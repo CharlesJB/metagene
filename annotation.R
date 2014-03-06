@@ -1,6 +1,34 @@
 # Created by Charles Joly Beauparlant
 # 2013-11-25
 
+# Fetch the annotation of all mouse genes
+#
+# INPUT:
+#
+# OUTPUT:
+#	A data.frame with 5 columns:
+#		1: chr
+#		2: start
+#		3: end
+#		4: gene name (ENSMUG)
+#		5: strand
+getMouseGenes <- function(maxDistance) {
+	library(ChIPpeakAnno)
+	library(org.Mm.eg.db)
+	data(TSS.mouse.NCBIM37)
+	anno <- as.data.frame(TSS.mouse.NCBIM37[TSS.mouse.NCBIM37$space %in% selected,])
+	anno <- anno[,c(1,2,3,5,6)]
+	anno$space <- as.character(anno$space)
+	anno$space <- paste("chr", anno$space, sep="")
+	anno$distancetoFeature <- 0
+	colnames(anno)[4] <- "feature"
+	anno$start_position <- anno$start
+	anno$end <- anno$start + maxDistance
+	anno$start <- anno$start - maxDistance
+	print(maxDistance)
+	return(anno)
+}
+
 # Add gene annotation to a bed file. Currently hard coded for mus musculus data.
 #
 # INPUT:
@@ -48,7 +76,9 @@ convertTranscriptIDtoEnsemblID <- function(TranscriptVector) {
 #		* a column for each group with a boolean value for each ensembl_transcript_id
 #
 #	Note: there is as many columns as there are unique ensembl_transcript_id among every groups.
-loadGroups <- function(group_filenames) {
+loadGroups <- function(groups) {
+	# 0. Load group filenames
+	group_filenames <- read.table(groups, stringsAsFactors=FALSE)[,1]
 	# 1. Get a list of all unique id
 	list_unique_id <- vector()
 	for (filename in group_filenames) {
@@ -56,7 +86,9 @@ loadGroups <- function(group_filenames) {
 		list_unique_id <- unique(c(list_unique_id, as.vector(current_group[[1]])))
 	}
 	# 2. Obtain the ensembl_id for each id
-	list_unique_id <- convertTranscriptIDtoEnsemblID(list_unique_id)
+#	list_unique_id <- convertTranscriptIDtoEnsemblID(list_unique_id)
+	list_unique_id <- as.data.frame(list_unique_id)
+	colnames(list_unique_id) <- c("ensembl_gene_id")
 	# 3. Add the boolean for each groups
 	for (filename in group_filenames) {
 		base_name <- basename(sub("^([^.]*).*", "\\1", filename))

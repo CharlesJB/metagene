@@ -46,10 +46,12 @@ initializeDf <- function(annotated_peaks, groups, max_distance) {
 	all_groups <- data.frame()
 	# 1. Remove annotated_peaks outside of max_distance
 	distance_annotated_peaks <- annotated_peaks[which(abs(annotated_peaks["distancetoFeature"]) <= max_distance),]
-	for(group in names(groups)[3:length(names(groups))]) {
+	for(group in names(groups)[2:length(names(groups))]) {
 		# 2. Keep only annotated_peaks found in current group
 		current_group_annotated_peaks <- groups["ensembl_gene_id"][which(groups[group]==TRUE),]
+#		print(length(current_group_annotated_peaks))
 		indexes <- which(as.vector(distance_annotated_peaks$feature) %in% current_group_annotated_peaks)
+#		print(length(indexes))
 		if (any(indexes)) {
 			current_annotated_peaks <- as.data.frame(distance_annotated_peaks[indexes,]$feature)
 			colnames(current_annotated_peaks) <- c("ensembl_gene_id")
@@ -72,30 +74,39 @@ initializeDf <- function(annotated_peaks, groups, max_distance) {
 #	A data.frame with the intentisties around TSS of every group/TSS combination.
 #d[as.character(c(-1,0,1))][1,] <- d[as.character(c(-1,0,1))][1,] + 1	
 parseBam <- function(annotated_peaks, bam_file, initialized_df, max_distance) {
+#	library(Rsamtools)
 	# 1. Initialize result data.frame
-	result <- data.frame(matrix(ncol=max_distance*2+1, nrow=nrow(initialized_df)))
-	colnames(result) <- as.character(seq(-max_distance,max_distance))
-	result[] <- 0
+	result <- matrix(0, ncol=max_distance*2+1, nrow=nrow(initialized_df))
 	# 2. For every TSS...
 	for (gene_id in initialized_df$ensembl_gene_id) {
-		current_index <- which(IDs$feature == gene_id)
-#		cat(paste(current_index, "\n", sep=""))
-		current_peaks <- IDs[current_index,]
+		print(paste("gene_id:", gene_id))
+		result_index <- which(initialized_df$ensembl_gene_id == gene_id)
+		current_peaks_indexes <- which(annotated_peaks$feature == gene_id)
 		# 3. For every peaks in current TSS
-		for (i in seq(1, nrow(current_peaks))) {
+		for (i in current_peaks_indexes) {
+			vector_result <- numeric(max_distance*2+1)
 			# 4. Get current offset info
-			current_TSS_offset <- current_peaks[i,]$start_position
+			current_TSS_offset <- annotated_peaks[i,]$start_position
 			# 5. Extract reads 
-			current_reads <- extractsReadsInPeaks(bam_file, current_peaks[i,])
+			current_reads <- extractsReadsInPeaks(bam_file, annotated_peaks[i,])
 			# 6. Increment the result data.frame for the current gene_id index
-			relative_positions <- as.character(mapply(function(x,y) seq(x, x+y), current_reads$pos - current_TSS_offset, current_reads$qwidth))
-			relative_positions <- relative_positions[abs(as.numeric(relative_positions))<=max_distance] # to remove reads beyond max distance
-			result_index <- which(initialized_df$ensembl_gene_id == gene_id)
-			if (length(relative_positions) > 0) {
-				result[relative_positions][result_index,] <- result[relative_positions][result_index,] + 1
+			if (nrow(current_reads) > 0) {
+				positions <- unlist(mapply(function(x,y) seq(x, x+y), current_reads$pos - current_TSS_offset, current_reads$qwidth))
+				positions <- positions[abs(positions)<=max_distance] # to remove reads beyond max distance
+				positions <- positions + max_distance
+				# TODO: faire les operations sur un vecteur puis incrementer la matrice en une seule etape
+#				vector_result <- vector_result + tabulate(positions, nbins=max_distance*2+1)
+				if (length(positions) > 0) {
+					for (i in positions) {
+						vector_result[i] <- vector_result[i] + 1
+					}
+				}
 			}
+			result[result_index,] <- result[result_index,] + vector_result
                 }
 	}
+	result <- as.data.frame(result)
+	colnames(result) <- as.character(seq(-max_distance,max_distance))
 	return(result)
 }
 
