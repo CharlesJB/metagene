@@ -13,8 +13,8 @@
 #		4: gene name (ENSMUG)
 #		5: strand
 getMouseGenes <- function(maxDistance) {
-	library(ChIPpeakAnno)
-	library(org.Mm.eg.db)
+	suppressMessages(library(ChIPpeakAnno))
+	suppressMessages(library(org.Mm.eg.db))
 	data(TSS.mouse.NCBIM37)
 	selected <- c(as.character(1:19), "X", "Y")
 	anno <- as.data.frame(TSS.mouse.NCBIM37[TSS.mouse.NCBIM37$space %in% selected,])
@@ -38,8 +38,8 @@ getMouseGenes <- function(maxDistance) {
 # OUTPUT:
 #	A data.frame with the annotation obtained with ChIPpeakAnnoPackage.
 annotateBED <- function(BEDfile) {
-	library(ChIPpeakAnno)
-	library(org.Mm.eg.db)
+	suppressMessages(library(ChIPpeakAnno))
+	suppressMessages(library(org.Mm.eg.db))
 	data(TSS.mouse.NCBIM37)
 	myPeaks <- BED2RangedData(BEDfile)
 	annotatedPeaks <- annotatePeakInBatch(myPeaks, AnnotationData=TSS.mouse.NCBIM37)
@@ -57,7 +57,7 @@ annotateBED <- function(BEDfile) {
 #		* ensembl_transcript_id
 #		* ensembl_gene_id
 convertTranscriptIDtoEnsemblID <- function(TranscriptVector) {
-	library(biomaRt)
+	suppressMessages(library(biomaRt))
 	ensembl <- useMart("ensembl")
 	ensembl <- useDataset("mmusculus_gene_ensembl", mart=ensembl)
 	return(getBM(attributes=c('ensembl_transcript_id', 'ensembl_gene_id'), filters='ensembl_transcript_id', values=TranscriptVector, mart=ensembl))

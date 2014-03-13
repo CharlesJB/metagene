@@ -13,7 +13,7 @@
 #		* pos
 #		* qwidth
 extractsReadsInPeaks <- function(bam_file, annotated_peaks) {
-	library(Rsamtools)
+	suppressMessages(library(Rsamtools))
 	df <- data.frame()
 	which <- GRanges(seqnames=Rle(annotated_peaks$space), ranges=IRanges(annotated_peaks$start, annotated_peaks$end),strand=Rle(annotated_peaks$strand)) 
 	what <- c("rname", "pos", "qwidth")
