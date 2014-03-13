@@ -13,6 +13,7 @@
 #		* pos
 #		* qwidth
 extractsReadsInPeaks <- function(bam_file, annotated_peaks) {
+	library(Rsamtools)
 	df <- data.frame()
 	which <- GRanges(seqnames=Rle(annotated_peaks$space), ranges=IRanges(annotated_peaks$start, annotated_peaks$end),strand=Rle(annotated_peaks$strand)) 
 	what <- c("rname", "pos", "qwidth")
@@ -74,7 +75,6 @@ initializeDf <- function(annotated_peaks, groups, max_distance) {
 #	A data.frame with the intentisties around TSS of every group/TSS combination.
 #d[as.character(c(-1,0,1))][1,] <- d[as.character(c(-1,0,1))][1,] + 1	
 parseBam <- function(annotated_peaks, bam_file, initialized_df, max_distance) {
-#	library(Rsamtools)
 	# 1. Initialize result data.frame
 	result <- matrix(0, ncol=max_distance*2+1, nrow=nrow(initialized_df))
 	# 2. For every TSS...
