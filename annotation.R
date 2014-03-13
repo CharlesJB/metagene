@@ -16,6 +16,7 @@ getMouseGenes <- function(maxDistance) {
 	library(ChIPpeakAnno)
 	library(org.Mm.eg.db)
 	data(TSS.mouse.NCBIM37)
+	selected <- c(as.character(1:19), "X", "Y")
 	anno <- as.data.frame(TSS.mouse.NCBIM37[TSS.mouse.NCBIM37$space %in% selected,])
 	anno <- anno[,c(1,2,3,5,6)]
 	anno$space <- as.character(anno$space)
