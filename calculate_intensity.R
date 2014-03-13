@@ -73,7 +73,6 @@ initializeDf <- function(annotated_peaks, groups, max_distance) {
 #
 # OUPUT:
 #	A data.frame with the intentisties around TSS of every group/TSS combination.
-#d[as.character(c(-1,0,1))][1,] <- d[as.character(c(-1,0,1))][1,] + 1	
 parseBam <- function(annotated_peaks, bam_file, initialized_df, max_distance) {
 	# 1. Initialize result data.frame
 	result <- matrix(0, ncol=max_distance*2+1, nrow=nrow(initialized_df))
