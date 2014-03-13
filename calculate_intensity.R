@@ -83,30 +83,42 @@ parseBam <- function(annotated_peaks, bam_file, initialized_df, max_distance) {
 		current_peaks_indexes <- which(annotated_peaks$feature == gene_id)
 		# 3. For every peaks in current TSS
 		for (i in current_peaks_indexes) {
-			vector_result <- numeric(max_distance*2+1)
 			# 4. Get current offset info
 			current_TSS_offset <- annotated_peaks[i,]$start_position
 			# 5. Extract reads 
 			current_reads <- extractsReadsInPeaks(bam_file, annotated_peaks[i,])
 			# 6. Increment the result data.frame for the current gene_id index
-			if (nrow(current_reads) > 0) {
-				positions <- unlist(mapply(function(x,y) seq(x, x+y), current_reads$pos - current_TSS_offset, current_reads$qwidth))
-				positions <- positions[abs(positions)<=max_distance] # to remove reads beyond max distance
-				positions <- positions + max_distance
-				# TODO: faire les operations sur un vecteur puis incrementer la matrice en une seule etape
-#				vector_result <- vector_result + tabulate(positions, nbins=max_distance*2+1)
-				if (length(positions) > 0) {
-					for (i in positions) {
-						vector_result[i] <- vector_result[i] + 1
-					}
-				}
-			}
+			vector_result <- convertReadsToPosVector(current_reads, current_TSS_offset, max_distance)
 			result[result_index,] <- result[result_index,] + vector_result
                 }
 	}
 	result <- as.data.frame(result)
 	colnames(result) <- as.character(seq(-max_distance,max_distance))
 	return(result)
+}
+
+# Convert a list of read in a vector of positions.
+#
+# INPUT:
+# 	current_reads:		The list of read to parse.
+#	current_TSS_offset:	The offset of the reads from the TSS.
+# 	max_distance:		Maximal distance from TSS.
+#
+# OUPUT:
+#	A vector of with the coverage of every positions calculated from the reads around the max distance from TSS.
+convertReadsToPosVector <- function(current_reads, current_TSS_offset, max_distance) {
+	vector_result <- numeric(max_distance*2+1)
+	if (nrow(current_reads) > 0) {
+		positions <- unlist(mapply(function(x,y) seq(x, x+y), current_reads$pos - current_TSS_offset, current_reads$qwidth-1))
+		positions <- positions[abs(positions)<=max_distance] # to remove reads beyond max distance
+		positions <- positions + max_distance
+		if (length(positions) > 0) { # TODO: Change for tabulate?
+			for (i in positions) {
+				vector_result[i] <- vector_result[i] + 1
+			}
+		}
+	}
+	return(vector_result)
 }
 
 # Calculate the intensities of the reads in the enriched peaks for multiple groups.
