@@ -20,7 +20,7 @@ getMouseGenes <- function(maxDistance) {
 	anno <- as.data.frame(TSS.mouse.NCBIM37[TSS.mouse.NCBIM37$space %in% selected,])
 	anno <- anno[,c(1,2,3,5,6)]
 	anno$space <- as.character(anno$space)
-	anno$space <- paste("chr", anno$space, sep="")
+#	anno$space <- paste("chr", anno$space, sep="")
 	anno$distancetoFeature <- 0
 	colnames(anno)[4] <- "feature"
 	anno$start_position <- anno$start
