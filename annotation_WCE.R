@@ -20,7 +20,7 @@ getMouseGenes <- function(maxDistance) {
 	anno <- as.data.frame(TSS.mouse.NCBIM37[TSS.mouse.NCBIM37$space %in% selected,])
 	anno <- anno[,c(1,2,3,5,6)]
 	anno$space <- as.character(anno$space)
-	anno$space <- paste("chr", anno$space, sep="")
+#	anno$space <- paste("chr", anno$space, sep="")
 	anno$distancetoFeature <- 0
 	colnames(anno)[4] <- "feature"
 	anno$start_position <- anno$start
@@ -28,49 +28,6 @@ getMouseGenes <- function(maxDistance) {
 	anno$start <- anno$start - maxDistance
 	print(maxDistance)
 	return(anno)
-}
-
-# Fetch the annotation of all genes
-#
-# INPUT:
-#	species: "mouse" or "human"
-#	max_distance: distance to add before and after TSS
-#
-# OUTPUT:
-#	A data.frame with 7 columns:
-#		1: feature -> Ensembl gene id
-#		2: strand -> -1 or 1
-#		3: space -> chromosome
-#		4: start_position -> position of the TSS
-#		5: end_position -> ending postition of the last exon of the gene
-#		6: start -> start of the regions to analyze (based on max_distance)
-#		7: end -> end of the regions to analyze (based on max_distance)
-#		8: distancetoFeature: 0 (since this is the TSS by definition)
-getGenes <- function(species, max_distance) {
-	require(biomaRt)
-	if (species == "human") {
-		chrom <- c(as.character(seq(1,21)),"X","Y")
-		ensmart <- useMart("ensembl", dataset="hsapiens_gene_ensembl")
-	} else if (species == "mouse") {
-		chrom <- c(as.character(seq(1,19)),"X","Y")
-		ensmart <- useMart("ensembl", dataset="mmusculus_gene_ensembl")
-	} else {
-		print("Incorrect parameter for species name")
-		print("Currently supported species are human and mouse")
-	}
-
-	sub.ensmart <- getBM(attributes=c("ensembl_gene_id","strand", "chromosome_name","start_position","end_position"),filters=c("chromosome_name"),values=chrom, mart=ensmart)
-	tmp <- sub.ensmart$start_position
-	sub.ensmart[sub.ensmart$strand == -1,]$start_position <- sub.ensmart[sub.ensmart$strand == -1,]$end_position
-	sub.ensmart[sub.ensmart$strand == -1,]$end_position <- tmp[sub.ensmart$strand == -1]
-
-	colnames(sub.ensmart) <- c("feature", "strand", "space", "start_position", "end_position")
-	sub.ensmart$space <- paste("chr", sub.ensmart$space, sep="")
-	sub.ensmart$start <- sub.ensmart$start_position - max_distance
-	sub.ensmart$end <- sub.ensmart$start_position + max_distance
-	sub.ensmart$distancetoFeature <- 0
-
-	return(sub.ensmart)
 }
 
 # Add gene annotation to a bed file. Currently hard coded for mus musculus data.
