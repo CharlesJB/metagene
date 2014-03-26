@@ -34,6 +34,43 @@ extractsReadsInPeaks <- function(bam_file, annotated_peaks) {
 	return(do.call("DataFrame", lst))
 } 
 
+# Extract reads from bam file that overlap with a genomic region
+#
+# INPUT:
+#	bam_file:	Path to the bam file.
+#	chr:		Current chromosome.
+#	start:		Starting position of the current region.
+#	end:		Ending position of the current region.
+#	strand:		Strand of the current peak
+#
+# OUTPUT:
+#	A data.frame containing every reads overlapping a list of enriched peaks with 3 columns:
+#		* rname
+#		* pos
+#		* qwidth
+extractsReadsInPeaksNoAnnotation <- function(bam_file, chr, start, end, strand) {
+	suppressMessages(library(Rsamtools))
+	df <- data.frame()
+	#which <- GRanges(seqnames=Rle(chr), ranges=IRanges(start, end),strand=Rle(strand))
+	which <- GRanges(seqnames=Rle(chr), ranges=IRanges(start, end))
+	what <- c("rname", "pos", "qwidth")
+	param <- ScanBamParam(which=which, what=what)
+	bam <- scanBam(bam_file, param=param)
+	.unlist <- function(x) {
+		## do.call(c, ...) coerces factor to integer, which is undesired
+		x1 <- x[[1L]]
+		if (is.factor(x1)) {
+			structure(unlist(x), class = "factor", levels = levels(x1))
+		} else {
+			do.call(c, x)
+		}
+	}
+	bam <- unname(bam)
+	elts <- setNames(bamWhat(param), bamWhat(param))
+	lst <- lapply(elts, function(elt) .unlist(lapply(bam, "[[", elt)))
+	return(do.call("DataFrame", lst))
+}
+
 # Create the base data.frame containing all the groups/id combinations. Only regions within max_distance are kept.
 #
 # INPUT:
@@ -93,6 +130,54 @@ parseBam <- function(annotated_peaks, bam_file, initialized_df, max_distance) {
                 }
 	}
 	result <- as.data.frame(result)
+	colnames(result) <- as.character(seq(-max_distance,max_distance))
+	return(result)
+}
+
+# Calculate the read intentity around a list of regions
+#
+# INPUT:
+# 	regions:	A data.frame with all the regions to parse.
+#			Require the following column names:
+#				* space:	name of the chromosome
+#				* start: 	start of the region.
+#				* end:		end of the region.
+#			The following column name is facultative:
+#				* strand:	strand of the region (default "+")
+#	bam_file: 	Path to the bam file.
+# 	max_distance:	Maximal distance from feature.
+#
+# OUPUT:
+#	A data.frame with the intentisties around features
+# TODO: Fill padding with NA instead of looking for the reads
+parseBamNoAnnotation <- function(regions, bam_file, max_distance) {
+	# 1. Initialize result data.frame
+	result <- matrix(0, ncol=max_distance*2+1, nrow=nrow(regions))
+
+	# 2. For every region
+	for(i in seq(1, nrow(regions))) {
+		# 2.1 Parse values
+		current_start <- regions[i,]$start
+		current_end <- regions[i,]$end
+		current_chr <- regions[i,]$space
+		current_strand <- regions[i,]$strand
+		if (current_start > current_end) {
+			tmp <- current_start
+			current_start <- current_end
+			current_end <- tmp
+		}
+		if (is.null(current_strand)) {
+			current_strand <- "+"
+		}
+		# 2.2 Extracts reads
+		padding <- ((max_distance*2+1) - (current_start+current_end)) / 2
+		current_reads <- extractsReadsInPeaksNoAnnotation(bam_file, current_chr, current_start, current_end, current_strand)
+		# 2.3 Convert to relative position
+		# Offset is the center position of the current region
+		current_offset <- current_start + ((current_end - current_start) / 2)
+		vector_result <- convertReadsToPosVector(current_reads, current_offset, max_distance)
+		result[i,] <- vector_result
+	}
 	colnames(result) <- as.character(seq(-max_distance,max_distance))
 	return(result)
 }
