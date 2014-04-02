@@ -15,7 +15,7 @@
 extractsReadsInPeaks <- function(bam_file, annotated_peaks) {
 	suppressMessages(library(Rsamtools))
 	df <- data.frame()
-	which <- GRanges(seqnames=Rle(annotated_peaks$space), ranges=IRanges(annotated_peaks$start, annotated_peaks$end),strand=Rle(annotated_peaks$strand)) 
+	which <- GRanges(seqnames=Rle(annotated_peaks$space), ranges=IRanges(annotated_peaks$start, annotated_peaks$end),strand=Rle(annotated_peaks$strand))
 	what <- c("rname", "pos", "qwidth")
 	param <- ScanBamParam(which=which, what=what)
 	bam <- scanBam(bam_file, param=param)
@@ -48,7 +48,7 @@ extractsReadsInPeaks <- function(bam_file, annotated_peaks) {
 #		* rname
 #		* pos
 #		* qwidth
-extractsReadsInPeaksNoAnnotation <- function(bam_file, chr, start, end, strand) {
+extractsReadsInPeaksNoAnnotation <- function(bam_file, chr, start, end) {
 	suppressMessages(library(Rsamtools))
 	df <- data.frame()
 	#which <- GRanges(seqnames=Rle(chr), ranges=IRanges(start, end),strand=Rle(strand))
@@ -127,11 +127,117 @@ parseBam <- function(annotated_peaks, bam_file, initialized_df, max_distance) {
 			# 6. Increment the result data.frame for the current gene_id index
 			vector_result <- convertReadsToPosVector(current_reads, current_TSS_offset, max_distance)
 			result[result_index,] <- result[result_index,] + vector_result
-                }
+		}
 	}
 	result <- as.data.frame(result)
 	colnames(result) <- as.character(seq(-max_distance,max_distance))
 	return(result)
+}
+
+# Calculate the read intentity around a list of regions
+#
+# INPUT:
+#	chromosomes:	Vector with the names of the chromosomes
+#	starts: 	Vector with starting values of the regions.
+#	ends:		Vector with the ending of the regions.
+#	bam_file: 	Path to the bam file.
+#
+# OUPUT:
+#	A data.frame with the intentisties around features
+parseRegions <- function(chromosomes, starts, ends, bam_file) {
+	percent_padding <- 0.2
+	# 0. Find the median region size
+	median_value <- median(mapply(function(x,y) max(x,y)-min(x,y), starts, ends))
+	#domain_size <- median_value + median_value * percent_padding
+	domain_size <- median_value + 2 * (median_value * percent_padding)
+	# 1. Initialize result data.frame
+	result <- matrix(0, ncol=domain_size, nrow=length(starts))
+
+	# 2. For every region
+	for(i in seq(1, length(starts))) {
+		# 2.1 Parse values
+		current_start <- min(starts[i], ends[i])
+		current_start <- current_start - (current_start * percent_padding) # Add padding
+		current_end <- max(starts[i], ends[i])
+		current_end <- current_end + (current_end * percent_padding) # Add padding
+		current_chr <- chromosomes[i]
+		print(paste(current_chr, current_start, current_end, sep=' '))
+		# 2.2 Extracts reads
+		current_reads <- extractsReadsInPeaksNoAnnotation(bam_file, current_chr, current_start, current_end)
+		# 2.3 Convert to relative position
+		# Offset is the center position of the current region
+		current_offset <- current_start + ((current_end - current_start) / 2)
+		max_distance <- (current_end - current_start) / 2
+		vector_result <- convertReadsToPosVector(current_reads, current_offset, max_distance)
+		# 2.4 Scale the vector
+		vector_result <- scaleVector(vector_result, domain_size)
+		result[i,] <- vector_result
+	}
+	return(result)
+}
+
+parseRegionsAlternatePadding <- function(chromosomes, starts, ends, bam_file) {
+	padding_value <- 2000
+	# 0. Find the median region size
+	median_value <- median(mapply(function(x,y) max(x,y)-min(x,y), starts, ends))
+	domain_size <- median_value + padding_value * 2
+	# 1. Initialize result data.frame
+	result <- matrix(0, ncol=domain_size, nrow=length(starts))
+
+	# 2. For every region
+	for(i in seq(1, length(starts))) {
+		# 2.1 Parse values
+		current_start <- min(starts[i], ends[i])
+		current_start <- current_start - padding_value # Add padding
+		current_end <- max(starts[i], ends[i])
+		current_end <- current_end + padding_value # Add padding
+		current_chr <- chromosomes[i]
+		print(paste(current_chr, current_start, current_end, sep=' '))
+		# 2.2 Extracts reads
+		current_reads <- extractsReadsInPeaksNoAnnotation(bam_file, current_chr, current_start, current_end)
+		# 2.3 Convert to relative position
+		# Offset is the center position of the current region
+		current_offset <- current_start + ((current_end - current_start) / 2)
+		max_distance <- (current_end - current_start) / 2
+		vector_result <- convertReadsToPosVector(current_reads, current_offset, max_distance)
+		# 2.4 Scale the vector
+		vector_result <- scaleVector(vector_result, domain_size)
+		result[i,] <- vector_result
+	}
+	return(result)
+}
+
+# Scale the values of a vector to fit with predetermined size
+#
+# INPUT:
+#	values:	the values to scale
+#	domain:	the range to fit the value to
+#
+# OUTPUT:
+# 	A vector with the scaled data
+scaleVector <- function(values, domain) {
+	to_return <- numeric(domain)
+	if (length(values) < domain) {
+		ratio <- domain / length(values)
+		for (i in seq(1, length(values))) {
+			current_start <- round((i - 1) * ratio + 1)
+			current_end <- round(i * ratio)
+			to_return[current_start:current_end] <- values[i]
+		}
+	}
+	else if (length(values) > domain) {
+		ratio <- length(values) / domain
+		for (i in seq(1, domain)) {
+			current_start <- round((i - 1) * ratio + 1)
+			current_end <- round(i * ratio)
+			to_return[i] <- mean(values[current_start:current_end])
+		}
+
+	}
+	else {
+		return(values)
+	}
+	return(to_return)
 }
 
 # Calculate the read intentity around a list of regions
@@ -171,7 +277,53 @@ parseBamNoAnnotation <- function(regions, bam_file, max_distance) {
 		}
 		# 2.2 Extracts reads
 		padding <- ((max_distance*2+1) - (current_start+current_end)) / 2
-		current_reads <- extractsReadsInPeaksNoAnnotation(bam_file, current_chr, current_start, current_end, current_strand)
+		current_reads <- extractsReadsInPeaksNoAnnotation(bam_file, current_chr, current_start, current_end)
+		# 2.3 Convert to relative position
+		# Offset is the center position of the current region
+		current_offset <- current_start + ((current_end - current_start) / 2)
+		vector_result <- convertReadsToPosVector(current_reads, current_offset, max_distance)
+		result[i,] <- vector_result
+	}
+	colnames(result) <- as.character(seq(-max_distance,max_distance))
+	return(result)
+}
+
+# Calculate the read intensity around a list of regions. Regions are scaled to fit with the median.
+#
+# INPUT:
+# 	regions:	A data.frame with all the regions to parse.
+#			Require the following column names:
+#				* space:	name of the chromosome
+#				* start: 	start of the region.
+#				* end:		end of the region.
+#			The following column name is facultative:
+#				* strand:	strand of the region (default "+")
+#	bam_file: 	Path to the bam file.
+#
+# OUPUT:
+#	A scaled data.frame with the intentisties around features
+parseBamNoAnnotationScaled <- function(regions, bam_file) {
+	# 1. Initialize result data.frame
+	result <- matrix(0, ncol=max_distance*2+1, nrow=nrow(regions))
+
+	# 2. For every region
+	for(i in seq(1, nrow(regions))) {
+		# 2.1 Parse values
+		current_start <- regions[i,]$start
+		current_end <- regions[i,]$end
+		current_chr <- regions[i,]$space
+		current_strand <- regions[i,]$strand
+		if (current_start > current_end) {
+			tmp <- current_start
+			current_start <- current_end
+			current_end <- tmp
+		}
+		if (is.null(current_strand)) {
+			current_strand <- "+"
+		}
+		# 2.2 Extracts reads
+		padding <- ((max_distance*2+1) - (current_start+current_end)) / 2
+		current_reads <- extractsReadsInPeaksNoAnnotation(bam_file, current_chr, current_start, current_end)
 		# 2.3 Convert to relative position
 		# Offset is the center position of the current region
 		current_offset <- current_start + ((current_end - current_start) / 2)
@@ -197,11 +349,12 @@ convertReadsToPosVector <- function(current_reads, current_TSS_offset, max_dista
 		positions <- unlist(mapply(function(x,y) seq(x, x+y), current_reads$pos - current_TSS_offset, current_reads$qwidth-1))
 		positions <- positions[abs(positions)<=max_distance] # to remove reads beyond max distance
 		positions <- positions + max_distance
-		if (length(positions) > 0) { # TODO: Change for tabulate?
-			for (i in positions) {
-				vector_result[i] <- vector_result[i] + 1
-			}
-		}
+		vector_result <- tabulate(positions, nbins=max_distance*2+1)
+		#if (length(positions) > 0) { # TODO: Change for tabulate?
+			#for (i in positions) {
+				#vector_result[i] <- vector_result[i] + 1
+			#}
+		#}
 	}
 	return(vector_result)
 }
