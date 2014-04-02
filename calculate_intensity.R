@@ -144,7 +144,8 @@ parseBam <- function(annotated_peaks, bam_file, initialized_df, max_distance) {
 #
 # OUPUT:
 #	A data.frame with the intentisties around features
-parseRegions <- function(chromosomes, starts, ends, bam_file) {
+#parseRegions <- function(chromosomes, starts, ends, bam_file) {
+parseRegionsWithPadding <- function(chromosomes, starts, ends, bam_file) {
 	percent_padding <- 0.2
 	# 0. Find the median region size
 	median_value <- median(mapply(function(x,y) max(x,y)-min(x,y), starts, ends))
@@ -172,6 +173,47 @@ parseRegions <- function(chromosomes, starts, ends, bam_file) {
 		# 2.4 Scale the vector
 		vector_result <- scaleVector(vector_result, domain_size)
 		result[i,] <- vector_result
+	}
+	return(result)
+}
+
+# Calculate the read intentity around a list of regions (invert values when strand is negative)
+# All regions must have the same size
+#
+# INPUT:
+#	chromosomes:	Vector with the names of the chromosomes
+#	starts: 	Vector with starting values of the regions.
+#	ends:		Vector with the ending of the regions.
+#	bam_file: 	Path to the bam file.
+#
+# OUPUT:
+#	A data.frame with the intentisties around features
+parseRegionsStrand <- function(chromosomes, starts, ends, strand, bam_file) {
+	# 1. Initialize result data.frame
+	result <- matrix(0, ncol=(ends[1]-starts[1])+1, nrow=length(starts))
+
+	# 2. For every region
+	for(i in seq(1, length(starts))) {
+		# 2.1 Parse values
+		current_start <- min(starts[i], ends[i])
+		current_end <- max(starts[i], ends[i])
+		current_chr <- chromosomes[i]
+		current_strand <- strand[i]
+		print(paste(current_chr, current_start, current_end, sep=' '))
+		# 2.2 Extracts reads
+		current_reads <- extractsReadsInPeaksNoAnnotation(bam_file, current_chr, current_start, current_end)
+		if (length(current_reads) > 0) {
+			# 2.3 Convert to relative position
+			# Offset is the center position of the current region
+			current_offset <- current_start + ((current_end - current_start) / 2)
+			max_distance <- (current_end - current_start) / 2
+			vector_result <- convertReadsToPosVector(current_reads, current_offset, max_distance)
+			if (current_strand == "-1" | current_strand == -1 | current_strand == "-") {
+				result[i,] <- rev(vector_result)
+			} else {
+				result[i,] <- vector_result
+			}
+		}
 	}
 	return(result)
 }
