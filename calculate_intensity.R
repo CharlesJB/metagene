@@ -85,10 +85,12 @@ initializeDf <- function(annotated_peaks, groups, max_distance) {
 	# 1. Remove annotated_peaks outside of max_distance
 	distance_annotated_peaks <- annotated_peaks[which(abs(annotated_peaks["distancetoFeature"]) <= max_distance),]
 	for(group in names(groups)[2:length(names(groups))]) {
+		print(group)
 		# 2. Keep only annotated_peaks found in current group
 		current_group_annotated_peaks <- groups["ensembl_gene_id"][which(groups[group]==TRUE),]
 #		print(length(current_group_annotated_peaks))
 		indexes <- which(as.vector(distance_annotated_peaks$feature) %in% current_group_annotated_peaks)
+		print(length(indexes))
 #		print(length(indexes))
 		if (any(indexes)) {
 			current_annotated_peaks <- as.data.frame(distance_annotated_peaks[indexes,]$feature)
@@ -126,6 +128,11 @@ parseBam <- function(annotated_peaks, bam_file, initialized_df, max_distance) {
 			current_reads <- extractsReadsInPeaks(bam_file, annotated_peaks[i,])
 			# 6. Increment the result data.frame for the current gene_id index
 			vector_result <- convertReadsToPosVector(current_reads, current_TSS_offset, max_distance)
+			# If on negative strand, invert the current vector
+			current_strand <- annotated_peaks[i,]$strand
+			if (current_strand == "-1" |  current_strand == -1 | current_strand == "-") {
+				vector_result <- rev(vector_result)
+			}
 			result[result_index,] <- result[result_index,] + vector_result
 		}
 	}
