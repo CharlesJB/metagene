@@ -1,14 +1,110 @@
 # Created by Charles Joly Beauparlant
 # 2013-11-26
 
-# Extract reads from bam file that overlap with enriched peaks.
+# Create a metagene plot based on a list of genomic regions
 #
-# INPUT:
-#	bam_file: 		Path to the bam file.
-# 	annotated_peaks:	Annoted bed file with ensembltrans added with ChIPpeakAnno::addGeneannotated_peaks
+# Input:
+#	bamFiles:	A vector of bamFile to plot. TODO: Should also accept a list of bamfiles where each elements would be grouped together
+#	file:		The name of the output file. In pdf format. TODO: also send to screen
+#	ranges:		List of genomic regions. Path to a bed file. TODO: add genomic ranges class.
+#			TODO: Hard coder FANTOM enhancer -> default
+# 	design:		A matrix explaining the relationship between multiple samples.
+#			One line per samples.
+#			One column per group of samples. For example, biological replicates and corresponding controls are in the same group.
+#			1: treatment file(s)
+#			2: control file(s)
+#	scaling:	The way the regions should be scaled. Cannot be used with filling.
+#			"median": Default. Every regions are resized to fit the median size of the regions.
+#			"average": Every regions are resized to fit the average size of the regions.
+#			"largest": Every regions are resized to fit the largest size of the regions.
+#			"smallest": Every regions are resized to fit the smallest size of the regions.
+#			NULL: No scaling.
+#	filling:	Define how are smaller regions are fitted to the largest. Cannot be used with scaling.
+#			"extend": Resize all regions to fit largest.
+#			"NA": Fill smaller regions with NA.
+#			NULL: Default. No filling.
+#	padding:	Add nucleotides to the size of every regions.
+#			TODO: 2 arguments, type de padding (absolute ou relative) et taille du padding (paddingSize)
+#			If the value is greater than one, the rounded value will be added in both directions.
+#			If the value is smaller than one, a relative padding corresponding to the value will be added in both directions.
+#			NULL: Default. No padding
+#	centering:	A function to define how are the regions centered.
+#			NULL: Default. Regions are centered at the middle.
+#	...:		Extra arguments for centering function.
 #
-# OUTPUT:
-#	A data.frame containing every reads overlapping a list of enriched peaks with 3 columns:
+# TODO: nouvel argument pour normalisation qui fit avec edgeR
+# TODO: nouvel argument pour overlapping regions (merge, mean: on fait la moyenne)
+#
+# output:
+#
+plotByRegions <- function(bamFiles, file="regions.pdf", ranges=NULL, design=NULL, scaling="median", filling=NULL, padding=NULL, centering=NULL, ...) {
+	# 0. Check if params are valid
+	# 1. Prepare bam files
+	# 2. Parse regions
+	# 	For loop for now. Eventually, this is the place that will be parallelized.
+	# 3. Realign regions
+}
+
+# Create a metagene plot based on a list of genomic features
+#
+# Input:
+#	bamFiles:	A vector of bamFile to plot. TODO: Should also accept a list of bamfiles where each elements would be grouped together
+#	file:		The name of the output file. In pdf format. TODO: also send to screen
+#	features:	Either a filename of a vector of filenames
+#	maxDistance:	The distance around feature to include in the plot.
+#	design:		A matrix explaining the relationship between multiple samples.
+#			One line per samples.
+#			One column per group of samples. For example, biological replicates and corresponding controls are in the same group.
+#			1: treatment file(s)
+#			2: control file(s)
+plotByFeature <- function(bamFiles, file="features.pdf", features=NULL, maxDistance=5000, design=NULL) {
+	# 0. Check if params are valid
+	# 1. Prepare bam files
+	# 2. Prepare regions
+	# 3. Parse regions
+	# 	For loop for now. Eventually, this is the place that will be parallelized.
+	# 4. Bootstrap
+	# 5. Plot
+}
+
+# Check parameters for the plot functions
+checkParams <- function(bamfiles, features=NULL, maxDistance=NULL, ranges=NULL, design=NULL, scaling="median", filling=NULL, padding=NULL, centering=NULL) {
+
+}
+
+# Sort and index bam files, if necessary. Return the number of aligned reads for each bam file.
+#
+# Input:
+#	bamFiles:	Vector containing the list of every bam filename to be included in the analysis.
+#
+# Output:
+#	A vector containing the number of aligned reads for each bam file.
+prepareBamFiles <- function(bamFiles) {
+
+}
+
+# Extract read density information from a list of regions and convert them into a matrix
+#
+# Input:
+#	bamFile:	The bam file to parse.
+#	regions:	GRanges object representing the list of genomic ranges for the current group of file.
+#
+# Output:
+#	A matrix with as much columns as the largest region and as many line as the number of regions.
+parseRegions <- function(bamFile, regions) {
+
+}
+
+##############################################################################################
+
+# extract reads from bam file that overlap with enriched peaks.
+#
+# input:
+#	bam_file: 		path to the bam file.
+# 	annotated_peaks:	annoted bed file with ensembltrans added with chippeakanno::addgeneannotated_peaks
+#
+# output:
+#	a data.frame containing every reads overlapping a list of enriched peaks with 3 columns:
 #		* rname
 #		* pos
 #		* qwidth
