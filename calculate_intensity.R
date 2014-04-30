@@ -49,18 +49,29 @@ plotByRegions <- function(bamFiles, file="regions.pdf", ranges=NULL, design=NULL
 #
 # Input:
 #	bamFiles:	A vector of bamFile to plot. TODO: Should also accept a list of bamfiles where each elements would be grouped together
-#	file:		The name of the output file. In pdf format. TODO: also send to screen
-#	features:	Either a filename of a vector of filenames
+#	features:	Either a filename of a vector of filenames.
+#			Supported features: ensembl_gene_id
+#			File must contain a header that correspond to the name of the group
+#	specie:		hs: Homo sapiens (default) / mm: Mus musculus
 #	maxDistance:	The distance around feature to include in the plot.
 #	design:		A matrix explaining the relationship between multiple samples.
 #			One line per samples.
 #			One column per group of samples. For example, biological replicates and corresponding controls are in the same group.
 #			1: treatment file(s)
 #			2: control file(s)
-plotByFeature <- function(bamFiles, file="features.pdf", features=NULL, maxDistance=5000, design=NULL) {
+plotByFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000, design=NULL) {
 	# 0. Check if params are valid
 	# 1. Prepare bam files
 	# 2. Prepare regions
+	knownGenes <- getGenes(specie)
+	allFeatures <- data.frame()
+	for (filename in features) {
+		currentFeatures <- read.table(filename, header=TRUE)
+		currentGroup <- colnames(currentFeatures)[1]
+		currentFeatures$group <- currentGroup
+		colnames(currentFeatures) <- c("feature", "group")
+		allFeatures <- rbind(allFeatures, currentFeatures)
+	}
 	# 3. Parse regions
 	# 	For loop for now. Eventually, this is the place that will be parallelized.
 	# 4. Bootstrap
@@ -81,6 +92,47 @@ checkParams <- function(bamfiles, features=NULL, maxDistance=NULL, ranges=NULL, 
 #	A vector containing the number of aligned reads for each bam file.
 prepareBamFiles <- function(bamFiles) {
 
+}
+
+# Fetch the annotation of all genes
+#
+# INPUT:
+#	specie: "mouse" or "human"
+#
+# OUTPUT:
+#	A data.frame with 5 columns:
+#		1: feature -> Ensembl gene id
+#		2: strand -> -1 or 1
+#		3: space -> chromosome
+#		4: start_position -> position of the TSS
+#		5: end_position -> ending position of the last exon of the gene
+getGenes <- function(specie) {
+	require(biomaRt)
+	# Set the correct specie
+	if (species == "hs") {
+		chrom <- c(as.character(seq(1,21)),"X","Y")
+		ensmart <- useMart("ensembl", dataset="hsapiens_gene_ensembl")
+	} else if (species == "mm") {
+		chrom <- c(as.character(seq(1,19)),"X","Y")
+		ensmart <- useMart("ensembl", dataset="mmusculus_gene_ensembl")
+	} else {
+		print("Incorrect parameter for species name")
+		print("Currently supported species are human and mouse")
+	}
+
+	# Fetch the data
+	attributes <- c("ensembl_gene_id","strand", "chromosome_name","start_position","end_position")
+	filters <- c("chromosome_name")
+	sub.ensmart <- getBM(attributes=attributes,filters=filters,values=chrom, mart=ensmart)
+	sub.ensmart$space <- paste("chr", sub.ensmart$space, sep="")
+	colnames(sub.ensmart) <- c("feature", "strand", "space", "start_position", "end_position")
+
+	# If a gene is on the negative strand, we want the start position value to be greater than the end position
+	tmp <- sub.ensmart$start_position
+	sub.ensmart[sub.ensmart$strand == -1,]$start_position <- sub.ensmart[sub.ensmart$strand == -1,]$end_position
+	sub.ensmart[sub.ensmart$strand == -1,]$end_position <- tmp[sub.ensmart$strand == -1]
+
+	return(sub.ensmart)
 }
 
 # Extract read density information from a list of regions and convert them into a matrix
