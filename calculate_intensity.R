@@ -19,6 +19,8 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	# 0. Check if params are valid
 	# 1. Prepare bam files
 	# 2. Prepare regions
+	# TODO: We need to iterate on experiment in design files and produce a matrix for each experiment (output: a list of matrices?)
+	#	The loop should start here and stop before Bootstrap
 	knownGenes <- getGenes(specie)
 	allFeatures <- data.frame()
 	for (filename in features) {
@@ -29,7 +31,8 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 		allFeatures <- rbind(allFeatures, currentFeatures)
 	}
 	# 3. Parse regions
-	# 	For loop for now. Eventually, this is the place that will be parallelized.
+	rawMatrix <- lapply(nrow(allFeatures), getRegionRawReadCount(allFeatures[x,]$feature))
+	rawMatrix <- do.call(rbind, rawMatrix)
 	# 4. Bootstrap
 	# 5. Plot
 }
