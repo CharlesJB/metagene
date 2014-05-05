@@ -31,7 +31,7 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 		allFeatures <- rbind(allFeatures, currentFeatures)
 	}
 	# 3. Parse regions
-	rawMatrix <- lapply(nrow(allFeatures), getRegionRawReadCount(allFeatures[x,]$feature))
+	rawMatrix <- lapply(nrow(allFeatures), getRegionReadDensity(allFeatures[x,]$feature), knownGenes=knowGenes, bamFiles=bamFiles)
 	rawMatrix <- do.call(rbind, rawMatrix)
 	# 4. Bootstrap
 	# 5. Plot
@@ -163,6 +163,34 @@ getGenes <- function(specie) {
 	return(sub.ensmart)
 }
 
+# Extract read density from a region
+#
+# Input:
+#	ensembl_gene_id:	The current ensembl gene id to parse
+#	knownGenes:		The annotation to translate ID into genomic positions
+#	bamFiles:		A vector of bam file to parse.
+#
+# Output:
+# 	A matrix with the read density for the current regions with as many line as there are bam files.
+# TODO: return count as read per million aligned read (RPM)
+getRegionReadDensity <- funtion(geneID, knowGenes, bamFiles, maxDistance) {
+	extractReadsDensity <- function(bamfile) {
+		currentFeature <- knowGenes[knowGenes$feature == geneID,]
+		currentReads <- extractsReadsInRegion(bamFile, currentFeature$space, currentFeature$start, currentFeature$end)
+		vectorResult <- convertReadsToPosVector(currentReads, currentFeature, maxDistance)
+		# If on negative strand, invert the current vector
+		currentStrand <- currentFeature$strand
+		if (currentStrand == "-1" |  currentStrand == -1 | currentStrand == "-") {
+			vectorResult <- rev(vectorResult)
+		}
+		return(vectorResult)
+	}
+
+	rawMatrix <- lapply(nrow(allFeatures), extractReadsDensity)
+	rawMatrix <- do.call(rbind, rawMatrix)
+	return(rawMatrix)
+}
+
 # Convert a list of feature into genomic regions
 #
 # Input:
@@ -213,6 +241,67 @@ parseRegions <- function(bamFile, regions) {
 
 }
 
+# Extract reads from bam file that overlap with a genomic region
+#
+# INPUT:
+#	bam_file:	Path to the bam file.
+#	chr:		Current chromosome.
+#	start:		Starting position of the current region.
+#	end:		Ending position of the current region.
+#
+# OUTPUT:
+#	A data.frame containing every reads overlapping the current genomic region:
+#		* rname
+#		* pos
+#		* qwidth
+extractsReadsInRegion <- function(bam_file, chr, start, end) {
+	suppressMessages(library(Rsamtools))
+	df <- data.frame()
+	#which <- GRanges(seqnames=Rle(chr), ranges=IRanges(start, end),strand=Rle(strand))
+	which <- GRanges(seqnames=Rle(chr), ranges=IRanges(start, end))
+	what <- c("rname", "pos", "qwidth")
+	param <- ScanBamParam(which=which, what=what)
+	bam <- scanBam(bam_file, param=param)
+	.unlist <- function(x) {
+		## do.call(c, ...) coerces factor to integer, which is undesired
+		x1 <- x[[1L]]
+		if (is.factor(x1)) {
+			structure(unlist(x), class = "factor", levels = levels(x1))
+		} else {
+			do.call(c, x)
+		}
+	}
+	bam <- unname(bam)
+	elts <- setNames(bamWhat(param), bamWhat(param))
+	lst <- lapply(elts, function(elt) .unlist(lapply(bam, "[[", elt)))
+	return(do.call("DataFrame", lst))
+}
+
+# Convert a list of read in a vector of positions.
+#
+# INPUT:
+# 	current_reads:		The list of read to parse.
+#	current_TSS_offset:	The offset of the reads from the TSS.
+# 	max_distance:		Maximal distance from TSS.
+#
+# OUPUT:
+#	A vector of with the coverage of every positions calculated from the reads around the max distance from TSS.
+convertReadsToPosVector <- function(current_reads, current_TSS_offset, max_distance) {
+	vector_result <- numeric(max_distance*2+1)
+	if (nrow(current_reads) > 0) {
+		positions <- unlist(mapply(function(x,y) seq(x, x+y), current_reads$pos - current_TSS_offset, current_reads$qwidth-1))
+		positions <- positions[abs(positions)<=max_distance] # to remove reads beyond max distance
+		positions <- positions + max_distance
+		vector_result <- tabulate(positions, nbins=max_distance*2+1)
+		#if (length(positions) > 0) { # TODO: Change for tabulate?
+			#for (i in positions) {
+				#vector_result[i] <- vector_result[i] + 1
+			#}
+		#}
+	}
+	return(vector_result)
+}
+
 ##############################################################################################
 
 # extract reads from bam file that overlap with enriched peaks.
@@ -246,44 +335,8 @@ extractsReadsInPeaks <- function(bam_file, annotated_peaks) {
 	elts <- setNames(bamWhat(param), bamWhat(param))
 	lst <- lapply(elts, function(elt) .unlist(lapply(bam, "[[", elt)))
 	return(do.call("DataFrame", lst))
-} 
-
-# Extract reads from bam file that overlap with a genomic region
-#
-# INPUT:
-#	bam_file:	Path to the bam file.
-#	chr:		Current chromosome.
-#	start:		Starting position of the current region.
-#	end:		Ending position of the current region.
-#	strand:		Strand of the current peak
-#
-# OUTPUT:
-#	A data.frame containing every reads overlapping a list of enriched peaks with 3 columns:
-#		* rname
-#		* pos
-#		* qwidth
-extractsReadsInPeaksNoAnnotation <- function(bam_file, chr, start, end) {
-	suppressMessages(library(Rsamtools))
-	df <- data.frame()
-	#which <- GRanges(seqnames=Rle(chr), ranges=IRanges(start, end),strand=Rle(strand))
-	which <- GRanges(seqnames=Rle(chr), ranges=IRanges(start, end))
-	what <- c("rname", "pos", "qwidth")
-	param <- ScanBamParam(which=which, what=what)
-	bam <- scanBam(bam_file, param=param)
-	.unlist <- function(x) {
-		## do.call(c, ...) coerces factor to integer, which is undesired
-		x1 <- x[[1L]]
-		if (is.factor(x1)) {
-			structure(unlist(x), class = "factor", levels = levels(x1))
-		} else {
-			do.call(c, x)
-		}
-	}
-	bam <- unname(bam)
-	elts <- setNames(bamWhat(param), bamWhat(param))
-	lst <- lapply(elts, function(elt) .unlist(lapply(bam, "[[", elt)))
-	return(do.call("DataFrame", lst))
 }
+
 
 # Create the base data.frame containing all the groups/id combinations. Only regions within max_distance are kept.
 #
@@ -595,31 +648,6 @@ parseBamNoAnnotationScaled <- function(regions, bam_file) {
 	}
 	colnames(result) <- as.character(seq(-max_distance,max_distance))
 	return(result)
-}
-
-# Convert a list of read in a vector of positions.
-#
-# INPUT:
-# 	current_reads:		The list of read to parse.
-#	current_TSS_offset:	The offset of the reads from the TSS.
-# 	max_distance:		Maximal distance from TSS.
-#
-# OUPUT:
-#	A vector of with the coverage of every positions calculated from the reads around the max distance from TSS.
-convertReadsToPosVector <- function(current_reads, current_TSS_offset, max_distance) {
-	vector_result <- numeric(max_distance*2+1)
-	if (nrow(current_reads) > 0) {
-		positions <- unlist(mapply(function(x,y) seq(x, x+y), current_reads$pos - current_TSS_offset, current_reads$qwidth-1))
-		positions <- positions[abs(positions)<=max_distance] # to remove reads beyond max distance
-		positions <- positions + max_distance
-		vector_result <- tabulate(positions, nbins=max_distance*2+1)
-		#if (length(positions) > 0) { # TODO: Change for tabulate?
-			#for (i in positions) {
-				#vector_result[i] <- vector_result[i] + 1
-			#}
-		#}
-	}
-	return(vector_result)
 }
 
 # Calculate the intensities of the reads in the enriched peaks for multiple groups.
