@@ -1,6 +1,39 @@
 # Created by Charles Joly Beauparlant
 # 2013-11-26
 
+# Create a metagene plot based on a list of genomic features
+#
+# Input:
+#	bamFiles:	A vector of bamFile to plot. TODO: Should also accept a list of bamfiles where each elements would be grouped together
+#	features:	Either a filename of a vector of filenames.
+#			Supported features: ensembl_gene_id
+#			File must contain a header that correspond to the name of the group
+#	specie:		hs: Homo sapiens (default) / mm: Mus musculus
+#	maxDistance:	The distance around feature to include in the plot.
+#	design:		A matrix explaining the relationship between multiple samples.
+#			One line per samples.
+#			One column per group of samples. For example, biological replicates and corresponding controls are in the same group.
+#			1: treatment file(s)
+#			2: control file(s)
+plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000, design=NULL) {
+	# 0. Check if params are valid
+	# 1. Prepare bam files
+	# 2. Prepare regions
+	knownGenes <- getGenes(specie)
+	allFeatures <- data.frame()
+	for (filename in features) {
+		currentFeatures <- read.table(filename, header=TRUE)
+		currentGroup <- colnames(currentFeatures)[1]
+		currentFeatures$group <- currentGroup
+		colnames(currentFeatures) <- c("feature", "group")
+		allFeatures <- rbind(allFeatures, currentFeatures)
+	}
+	# 3. Parse regions
+	# 	For loop for now. Eventually, this is the place that will be parallelized.
+	# 4. Bootstrap
+	# 5. Plot
+}
+
 # Create a metagene plot based on a list of genomic regions
 #
 # Input:
@@ -37,45 +70,12 @@
 #
 # output:
 #
-plotByRegions <- function(bamFiles, file="regions.pdf", ranges=NULL, design=NULL, scaling="median", filling=NULL, padding=NULL, centering=NULL, ...) {
+plotFeaturesByRegions <- function(bamFiles, file="regions.pdf", ranges=NULL, design=NULL, scaling="median", filling=NULL, padding=NULL, centering=NULL, ...) {
 	# 0. Check if params are valid
 	# 1. Prepare bam files
 	# 2. Parse regions
 	# 	For loop for now. Eventually, this is the place that will be parallelized.
 	# 3. Realign regions
-}
-
-# Create a metagene plot based on a list of genomic features
-#
-# Input:
-#	bamFiles:	A vector of bamFile to plot. TODO: Should also accept a list of bamfiles where each elements would be grouped together
-#	features:	Either a filename of a vector of filenames.
-#			Supported features: ensembl_gene_id
-#			File must contain a header that correspond to the name of the group
-#	specie:		hs: Homo sapiens (default) / mm: Mus musculus
-#	maxDistance:	The distance around feature to include in the plot.
-#	design:		A matrix explaining the relationship between multiple samples.
-#			One line per samples.
-#			One column per group of samples. For example, biological replicates and corresponding controls are in the same group.
-#			1: treatment file(s)
-#			2: control file(s)
-plotByFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000, design=NULL) {
-	# 0. Check if params are valid
-	# 1. Prepare bam files
-	# 2. Prepare regions
-	knownGenes <- getGenes(specie)
-	allFeatures <- data.frame()
-	for (filename in features) {
-		currentFeatures <- read.table(filename, header=TRUE)
-		currentGroup <- colnames(currentFeatures)[1]
-		currentFeatures$group <- currentGroup
-		colnames(currentFeatures) <- c("feature", "group")
-		allFeatures <- rbind(allFeatures, currentFeatures)
-	}
-	# 3. Parse regions
-	# 	For loop for now. Eventually, this is the place that will be parallelized.
-	# 4. Bootstrap
-	# 5. Plot
 }
 
 # Check parameters for the plot functions
