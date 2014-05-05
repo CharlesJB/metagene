@@ -92,9 +92,34 @@ checkParams <- function(bamfiles, features=NULL, maxDistance=NULL, ranges=NULL, 
 #	bamFiles:	Vector containing the list of every bam filename to be included in the analysis.
 #
 # Output:
-#	A vector containing the number of aligned reads for each bam file.
+#	A data.frame containing the indexed bam filename and number of aligned reads for each bam file.
+#	Column names: bamFiles and alignedCount
 prepareBamFiles <- function(bamFiles) {
+	library(Rsamtools)
+	results <- data.frame()
 
+	# This function will only index a file if there is no index file
+	indexBamFiles <- function(bamFile) {
+		if (file.exists(paste(bamFile, ".bai", sep=""))  == FALSE) {
+			# If there is no index file, we sort and index the current bam file
+			sortedBamFile <- sub("^([^.]*).*", "\\1", bamFile)
+			sortedBamFile <- paste(sortedBamFile, ".sorted", sep="")
+			sortBam(bamFile, sortedBamFile)
+			sortedBamFile <- paste(sortedBamFile, ".bam", sep="")
+			indexBam(sortedBamFile)
+			bamFile <- sortedBamFile
+		}
+		return(bamFile)
+	}
+	results$bamFiles <- sapply(bamFiles, indexBamFiles)
+
+	# This function will calculate the number of aligned read in each bam file
+	countAlignedReads <- function(bamFile) {
+		return(countBam(bamFile, param=ScanBamParam(flag = scanBamFlag(isUnmappedQuery=FALSE)))$records)
+	}
+	results$alignedCount <- sapply(bamFiles, countAlignedReads)
+
+	return(results)
 }
 
 # Fetch the annotation of all genes
