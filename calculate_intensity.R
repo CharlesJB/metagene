@@ -112,23 +112,23 @@ prepareBamFiles <- function(bamFiles) {
 getGenes <- function(specie) {
 	require(biomaRt)
 	# Set the correct specie
-	if (species == "hs") {
+	if (specie == "hs") {
 		chrom <- c(as.character(seq(1,21)),"X","Y")
 		ensmart <- useMart("ensembl", dataset="hsapiens_gene_ensembl")
-	} else if (species == "mm") {
+	} else if (specie == "mm") {
 		chrom <- c(as.character(seq(1,19)),"X","Y")
 		ensmart <- useMart("ensembl", dataset="mmusculus_gene_ensembl")
 	} else {
-		print("Incorrect parameter for species name")
-		print("Currently supported species are human and mouse")
+		print("Incorrect parameter for specie name")
+		print("Currently supported specie are human and mouse")
 	}
 
 	# Fetch the data
 	attributes <- c("ensembl_gene_id","strand", "chromosome_name","start_position","end_position")
 	filters <- c("chromosome_name")
 	sub.ensmart <- getBM(attributes=attributes,filters=filters,values=chrom, mart=ensmart)
-	sub.ensmart$space <- paste("chr", sub.ensmart$space, sep="")
 	colnames(sub.ensmart) <- c("feature", "strand", "space", "start_position", "end_position")
+	sub.ensmart$space <- paste("chr", sub.ensmart$space, sep="")
 
 	# If a gene is on the negative strand, we want the start position value to be greater than the end position
 	tmp <- sub.ensmart$start_position
