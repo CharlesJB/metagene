@@ -135,6 +135,44 @@ getGenes <- function(specie) {
 	return(sub.ensmart)
 }
 
+# Convert a list of feature into genomic regions
+#
+# Input:
+#	features:	A vector of Ensembl gene IDs.
+#	knownGenes:	A data.frame with known genes
+#			Must contain the following columns:
+#			 feature -> Ensembl gene id
+#			 strand -> -1 or 1
+#			 space -> chromosome
+#			 start_position -> position of the TSS
+#			 end_position -> ending position of the last exon of the gene
+#	maxDistance:	The distance around feature to include in the plot.
+#
+# Output:
+#	A data.frame with the genomic positions (4 columns)
+#		1: feature -> Ensembl gene id
+#		2: strand -> -1 or 1
+#		3: space -> chromosome
+#		4: start -> position of the region
+#		5: end -> ending position of the region
+prepareRegions <- function(features, knownGenes, maxDistance) {
+	# Keep only ensembl id in features
+	if (is.null(features)) {
+		result <- knownGenes
+	} else {
+		positions <- data.frame()
+		for (feature in features$feature) {
+			currentIndex <- which() # TODO: remove prepareRegion function. Replace with a apply function that takes a single feature id and return a single line of the matrix
+		}
+	}
+	# Expand the regions
+	result[result$start < result$end]$start <- result[result$start > result$end]$start - maxDistance
+	result[result$start < result$end]$end <- result[result$start > result$end]$end + maxDistance
+	result[result$start > result$end]$start <- result[result$start > result$end]$start + maxDistance
+	result[result$start > result$end]$end <- result[result$start > result$end]$end - maxDistance
+	return(result)
+}
+
 # Extract read density information from a list of regions and convert them into a matrix
 #
 # Input:
