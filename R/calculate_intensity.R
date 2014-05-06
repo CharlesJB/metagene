@@ -182,7 +182,7 @@ getRegionReadDensity <- function(geneID, knowGenes, bamFiles, maxDistance) {
 	extractReadsDensity <- function(bamfile) {
 		currentFeature <- knowGenes[knowGenes$feature == geneID,]
 		currentReads <- extractsReadsInRegion(bamFile, currentFeature$space, currentFeature$start, currentFeature$end)
-		vectorResult <- convertReadsToPosVector(currentReads, currentFeature, maxDistance)
+		vectorResult <- convertReadsToDensity(currentReads, currentFeature$start, maxDistance)
 		# If on negative strand, invert the current vector
 		currentStrand <- currentFeature$strand
 		if (currentStrand == "-1" |  currentStrand == -1 | currentStrand == "-") {
@@ -291,20 +291,15 @@ extractsReadsInRegion <- function(bam_file, chr, start, end) {
 #
 # OUPUT:
 #	A vector of with the coverage of every positions calculated from the reads around the max distance from TSS.
-convertReadsToPosVector <- function(current_reads, current_TSS_offset, max_distance) {
-	vector_result <- numeric(max_distance*2+1)
-	if (nrow(current_reads) > 0) {
-		positions <- unlist(mapply(function(x,y) seq(x, x+y), current_reads$pos - current_TSS_offset, current_reads$qwidth-1))
-		positions <- positions[abs(positions)<=max_distance] # to remove reads beyond max distance
-		positions <- positions + max_distance
-		vector_result <- tabulate(positions, nbins=max_distance*2+1)
-		#if (length(positions) > 0) { # TODO: Change for tabulate?
-			#for (i in positions) {
-				#vector_result[i] <- vector_result[i] + 1
-			#}
-		#}
+convertReadsToDensity <- function(currentReads, currentOffset, maxDistance) {
+	vectorResult <- numeric(maxDistance*2+1)
+	if (nrow(currentReads) > 0) {
+		positions <- unlist(mapply(function(x,y) seq(x, x+y), currentReads$pos - currentOffset, currentReads$qwidth-1))
+		positions <- positions[abs(positions)<=maxDistance] # to remove reads beyond max distance
+		positions <- positions + maxDistance
+		vectorResult <- tabulate(positions, nbins=maxDistance*2+1)
 	}
-	return(vector_result)
+	return(vectorResult)
 }
 
 ###########################################################################################################################################
