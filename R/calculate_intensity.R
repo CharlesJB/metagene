@@ -178,7 +178,7 @@ getGenes <- function(specie) {
 # Output:
 # 	A matrix with the read density for the current regions with as many line as there are bam files.
 # TODO: return count as read per million aligned read (RPM)
-getRegionReadDensity <- funtion(geneID, knowGenes, bamFiles, maxDistance) {
+getRegionReadDensity <- function(geneID, knowGenes, bamFiles, maxDistance) {
 	extractReadsDensity <- function(bamfile) {
 		currentFeature <- knowGenes[knowGenes$feature == geneID,]
 		currentReads <- extractsReadsInRegion(bamFile, currentFeature$space, currentFeature$start, currentFeature$end)
@@ -311,20 +311,6 @@ convertReadsToPosVector <- function(current_reads, current_TSS_offset, max_dista
 ############## Fonctions utilisées pour estimer les moyennes et les bandes de confiances ##################################################
 ###########################################################################################################################################
 
-### La fonction newData ci-dessous a pour but de regrouper et de moyenner des colonnes d'une matrice de données.
-### Elle prend deux arguments:
-### data: une matrice de données normalisées
-### bin: le nombre de colonnes qui caracetérisent un groupe.
-### Cette fonction retourne une nouvelle matrice dont chacune des colonnes correspond à une moyenne sur bin colonnes de l'ancienne matrice
-newData <- function(data,bin)
-{
-	n <- ((ncol(data)-1)/bin + 1)
-	a <- sapply(1:n, function(j){(j-1)*bin+1})
-	newdata <- matrix(0, nrow=nrow(data), ncol=(ncol(data)-1)/bin)
-	for (j in 1:(n-1)) {
-		newdata[,j] <- sapply(1:nrow(data), function(i){mean(data[i,a[j]:a[j+1]])}) }
-	return(newdata)
-}
 
 ### La fonction binBootstrap ci-après estime par boostrap les paramètres (moyenne, quartiles) d'une colonne d'une matrice issue d'un binage
 ### Elle prend six agrguments:
@@ -335,9 +321,22 @@ newData <- function(data,bin)
 ### nech: le nombre d'échantillons boostrap (au minimum 1000),
 ### size: la taille des échantillons boostrap (par défaut size est égal à la taille de l'échantillon initial).
 ### La fonction retourne un élément de type liste dont les éléments sont la moyenne et les quartiles d'ordre alpha/2 et (1-alpha/2).
-
 binBootstrap <- function(data,bin,column,alpha,nech,size)
 {
+	### La fonction newData ci-dessous a pour but de regrouper et de moyenner des colonnes d'une matrice de données.
+	### Elle prend deux arguments:
+	### data: une matrice de données normalisées
+	### bin: le nombre de colonnes qui caracetérisent un groupe.
+	### Cette fonction retourne une nouvelle matrice dont chacune des colonnes correspond à une moyenne sur bin colonnes de l'ancienne matrice
+	newData <- function(data,bin)
+	{
+		n <- ((ncol(data)-1)/bin + 1)
+		a <- sapply(1:n, function(j){(j-1)*bin+1})
+		newdata <- matrix(0, nrow=nrow(data), ncol=(ncol(data)-1)/bin)
+		for (j in 1:(n-1)) {
+			newdata[,j] <- sapply(1:nrow(data), function(i){mean(data[i,a[j]:a[j+1]])}) }
+		return(newdata)
+	}
 	data.binage <- newData(data,bin)
 	X <- data.binage[,column]
 	S <- matrix(replicate(nech, X[sample(1:length(X),size,replace=TRUE)]), nrow=nech)
@@ -352,19 +351,6 @@ binBootstrap <- function(data,bin,column,alpha,nech,size)
 ############## Fonctions utilisées pour tester l'égalité des moyennes d'enrichissement de deux groupes ##################################################
 ###########################################################################################################################################
 
-### La fonction statistic ci-dessous est utilisée pour tester l'égalité entre les moyennes de deux groupes.
-### Elle prend deux arguments:
-### X1: un échantillon issu du groupe 1,
-### X2: un échantillon du groupe 2.
-### Elle retourne la valeur de la statistique du test bilatéral sur les deux groupes.
-
-statistic <- function(X1,X2)
-{
-	var.pool = ((length(X1)-1)*var(X1)+(length(X2)-1)*var(X2))/(length(X1)+length(X2)-2)
-	stat =   (mean(X1)-mean(X2))/sqrt(var.pool(X1,X2)*(1/length(X1)+1/length(X2)))
-	return(stat)
-}
-
 ### La fonction pvalue calcule la p-valeur boostrap du test bilatéral sur deux groupes.
 ### Elle prend quatre arguments:
 ### X1: un échantillon issu du groupe 1,
@@ -372,6 +358,17 @@ statistic <- function(X1,X2)
 ### nech: le nombre d'échantillons boostrap de chaque groupe,
 ### size: la taille des échantillons boostrap.
 pvalue <- function(X1, X2, nech, size) {
+	### La fonction statistic ci-dessous est utilisée pour tester l'égalité entre les moyennes de deux groupes.
+	### Elle prend deux arguments:
+	### X1: un échantillon issu du groupe 1,
+	### X2: un échantillon du groupe 2.
+	### Elle retourne la valeur de la statistique du test bilatéral sur les deux groupes.
+	statistic <- function(X1,X2)
+	{
+		var.pool = ((length(X1)-1)*var(X1)+(length(X2)-1)*var(X2))/(length(X1)+length(X2)-2)
+		stat =   (mean(X1)-mean(X2))/sqrt(var.pool(X1,X2)*(1/length(X1)+1/length(X2)))
+		return(stat)
+	}
 	data1 <- matrix(replicate(nech, X1[sample(1:length(X1),size,replace=TRUE)]), nrow=nech)
 	data2 <- matrix(replicate(nech, X2[sample(1:length(X2),size,replace=TRUE)]), nrow=nech)
 	stat.boot <- sapply(1:nech,function(i){statistic(data1[i,],data2[i,])})
