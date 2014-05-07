@@ -19,6 +19,7 @@
 plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000, design=NULL, binSize=100) {
 	# 0. Check if params are valid
 	# 1. Prepare bam files
+	bamFiles <- prepareBamFiles(bamFiles)
 	# 2. Prepare regions
 	# TODO: We need to iterate on experiment in design files and produce a matrix for each experiment (output: a list of matrices?)
 	#	The loop should start here and stop before Bootstrap
@@ -119,6 +120,7 @@ prepareBamFiles <- function(bamFiles) {
 	}
 	results <- as.data.frame(unlist(lapply(bamFiles, indexBamFiles)))
 	colnames(results) <- "bam"
+	results$oldBam <- bamFiles
 
 	# This function will calculate the number of aligned read in each bam file
 	countAlignedReads <- function(bamFile) {
