@@ -101,7 +101,6 @@ checkParams <- function(bamfiles, features=NULL, maxDistance=NULL, ranges=NULL, 
 #	Column names: bamFiles and alignedCount
 prepareBamFiles <- function(bamFiles) {
 	library(Rsamtools)
-	results <- data.frame()
 
 	# This function will only index a file if there is no index file
 	indexBamFiles <- function(bamFile) {
@@ -109,20 +108,25 @@ prepareBamFiles <- function(bamFiles) {
 			# If there is no index file, we sort and index the current bam file
 			sortedBamFile <- sub("^([^.]*).*", "\\1", bamFile)
 			sortedBamFile <- paste(sortedBamFile, ".sorted", sep="")
+			cat(sortedBamFile)
 			sortBam(bamFile, sortedBamFile)
 			sortedBamFile <- paste(sortedBamFile, ".bam", sep="")
 			indexBam(sortedBamFile)
 			bamFile <- sortedBamFile
+			cat(bamFile)
 		}
 		return(bamFile)
 	}
-	results$bamFiles <- sapply(bamFiles, indexBamFiles)
+	results <- as.data.frame(unlist(lapply(bamFiles, indexBamFiles)))
+	colnames(results) <- "bam"
 
 	# This function will calculate the number of aligned read in each bam file
 	countAlignedReads <- function(bamFile) {
 		return(countBam(bamFile, param=ScanBamParam(flag = scanBamFlag(isUnmappedQuery=FALSE)))$records)
 	}
-	results$alignedCount <- sapply(bamFiles, countAlignedReads)
+	results$alignedCount <- unlist(lapply(bamFiles, countAlignedReads))
+	#library(parallel)
+	#results$alignedCount <- unlist(mclapply(bamFiles, countAlignedReads, mc.cores=12))
 
 	return(results)
 }
