@@ -21,16 +21,17 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	# 1. Prepare bam files
 	bamFiles <- prepareBamFiles(bamFiles)
 	# 2. Prepare regions
-	# TODO: We need to iterate on experiment in design files and produce a matrix for each experiment (output: a list of matrices?)
-	#	The loop should start here and stop before Bootstrap
 	knownGenes <- getGenes(specie)
-	allFeatures <- data.frame()
-	for (filename in features) {
-		currentFeatures <- read.table(filename, header=TRUE)
+	extractFeatures <- function(filename) {
+		currentFeatures <- read.table(filename, header = TRUE)
 		currentGroup <- colnames(currentFeatures)[1]
-		currentFeatures$group <- currentGroup
-		colnames(currentFeatures) <- c("feature", "group")
-		allFeatures <- rbind(allFeatures, currentFeatures)
+		return(knownGenes[knownGenes$feature %in% as.character(currentFeatures[,]),])
+	}
+	#library(parallel)
+	#allFeatures <- mclapply(features, extractFeatures, mc.cores=12) # TODO: parallel
+	allFeatures <- lapply(features, extractFeatures) # TODO: parallel
+	names(allFeatures) <- unlist(lapply(features, function(x) as.character(read.table(x, nrow=1)[1,])))
+
 	}
 	# 3. Parse regions
 	rawMatrix <- lapply(nrow(allFeatures), getRegionReadDensity(allFeatures[x,]$feature), knownGenes=knowGenes, bamFiles=bamFiles)
