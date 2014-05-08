@@ -49,7 +49,7 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	cat(" Done!\n")
 
 	# 3. Parse bam files
-	cat("Step 3: Parse bam files...")
+	cat("Step 3: Parse bam files...\n")
 	# TODO: When groups of bam files are implemented in design, we need to change the following function
 	#	that will return an element in the list for each combination of group of gene and group of bam
 	#	I.E.: 2 bam groups and 2 feature groups will mean 4 groups in total
@@ -67,6 +67,7 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 		#return(mergedMatrix)
 	}
 	listMatrixByGroup <- lapply(names(allFeatures), parseGroup)
+	cat("Step 3: Parse bam files... Done!\n")
 	cat(" Done!\n")
 	return(listMatrixByGroup)
 	#rawMatrix <- lapply(nrow(allFeatures), getRegionReadDensity(allFeatures[x,]$feature), knownGenes=knownGenes, bamFiles=bamFiles)
