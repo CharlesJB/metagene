@@ -16,11 +16,18 @@
 #			1: treatment file(s)
 #			2: control file(s)
 #	binSize:	The number of nucleotides in each bin.
+# TODO: Add group of bam files in design file
 plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000, design=NULL, binSize=100) {
 	# 0. Check if params are valid
+
 	# 1. Prepare bam files
+	cat("Step 1: Prepare bam files...")
 	bamFiles <- prepareBamFiles(bamFiles)
+	cat(" Done!\n")
+	#return(bamFiles)
+
 	# 2. Prepare regions
+	cat("Step 2: Prepare regions...")
 	knownGenes <- getGenes(specie)
 	extractFeatures <- function(filename) {
 		currentFeatures <- read.table(filename, header = TRUE)
@@ -31,12 +38,30 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	#allFeatures <- mclapply(features, extractFeatures, mc.cores=12) # TODO: parallel
 	allFeatures <- lapply(features, extractFeatures) # TODO: parallel
 	names(allFeatures) <- unlist(lapply(features, function(x) as.character(read.table(x, nrow=1)[1,])))
+	cat(" Done!\n")
 
+	# 3. Parse bam files
+	cat("Step 3: Parse bam files...")
+	# TODO: When groups of bam files are implemented in design, we need to change the following function
+	#	that will return an element in the list for each combination of group of gene and group of bam
+	#	I.E.: 2 bam groups and 2 feature groups will mean 4 groups in total
+	parseGroup <- function(currentGroup) {
+		# Extract the data.frame corresponding the current group in the list of groups
+		print(paste("Current group:", currentGroup))
+		currentFeatures <- allFeatures[[which(names(allFeatures) == currentGroup)]]
+		listMatrix <- parseBamFiles(bamFiles, currentFeatures)
+		if (!is.null(design)) {
+			listMatrix <- mergeDesign(listMatrix, design)
+		}
+		return(listMatrix)
+		#mergedMatrix <- do.call(rbind, listMatrix)
+		#return(mergedMatrix)
 	}
-	# 3. Parse regions
-	rawMatrix <- lapply(nrow(allFeatures), getRegionReadDensity(allFeatures[x,]$feature), knownGenes=knowGenes, bamFiles=bamFiles)
-	rawMatrix <- do.call(rbind, rawMatrix)
-	normalizedMatrix <- rawMatrix # TODO: change this when the design analysis is implemented
+	listMatrixByGroup <- lapply(names(allFeatures), parseGroup)
+	cat(" Done!\n")
+	return(listMatrixByGroup)
+	#rawMatrix <- lapply(nrow(allFeatures), getRegionReadDensity(allFeatures[x,]$feature), knownGenes=knownGenes, bamFiles=bamFiles)
+
 	# 4. Bootstrap
 	#bootstrapedMatrix <- binBootstrap(normalizedMatrix, binSize, alpha=0.05, nech=1000, size=???)
 	# TODO: Check param with Rawane
@@ -127,9 +152,9 @@ prepareBamFiles <- function(bamFiles) {
 	countAlignedReads <- function(bamFile) {
 		return(countBam(bamFile, param=ScanBamParam(flag = scanBamFlag(isUnmappedQuery=FALSE)))$records)
 	}
-	results$alignedCount <- unlist(lapply(bamFiles, countAlignedReads))
-	#library(parallel)
-	#results$alignedCount <- unlist(mclapply(bamFiles, countAlignedReads, mc.cores=12))
+	#results$alignedCount <- unlist(lapply(bamFiles, countAlignedReads))
+	library(parallel)
+	results$alignedCount <- unlist(mclapply(bamFiles, countAlignedReads, mc.cores=12))
 
 	return(results)
 }
@@ -175,32 +200,74 @@ getGenes <- function(specie) {
 	return(sub.ensmart)
 }
 
+parseBamFiles <- function(bamFiles, features) {
+	extractReadsDensity <- function(feature, bamFile) {
+		# Extract raw counts
+		currentReads <- extractReadsInRegion(bamFile, feature$space, feature$start_position, feature$end_position)
+		vectorResult <- convertReadsToDensity(currentReads, feature)
+
+		# If on negative strand, invert the current vector
+		if (feature$strand == "-1" |  feature$strand == -1 | feature$strand == "-") {
+			vectorResult <- rev(vectorResult)
+		}
+
+		# Convert to RPM
+		currentAlignedCount <- bamFiles[bamFiles$bam == bamFile,]$alignedCount
+		vectorResult <- vectorResult / (currentAlignedCount / 1000000)
+		return(vectorResult)
+
+	}
+	parseBam <- function(bamFile, features) {
+		print(paste("Current bam:", bamFile))
+		return(lapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile))))
+		#library(parallel)
+		#return(mclapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile)), mc.cores=12))
+	}
+
+	return(lapply(bamFiles$bam, parseBam, features=features))
+}
+
 # Extract read density from a region
 #
 # Input:
-#	ensembl_gene_id:	The current ensembl gene id to parse
-#	knownGenes:		The annotation to translate ID into genomic positions
-#	bamFiles:		A vector of bam file to parse.
+#	geneID:		The current ensembl gene id to parse
+#	knownGenes:	The annotation to translate ID into genomic positions
+#	bamFiles:	The data.frame obtained with the prepareBamFiles function.
+#	maxDistance:	The distance on each side of the beginning of feature to include in the analysis.
 #
 # Output:
 # 	A matrix with the read density for the current regions with as many line as there are bam files.
 # TODO: return count as read per million aligned read (RPM)
-getRegionReadDensity <- function(geneID, knowGenes, bamFiles, maxDistance) {
+# TODO: replace knownGenes by GRanges
+getRegionReadDensity <- function(geneID, knownGenes, bamFiles, maxDistance) {
 	extractReadsDensity <- function(bamfile) {
-		currentFeature <- knowGenes[knowGenes$feature == geneID,]
-		currentReads <- extractsReadsInRegion(bamFile, currentFeature$space, currentFeature$start, currentFeature$end)
-		vectorResult <- convertReadsToDensity(currentReads, currentFeature$start, maxDistance)
-		# If on negative strand, invert the current vector
+		# Fetch infos from current feature
+		currentFeature <- knownGenes[knownGenes$feature == geneID,]
+		currentSpace <- currentFeature$space
+		currentStart <- currentFeature$start - maxDistance
+		currentEnd <- currentFeature$start + maxDistance
 		currentStrand <- currentFeature$strand
+
+		# Extract raw counts
+		currentReads <- extractReadsInRegion(bamFile, currentSpace, currentStart, currentEnd)
+		vectorResult <- convertReadsToDensity(currentReads, currentFeature$start, maxDistance)
+
+		# If on negative strand, invert the current vector
 		if (currentStrand == "-1" |  currentStrand == -1 | currentStrand == "-") {
 			vectorResult <- rev(vectorResult)
 		}
+
+		# Convert to RPM
+		currentAlignedCount <- bamFiles[bamFiles$bam == bamFile,]$alignedCount
+		vectorResult <- vectorResult / (currentAlignedCount / 1000000)
 		return(vectorResult)
 	}
 
-	rawMatrix <- lapply(nrow(allFeatures), extractReadsDensity)
-	rawMatrix <- do.call(rbind, rawMatrix)
-	return(rawMatrix)
+	# TODO: use parallel with next line (?)
+	listResults <- lapply(bamFiles$bam, extractReadsDensity)
+	#rawMatrix <- lapply(nrow(allFeatures), extractReadsDensity)
+	#rawMatrix <- do.call(rbind, rawMatrix)
+	#return(rawMatrix)
 }
 
 # Convert a list of feature into genomic regions
@@ -256,7 +323,7 @@ parseRegions <- function(bamFile, regions) {
 # Extract reads from bam file that overlap with a genomic region
 #
 # INPUT:
-#	bam_file:	Path to the bam file.
+#	bamFile:	Path to the bam file.
 #	chr:		Current chromosome.
 #	start:		Starting position of the current region.
 #	end:		Ending position of the current region.
@@ -266,45 +333,38 @@ parseRegions <- function(bamFile, regions) {
 #		* rname
 #		* pos
 #		* qwidth
-extractsReadsInRegion <- function(bam_file, chr, start, end) {
+extractReadsInRegion <- function(bamFile, chr, start, end) {
 	suppressMessages(library(Rsamtools))
+	if (start > end) {
+		tmp <- start
+		start <- end
+		end <- tmp
+	}
 	df <- data.frame()
-	#which <- GRanges(seqnames=Rle(chr), ranges=IRanges(start, end),strand=Rle(strand))
 	which <- GRanges(seqnames=Rle(chr), ranges=IRanges(start, end))
 	what <- c("rname", "pos", "qwidth")
 	param <- ScanBamParam(which=which, what=what)
-	bam <- scanBam(bam_file, param=param)
-	.unlist <- function(x) {
-		## do.call(c, ...) coerces factor to integer, which is undesired
-		x1 <- x[[1L]]
-		if (is.factor(x1)) {
-			structure(unlist(x), class = "factor", levels = levels(x1))
-		} else {
-			do.call(c, x)
-		}
-	}
+	bam <- scanBam(as.character(bamFile), param=param)
 	bam <- unname(bam)
-	elts <- setNames(bamWhat(param), bamWhat(param))
-	lst <- lapply(elts, function(elt) .unlist(lapply(bam, "[[", elt)))
-	return(do.call("DataFrame", lst))
+	return(do.call("DataFrame", bam))
 }
 
 # Convert a list of read in a vector of positions.
 #
 # INPUT:
-# 	current_reads:		The list of read to parse.
-#	current_TSS_offset:	The offset of the reads from the TSS.
-# 	max_distance:		Maximal distance from TSS.
+# 	currentReads:		The list of read to parse.
+#	currentFeature:		The feature to parse.
 #
 # OUPUT:
 #	A vector of with the coverage of every positions calculated from the reads around the max distance from TSS.
-convertReadsToDensity <- function(currentReads, currentOffset, maxDistance) {
-	vectorResult <- numeric(maxDistance*2+1)
+convertReadsToDensity <- function(currentReads, currentFeature) {
+	maxSize <- abs(currentFeature$end_position - currentFeature$start_position)
+	start <- min(currentFeature$start_position, currentFeature$end_position)
+	vectorResult <- numeric(maxSize)
 	if (nrow(currentReads) > 0) {
-		positions <- unlist(mapply(function(x,y) seq(x, x+y), currentReads$pos - currentOffset, currentReads$qwidth-1))
-		positions <- positions[abs(positions)<=maxDistance] # to remove reads beyond max distance
-		positions <- positions + maxDistance
-		vectorResult <- tabulate(positions, nbins=maxDistance*2+1)
+		positions <- unlist(mapply(function(x,y) seq(x, x+y), currentReads$pos - currentFeature$start_position, currentReads$qwidth-1))
+		positions <- positions[positions > 0 && positions <= maxSize]
+		vectorResult <- tabulate(positions, nbins=maxSize)
 	}
 	return(vectorResult)
 }
