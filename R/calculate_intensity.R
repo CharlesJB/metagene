@@ -72,7 +72,8 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	mergeMatrix <- function(bamList) {
 		lapply(1:length(bamList), function(x) bamList[[x]] <- do.call(rbind,bamList[[x]]))
 	}
-	mergedMatrix <- lapply(1:length(listMatrixByGroup), function(x) mergeMatrix(listMatrixByGroup[[x]]))
+	mergedMatrix <- lapply(1:length(listMatrixByGroup), function(x) do.call(rbind, mergeMatrix(listMatrixByGroup[[x]])))
+	return(mergedMatrix)
 	cat(" Done!\n")
 
 	# 5. Bootstrap
