@@ -31,8 +31,13 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	knownGenes <- getGenes(specie)
 	extractFeatures <- function(filename) {
 		currentFeatures <- read.table(filename, header = TRUE)
-		currentGroup <- colnames(currentFeatures)[1]
-		return(knownGenes[knownGenes$feature %in% as.character(currentFeatures[,]),])
+		#currentGroup <- colnames(currentFeatures)[1]
+		currentFeature <- knownGenes[knownGenes$feature %in% as.character(currentFeatures[,]),]
+		# We want to return regions at +- maxDistance from starting position of current feature
+		currentFeature$end_position <- currentFeature$start_position
+		currentFeature$start_position <- currentFeature$start_position - maxDistance
+		currentFeature$end_position <- currentFeature$end_position + maxDistance
+		return(currentFeature)
 	}
 	if (cores > 1) {
 		library(parallel)
