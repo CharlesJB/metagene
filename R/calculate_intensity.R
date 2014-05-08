@@ -66,21 +66,14 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	}
 	listMatrixByGroup <- lapply(names(allFeatures), parseGroup)
 	cat("Step 3: Parse bam files... Done!\n")
-	#return(listMatrixByGroup)
 
 	# 4. Merge matrix
 	cat("Step 4: Merge matrix...")
-	#mergeMatrix <- function(vectorList) {
-		#return(do.call(rbind, vectorList))
-	#}
-	#prepareMergeMatrix <- function(bamList) {
 	mergeMatrix <- function(bamList) {
 		lapply(1:length(bamList), function(x) bamList[[x]] <- do.call(rbind,bamList[[x]]))
 	}
 	mergedMatrix <- lapply(1:length(listMatrixByGroup), function(x) mergeMatrix(listMatrixByGroup[[x]]))
 	cat(" Done!\n")
-	#return(mergedMatrix)
-	#rawMatrix <- lapply(nrow(allFeatures), getRegionReadDensity(allFeatures[x,]$feature), knownGenes=knownGenes, bamFiles=bamFiles)
 
 	# 5. Bootstrap
 	#bootstrapedMatrix <- binBootstrap(normalizedMatrix, binSize, alpha=0.05, nech=1000, size=???)
