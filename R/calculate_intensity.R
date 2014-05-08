@@ -17,12 +17,12 @@
 #			2: control file(s)
 #	binSize:	The number of nucleotides in each bin.
 # TODO: Add group of bam files in design file
-plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000, design=NULL, binSize=100) {
+plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000, design=NULL, binSize=100, cores=1) {
 	# 0. Check if params are valid
 
 	# 1. Prepare bam files
 	cat("Step 1: Prepare bam files...")
-	bamFiles <- prepareBamFiles(bamFiles)
+	bamFiles <- prepareBamFiles(bamFiles, cores=cores)
 	cat(" Done!\n")
 	#return(bamFiles)
 
@@ -34,9 +34,12 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 		currentGroup <- colnames(currentFeatures)[1]
 		return(knownGenes[knownGenes$feature %in% as.character(currentFeatures[,]),])
 	}
-	#library(parallel)
-	#allFeatures <- mclapply(features, extractFeatures, mc.cores=12) # TODO: parallel
-	allFeatures <- lapply(features, extractFeatures) # TODO: parallel
+	if (cores > 1) {
+		library(parallel)
+		allFeatures <- mclapply(features, extractFeatures, mc.cores=cores)
+	} else {
+		allFeatures <- lapply(features, extractFeatures)
+	}
 	names(allFeatures) <- unlist(lapply(features, function(x) as.character(read.table(x, nrow=1)[1,])))
 	cat(" Done!\n")
 
@@ -45,11 +48,12 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	# TODO: When groups of bam files are implemented in design, we need to change the following function
 	#	that will return an element in the list for each combination of group of gene and group of bam
 	#	I.E.: 2 bam groups and 2 feature groups will mean 4 groups in total
+	# TODO: Make a function to prepare and parse groups
 	parseGroup <- function(currentGroup) {
 		# Extract the data.frame corresponding the current group in the list of groups
 		print(paste("Current group:", currentGroup))
 		currentFeatures <- allFeatures[[which(names(allFeatures) == currentGroup)]]
-		listMatrix <- parseBamFiles(bamFiles, currentFeatures)
+		listMatrix <- parseBamFiles(bamFiles, currentFeatures, cores=cores)
 		if (!is.null(design)) {
 			listMatrix <- mergeDesign(listMatrix, design)
 		}
@@ -126,7 +130,7 @@ checkParams <- function(bamfiles, features=NULL, maxDistance=NULL, ranges=NULL, 
 # Output:
 #	A data.frame containing the indexed bam filename and number of aligned reads for each bam file.
 #	Column names: bamFiles and alignedCount
-prepareBamFiles <- function(bamFiles) {
+prepareBamFiles <- function(bamFiles, cores = 1) {
 	library(Rsamtools)
 
 	# This function will only index a file if there is no index file
@@ -152,9 +156,12 @@ prepareBamFiles <- function(bamFiles) {
 	countAlignedReads <- function(bamFile) {
 		return(countBam(bamFile, param=ScanBamParam(flag = scanBamFlag(isUnmappedQuery=FALSE)))$records)
 	}
-	#results$alignedCount <- unlist(lapply(bamFiles, countAlignedReads))
-	library(parallel)
-	results$alignedCount <- unlist(mclapply(bamFiles, countAlignedReads, mc.cores=12))
+	if (cores > 1) {
+		library(parallel)
+		results$alignedCount <- unlist(mclapply(bamFiles, countAlignedReads, mc.cores=cores))
+	} else {
+		results$alignedCount <- unlist(lapply(bamFiles, countAlignedReads))
+	}
 
 	return(results)
 }
@@ -200,7 +207,7 @@ getGenes <- function(specie) {
 	return(sub.ensmart)
 }
 
-parseBamFiles <- function(bamFiles, features) {
+parseBamFiles <- function(bamFiles, features, cores=1) {
 	extractReadsDensity <- function(feature, bamFile) {
 		# Extract raw counts
 		currentReads <- extractReadsInRegion(bamFile, feature$space, feature$start_position, feature$end_position)
@@ -219,9 +226,12 @@ parseBamFiles <- function(bamFiles, features) {
 	}
 	parseBam <- function(bamFile, features) {
 		print(paste("Current bam:", bamFile))
-		return(lapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile))))
-		#library(parallel)
-		#return(mclapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile)), mc.cores=12))
+		if (cores > 1) {
+			library(parallel)
+			return(mclapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile)), mc.cores=cores))
+		} else {
+			return(lapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile))))
+		}
 	}
 
 	return(lapply(bamFiles$bam, parseBam, features=features))
