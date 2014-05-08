@@ -428,33 +428,3 @@ binBootstrap <- function(data,bin,column,alpha,nech,size)
 	liste <- list(mean=mean, qinf=qinf, qsup=qsup)
 	return(liste)
 }
-
-###########################################################################################################################################
-############## Fonctions utilisées pour tester l'égalité des moyennes d'enrichissement de deux groupes ##################################################
-###########################################################################################################################################
-
-### La fonction pvalue calcule la p-valeur boostrap du test bilatéral sur deux groupes.
-### Elle prend quatre arguments:
-### X1: un échantillon issu du groupe 1,
-### X2: un échantillon du groupe 2,
-### nech: le nombre d'échantillons boostrap de chaque groupe,
-### size: la taille des échantillons boostrap.
-pvalue <- function(X1, X2, nech, size) {
-	### La fonction statistic ci-dessous est utilisée pour tester l'égalité entre les moyennes de deux groupes.
-	### Elle prend deux arguments:
-	### X1: un échantillon issu du groupe 1,
-	### X2: un échantillon du groupe 2.
-	### Elle retourne la valeur de la statistique du test bilatéral sur les deux groupes.
-	statistic <- function(X1,X2)
-	{
-		var.pool = ((length(X1)-1)*var(X1)+(length(X2)-1)*var(X2))/(length(X1)+length(X2)-2)
-		stat =   (mean(X1)-mean(X2))/sqrt(var.pool(X1,X2)*(1/length(X1)+1/length(X2)))
-		return(stat)
-	}
-	data1 <- matrix(replicate(nech, X1[sample(1:length(X1),size,replace=TRUE)]), nrow=nech)
-	data2 <- matrix(replicate(nech, X2[sample(1:length(X2),size,replace=TRUE)]), nrow=nech)
-	stat.boot <- sapply(1:nech,function(i){statistic(data1[i,],data2[i,])})
-	stat.obs <- abs(statistic(X1,X2))
-	pval <- length(stat.boot[stat.boot >= stat.obs])/nech  + length(stat.boot[stat.boot <= -stat.obs])/nech
-	return(pval)
-}
