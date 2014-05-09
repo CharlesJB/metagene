@@ -15,9 +15,12 @@
 #			One column per group of samples. For example, biological replicates and corresponding controls are in the same group.
 #			1: treatment file(s)
 #			2: control file(s)
-#	binSize:	The number of nucleotides in each bin.
+#	binSize:	The number of nucleotides in each bin for the bootstrap step.
+#	alpha: 		Confidence interval.
+# 	sampleSize:	Number of time each bin will be resampled (should be at least 1000).
+#	cores:		Number of cores for parallel processing (require parallel package).
 # TODO: Add group of bam files in design file
-plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000, design=NULL, binSize=100, cores=1) {
+plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000, design=NULL, binSize=100, alpha=0.05, sampleSize=1000, cores=1) {
 	# 0. Check if params are valid
 
 	# 1. Prepare bam files
@@ -73,11 +76,22 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 		lapply(1:length(bamList), function(x) bamList[[x]] <- do.call(rbind,bamList[[x]]))
 	}
 	mergedMatrix <- lapply(1:length(listMatrixByGroup), function(x) do.call(rbind, mergeMatrix(listMatrixByGroup[[x]])))
-	return(mergedMatrix)
 	cat(" Done!\n")
 
 	# 5. Bootstrap
-	#bootstrapedMatrix <- binBootstrap(normalizedMatrix, binSize, alpha=0.05, nech=1000, size=???)
+	cat("Step 5: Bootstrap...")
+	bootstrapData <- function(i) {
+		binnedMatrix <- binMatrix(mergedMatrix[[i]],binSize)
+		if (cores > 1) {
+			bootstrapedData <- mclapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores)
+		} else {
+			bootstrapedData <- lapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize))
+		}
+		return(bootstrapedData)
+	}
+	bootstrapedDataList <- lapply(1:length(mergedMatrix), bootstrapData)
+	cat(" Done!\n")
+	return(bootstrapedDataList)
 	# TODO: Check param with Rawane
 	# TODO: Add previous params to plotFeatures function
 	# 6. Plot
@@ -389,42 +403,41 @@ convertReadsToDensity <- function(currentReads, currentFeature) {
 	return(vectorResult)
 }
 
-###########################################################################################################################################
-############## Fonctions utilisées pour estimer les moyennes et les bandes de confiances ##################################################
-###########################################################################################################################################
-
-
-### La fonction binBootstrap ci-après estime par boostrap les paramètres (moyenne, quartiles) d'une colonne d'une matrice issue d'un binage
-### Elle prend six agrguments:
-### data: une matrice de données,
-### bin: le nombre de colonnes qui caracetérisent le binage,
-### column: la colonne de la matrice binée sur laquelle s'opère le boostrap,
-### alpha: (par défaut fixé à 0.05) définit le seuil des bandes de confiance,
-### nech: le nombre d'échantillons boostrap (au minimum 1000),
-### size: la taille des échantillons boostrap (par défaut size est égal à la taille de l'échantillon initial).
-### La fonction retourne un élément de type liste dont les éléments sont la moyenne et les quartiles d'ordre alpha/2 et (1-alpha/2).
-binBootstrap <- function(data,bin,column,alpha,nech,size)
+# Bin matrix columns
+#
+# INPUT:
+# 	data:		The matrix to bin.
+#	binSize:	The number of nucleotides in each bin.
+#
+# OUPUT:
+#	A matrix with each column representing the mean of binSize nucleotides.
+binMatrix <- function(data,bin)
 {
-	### La fonction newData ci-dessous a pour but de regrouper et de moyenner des colonnes d'une matrice de données.
-	### Elle prend deux arguments:
-	### data: une matrice de données normalisées
-	### bin: le nombre de colonnes qui caracetérisent un groupe.
-	### Cette fonction retourne une nouvelle matrice dont chacune des colonnes correspond à une moyenne sur bin colonnes de l'ancienne matrice
-	newData <- function(data,bin)
-	{
-		n <- ((ncol(data)-1)/bin + 1)
-		a <- sapply(1:n, function(j){(j-1)*bin+1})
-		newdata <- matrix(0, nrow=nrow(data), ncol=(ncol(data)-1)/bin)
-		for (j in 1:(n-1)) {
-			newdata[,j] <- sapply(1:nrow(data), function(i){mean(data[i,a[j]:a[j+1]])}) }
-		return(newdata)
-	}
-	data.binage <- newData(data,bin)
-	X <- data.binage[,column]
-	S <- matrix(replicate(nech, X[sample(1:length(X),size,replace=TRUE)]), nrow=nech)
-	mean <- mean(sapply(1:nech, function(i){mean(S[i,])}))
-	qinf <- quantile(sapply(1:nech, function(i){mean(S[i,])}), prob=alpha/2)
-	qsup <- quantile(sapply(1:nech, function(i){mean(S[i,])}), prob=(1-alpha/2))
+	n <- ((ncol(data)-1)/bin + 1)
+	a <- sapply(1:n, function(j){(j-1)*bin+1})
+	newdata <- matrix(0, nrow=nrow(data), ncol=(ncol(data)-1)/bin)
+	for (j in 1:(n-1)) {
+		newdata[,j] <- sapply(1:nrow(data), function(i){mean(data[i,a[j]:a[j+1]])}) }
+	return(newdata)
+}
+
+# Estimate mean and confidence interval of a column using bootstrap.
+#
+# INPUT:
+# 	data:		A vector representing a column from the binned matrix.
+#	alpha: 		Confidence interval.
+# 	sampleSize:	Number of time each bin will be resampled (should be at least 1000).
+#
+# OUPUT:
+#	A list with the mean of the bootstraped vector and the quartile of order alpha/2 and (1-alpha/2)
+binBootstrap <- function(data, alpha, sampleSize)
+{
+	# TODO: it would probably be more efficient to parallelize here
+	size <- length(data)
+	S <- matrix(replicate(sampleSize, data[sample(1:length(data),size,replace=TRUE)]), nrow=sampleSize)
+	mean <- mean(sapply(1:sampleSize, function(i){mean(S[i,])}))
+	qinf <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=alpha/2)
+	qsup <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=(1-alpha/2))
 	liste <- list(mean=mean, qinf=qinf, qsup=qsup)
 	return(liste)
 }
