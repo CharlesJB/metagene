@@ -30,7 +30,7 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 
 	# 2. Prepare regions
 	cat("Step 2: Prepare regions...")
-	allFeatures <- prepareRegions(features=features, specie=specie, cores=cores)
+	featuresGroups <- prepareRegions(features=features, specie=specie, cores=cores)
 	cat(" Done!\n")
 
 	# 3. Parse bam files
@@ -42,14 +42,14 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	parseGroup <- function(currentGroup) {
 		# Extract the data.frame corresponding the current group in the list of groups
 		print(paste("Current group:", currentGroup))
-		currentFeatures <- allFeatures[[which(names(allFeatures) == currentGroup)]]
+		currentFeatures <- featuresGroups[[which(names(featuresGroups) == currentGroup)]]
 		listMatrix <- parseBamFiles(bamFiles, currentFeatures, cores=cores)
 		if (!is.null(design)) {
 			listMatrix <- mergeDesign(listMatrix, design)
 		}
 		return(listMatrix)
 	}
-	listMatrixByGroup <- lapply(names(allFeatures), parseGroup)
+	listMatrixByGroup <- lapply(names(featuresGroups), parseGroup)
 	cat("Step 3: Parse bam files... Done!\n")
 
 	# 4. Merge matrix
@@ -240,12 +240,12 @@ prepareRegions <- function(features, specie="hs", maxDistance=5000, cores=1) {
 	}
 	if (cores > 1) {
 		library(parallel)
-		allFeatures <- mclapply(features, extractFeatures, mc.cores=cores)
+		featuresGroups <- mclapply(features, extractFeatures, mc.cores=cores)
 	} else {
-		allFeatures <- lapply(features, extractFeatures)
+		featuresGroups <- lapply(features, extractFeatures)
 	}
-	names(allFeatures) <- unlist(lapply(features, function(x) as.character(read.table(x, nrow=1)[1,])))
-	return(allFeatures)
+	names(featuresGroups) <- unlist(lapply(features, function(x) as.character(read.table(x, nrow=1)[1,])))
+	return(featuresGroups)
 }
 
 parseBamFiles <- function(bamFiles, features, cores=1) {
@@ -316,7 +316,7 @@ getRegionReadDensity <- function(geneID, knownGenes, bamFiles, maxDistance) {
 
 	# TODO: use parallel with next line (?)
 	listResults <- lapply(bamFiles$bam, extractReadsDensity)
-	#rawMatrix <- lapply(nrow(allFeatures), extractReadsDensity)
+	#rawMatrix <- lapply(nrow(featuresGroups), extractReadsDensity)
 	#rawMatrix <- do.call(rbind, rawMatrix)
 	#return(rawMatrix)
 }
