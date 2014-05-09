@@ -27,28 +27,10 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	cat("Step 1: Prepare bam files...")
 	bamFiles <- prepareBamFiles(bamFiles, cores=cores)
 	cat(" Done!\n")
-	#return(bamFiles)
 
 	# 2. Prepare regions
 	cat("Step 2: Prepare regions...")
-	knownGenes <- getGenes(specie)
-	extractFeatures <- function(filename) {
-		currentFeatures <- read.table(filename, header = TRUE)
-		#currentGroup <- colnames(currentFeatures)[1]
-		currentFeature <- knownGenes[knownGenes$feature %in% as.character(currentFeatures[,]),]
-		# We want to return regions at +- maxDistance from starting position of current feature
-		currentFeature$end_position <- currentFeature$start_position
-		currentFeature$start_position <- currentFeature$start_position - maxDistance
-		currentFeature$end_position <- currentFeature$end_position + maxDistance
-		return(currentFeature)
-	}
-	if (cores > 1) {
-		library(parallel)
-		allFeatures <- mclapply(features, extractFeatures, mc.cores=cores)
-	} else {
-		allFeatures <- lapply(features, extractFeatures)
-	}
-	names(allFeatures) <- unlist(lapply(features, function(x) as.character(read.table(x, nrow=1)[1,])))
+	allFeatures <- prepareRegions(features=features, specie=specie, cores=cores)
 	cat(" Done!\n")
 
 	# 3. Parse bam files
@@ -231,6 +213,41 @@ getGenes <- function(specie) {
 	return(sub.ensmart)
 }
 
+# Convert a list of IDs into a list of genomic regions
+#
+# Input:
+#	features:	Either a filename of a vector of filenames.
+#			Supported features: ensembl_gene_id
+#			File must contain a header that correspond to the name of the group
+#	specie:		hs: Homo sapiens (default) / mm: Mus musculus
+#	maxDistance:	The distance around feature to include in the plot.
+#	cores:		Number of cores for parallel processing (require parallel package).
+#
+# Output:
+#	A list of data.frame. One data.frame by group of features.
+#	The names of each element of the list correspond to the name of the group.
+prepareRegions <- function(features, specie="hs", maxDistance=5000, cores=1) {
+	knownGenes <- getGenes(specie)
+	extractFeatures <- function(filename) {
+		currentFeatures <- read.table(filename, header = TRUE)
+		#currentGroup <- colnames(currentFeatures)[1]
+		currentFeature <- knownGenes[knownGenes$feature %in% as.character(currentFeatures[,]),]
+		# We want to return regions at +- maxDistance from starting position of current feature
+		currentFeature$end_position <- currentFeature$start_position
+		currentFeature$start_position <- currentFeature$start_position - maxDistance
+		currentFeature$end_position <- currentFeature$end_position + maxDistance
+		return(currentFeature)
+	}
+	if (cores > 1) {
+		library(parallel)
+		allFeatures <- mclapply(features, extractFeatures, mc.cores=cores)
+	} else {
+		allFeatures <- lapply(features, extractFeatures)
+	}
+	names(allFeatures) <- unlist(lapply(features, function(x) as.character(read.table(x, nrow=1)[1,])))
+	return(allFeatures)
+}
+
 parseBamFiles <- function(bamFiles, features, cores=1) {
 	extractReadsDensity <- function(feature, bamFile) {
 		# Extract raw counts
@@ -302,44 +319,6 @@ getRegionReadDensity <- function(geneID, knownGenes, bamFiles, maxDistance) {
 	#rawMatrix <- lapply(nrow(allFeatures), extractReadsDensity)
 	#rawMatrix <- do.call(rbind, rawMatrix)
 	#return(rawMatrix)
-}
-
-# Convert a list of feature into genomic regions
-#
-# Input:
-#	features:	A vector of Ensembl gene IDs.
-#	knownGenes:	A data.frame with known genes
-#			Must contain the following columns:
-#			 feature -> Ensembl gene id
-#			 strand -> -1 or 1
-#			 space -> chromosome
-#			 start_position -> position of the TSS
-#			 end_position -> ending position of the last exon of the gene
-#	maxDistance:	The distance around feature to include in the plot.
-#
-# Output:
-#	A data.frame with the genomic positions (4 columns)
-#		1: feature -> Ensembl gene id
-#		2: strand -> -1 or 1
-#		3: space -> chromosome
-#		4: start -> position of the region
-#		5: end -> ending position of the region
-prepareRegions <- function(features, knownGenes, maxDistance) {
-	# Keep only ensembl id in features
-	if (is.null(features)) {
-		result <- knownGenes
-	} else {
-		positions <- data.frame()
-		for (feature in features$feature) {
-			currentIndex <- which() # TODO: remove prepareRegion function. Replace with a apply function that takes a single feature id and return a single line of the matrix
-		}
-	}
-	# Expand the regions
-	result[result$start < result$end]$start <- result[result$start > result$end]$start - maxDistance
-	result[result$start < result$end]$end <- result[result$start > result$end]$end + maxDistance
-	result[result$start > result$end]$start <- result[result$start > result$end]$start + maxDistance
-	result[result$start > result$end]$end <- result[result$start > result$end]$end - maxDistance
-	return(result)
 }
 
 # Extract read density information from a list of regions and convert them into a matrix
