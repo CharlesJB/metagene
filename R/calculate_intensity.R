@@ -35,6 +35,7 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 
 	# 3. Parse bam files
 	cat("Step 3: Parse bam files...\n")
+	groups <- prepareGroups(names(featuresGroups), bamFiles=bamFiles, design=design)
 	# TODO: When groups of bam files are implemented in design, we need to change the following function
 	#	that will return an element in the list for each combination of group of gene and group of bam
 	#	I.E.: 2 bam groups and 2 feature groups will mean 4 groups in total
@@ -248,7 +249,52 @@ prepareRegions <- function(features, specie="hs", maxDistance=5000, cores=1) {
 	return(featuresGroups)
 }
 
-parseBamFiles <- function(bamFiles, features, cores=1) {
+# Distribute the bam filenames in their respective groups.
+#
+# Input:
+#	featuresGroupsNames:	The name of the group of features in the current analysis.
+#	bamFiles:		A vector of bam filename(s).
+#	design:			A matrix explaining the relationship between multiple samples.
+#				One line per samples.
+#				One column per group of samples. For example, biological replicates and corresponding controls are in the same group.
+#				1: treatment file(s)
+#				2: control file(s)
+#
+# Output:
+#	A list of list.
+#	First level is the name of the group.
+#	Second level is the correct bam file for each group.
+# 	Note1: If there are groups of feature and groups of bam file, every possible combination of feature groups / bam groups will be created.
+# 	Note2: The names of the elements the bam list are the same as the ones in the design file, which are also the original bam file names.
+#	       The content of the each element of the list of bam file is the sorted bam file name, which should be use when parsing bam.
+prepareGroups <- function(featuresGroupsNames, bamFiles, design=NULL) {
+	allGroups <- list()
+	for (featureName in featuresGroupsNames) {
+		# If there is no design file, we put every bamFile in each groups
+		if (is.null(design)) {
+			allGroups[[featureName]] <- as.list(bamFiles$bam)
+			names(allGroups[[featureName]]) <- bamFiles$oldBam
+		} else {
+			for (i in 2:ncol(design)) {
+				name <- paste(featureName, colnames(design)[i], sep="_")
+				bam <- design[design[,i] != 0,]$Sample
+				# We want the sorted name of the bam files as the content of the list
+				j <- numeric()
+				for (bamFile in bam) {
+					j <- append(j, which(bamFiles$oldBam == bamFile))
+				}
+				sortedBamNames <- as.character(bamFiles[j,]$bam)
+				allGroups[[name]] <- as.list(sortedBamNames)
+				names(allGroups[[name]]) <- bam
+			}
+		}
+	}
+	return(allGroups)
+}
+
+
+#parseBamFiles <- function(bamFiles, features, cores=1) {
+parseBamFiles <- function(features, groups, cores=1) {
 	extractReadsDensity <- function(feature, bamFile) {
 		# Extract raw counts
 		currentReads <- extractReadsInRegion(bamFile, feature$space, feature$start_position, feature$end_position)
