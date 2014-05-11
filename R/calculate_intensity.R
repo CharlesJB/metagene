@@ -261,10 +261,15 @@ prepareRegions <- function(features, specie="hs", maxDistance=5000, cores=1) {
 #				2: control file(s)
 #
 # Output:
-#	A list of list.
+#	A list of list of list.
 #	First level is the name of the group.
-#	Second level is the correct bam file for each group.
+#	Second level is the metadata of the group:
+#		featureName:	The name of the group of features.
+#		designName:	The name of the column in the design file.
+#		bamFiles:	The list of bam files associated with this combination of featureName/designName
+#	Third level is the actual list of bam files.
 # 	Note1: If there are groups of feature and groups of bam file, every possible combination of feature groups / bam groups will be created.
+#              Otherwise, the is a group for each group of features.
 # 	Note2: The names of the elements the bam list are the same as the ones in the design file, which are also the original bam file names.
 #	       The content of the each element of the list of bam file is the sorted bam file name, which should be use when parsing bam.
 prepareGroups <- function(featuresGroupsNames, bamFiles, design=NULL) {
@@ -272,20 +277,27 @@ prepareGroups <- function(featuresGroupsNames, bamFiles, design=NULL) {
 	for (featureName in featuresGroupsNames) {
 		# If there is no design file, we put every bamFile in each groups
 		if (is.null(design)) {
-			allGroups[[featureName]] <- as.list(bamFiles$bam)
-			names(allGroups[[featureName]]) <- bamFiles$oldBam
+			allGroups[[featureName]] <- list()
+			allGroups[[featureName]]$featureName <- featureName
+			allGroups[[featureName]]$bamFiles <- as.list(as.character(bamFiles$bam))
+			names(allGroups[[featureName]]$bamFiles) <- as.character(bamFiles$oldBam)
 		} else {
 			for (i in 2:ncol(design)) {
 				name <- paste(featureName, colnames(design)[i], sep="_")
 				bam <- design[design[,i] != 0,]$Sample
+				designName <- colnames(design)[i]
 				# We want the sorted name of the bam files as the content of the list
 				j <- numeric()
 				for (bamFile in bam) {
 					j <- append(j, which(bamFiles$oldBam == bamFile))
 				}
 				sortedBamNames <- as.character(bamFiles[j,]$bam)
-				allGroups[[name]] <- as.list(sortedBamNames)
-				names(allGroups[[name]]) <- bam
+				# Create the actual element of the list
+				allGroups[[name]] <- list()
+				allGroups[[name]]$featureName <- featureName
+				allGroups[[name]]$designName <- designName
+				allGroups[[name]]$bamFiles <- as.list(sortedBamNames)
+				names(allGroups[[name]]$bamFiles) <- bam
 			}
 		}
 	}
