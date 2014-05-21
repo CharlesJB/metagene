@@ -296,7 +296,6 @@ parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1
 	parseGroup <- function(groupName, featuresGroups) {
 		print(paste("parseGroup:", groupName))
 		# Get bam files
-		#currentBamFiles <- unname(unlist(groups[[groupName]]$bamFiles))
 		currentBamFiles <- groups[[groupName]]$bamFiles
 
 		# Get features
@@ -304,7 +303,7 @@ parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1
 		currentFeatures <- featuresGroups[[currentFeatureName]]
 
 		# Parse each bam
-		currentBamFiles <- lapply(currentBamFiles, function(x) parseBamFile(x, bamFiles, currentFeatures, cores))
+		currentBamFiles <- lapply(currentBamFiles, function(x) parseBamFile(x, bamFiles[bamFiles$bam == x,]$alignedCount, currentFeatures, cores))
 		# Add the names
 		currentGroup <- list()
 		currentGroup$featureName <- groups[[groupName]]$featureName
@@ -325,7 +324,7 @@ parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1
 	# p < lapply(1:length(y), function(x) unlist(y[[x]]) - unlist(u[[x]]))
 }
 
-parseBamFile <- function(bamFile, bamFiles, features, cores=1) {
+parseBamFile <- function(bamFile, alignedCount, features, cores=1) {
 	print(paste("Current bam:", bamFile))
 	extractReadsDensity <- function(feature, bamFile) {
 		# Extract raw counts
