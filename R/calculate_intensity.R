@@ -291,7 +291,27 @@ prepareGroups <- function(featuresGroupsNames, bamFiles, design=NULL) {
 	return(allGroups)
 }
 
-# TODO: Remove design??
+# Parse multiple bamFiles
+#
+# Input:
+#	bamFiles:	The data.frame obtained with the prepareBamFiles function.
+#	featuresGroups:	A list of data.frame. One data.frame by group of features.
+#			The names of each element of the list correspond to the name of the group.
+#	design:		A matrix explaining the relationship between multiple samples.
+#			If there is a design, the controls will automatically be substracted from every
+#			replicates of the input files.
+#	cores:		Number of cores for parallel processing (require parallel package).
+#
+# Output:
+#	A list of list of list of list.
+#	First level is the name of the group.
+#	Second level is the metadata of the group:
+#		featureName:	The name of the group of features.
+#		designName:	The name of the column in the design file.
+#		bamFiles:	The list of bam files associated with this combination of featureName/designName
+#	The third level is the bamFiles, which are a list of the normalized expression of every features.
+#		There are as many elements in the list as there are features to parse.
+#		Each bam files has a list containing every features.
 parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1) {
 	parseGroup <- function(groupName, featuresGroups) {
 		print(paste("parseGroup:", groupName))
@@ -324,6 +344,18 @@ parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1
 	# p < lapply(1:length(y), function(x) unlist(y[[x]]) - unlist(u[[x]]))
 }
 
+# Parse a single bam file
+#
+# Input:
+#	bamFile:	The name of the bam file to parse. Must be sorted and indexed.
+#	alignedCount:	The number of aligned reads for the current sample.
+# 			TODO: if NULL, it should be calculated in the function.
+#	features:	A data.frame with the infos for every features to parse
+#			Must have the folowing columns: feature, strand, space, start_position and end_position
+#	cores:		Number of cores for parallel processing (require parallel package).
+#
+# Output:
+#	A list with an element for every feature to parse. Each element contains a vector of normalized reads expression.
 parseBamFile <- function(bamFile, alignedCount, features, cores=1) {
 	print(paste("Current bam:", bamFile))
 	extractReadsDensity <- function(feature, bamFile) {
