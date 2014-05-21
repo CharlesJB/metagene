@@ -36,21 +36,8 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	# 3. Parse bam files
 	cat("Step 3: Parse bam files...\n")
 	groups <- prepareGroups(names(featuresGroups), bamFiles=bamFiles, design=design)
-	# TODO: When groups of bam files are implemented in design, we need to change the following function
-	#	that will return an element in the list for each combination of group of gene and group of bam
-	#	I.E.: 2 bam groups and 2 feature groups will mean 4 groups in total
-	# TODO: Make a function to prepare and parse groups
-	parseGroup <- function(currentGroup) {
-		# Extract the data.frame corresponding the current group in the list of groups
-		print(paste("Current group:", currentGroup))
-		currentFeatures <- featuresGroups[[which(names(featuresGroups) == currentGroup)]]
-		listMatrix <- parseBamFiles(bamFiles, currentFeatures, cores=cores)
-		if (!is.null(design)) {
-			listMatrix <- mergeDesign(listMatrix, design)
-		}
-		return(listMatrix)
-	}
-	listMatrixByGroup <- lapply(names(featuresGroups), parseGroup)
+	parsedBam <- parseBamFiles(bamFiles, featuresGroups, groups=groups, design=design, cores=cores)
+	return(parsedBam)
 	cat("Step 3: Parse bam files... Done!\n")
 
 	# 4. Merge matrix
@@ -304,9 +291,42 @@ prepareGroups <- function(featuresGroupsNames, bamFiles, design=NULL) {
 	return(allGroups)
 }
 
+# TODO: Remove design??
+parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1) {
+	parseGroup <- function(groupName, featuresGroups) {
+		print(paste("parseGroup:", groupName))
+		# Get bam files
+		#currentBamFiles <- unname(unlist(groups[[groupName]]$bamFiles))
+		currentBamFiles <- groups[[groupName]]$bamFiles
 
-#parseBamFiles <- function(bamFiles, features, cores=1) {
-parseBamFiles <- function(features, groups, cores=1) {
+		# Get features
+		currentFeatureName <- groups[[groupName]]$featureName
+		currentFeatures <- featuresGroups[[currentFeatureName]]
+
+		# Parse each bam
+		currentBamFiles <- lapply(currentBamFiles, function(x) parseBamFile(x, bamFiles, currentFeatures, cores))
+		# Add the names
+		currentGroup <- list()
+		currentGroup$featureName <- groups[[groupName]]$featureName
+		currentGroup$designName <- groups[[groupName]]$designName
+		currentGroup$bamFiles <- currentBamFiles
+		names(currentGroup$bamFiles) <- names(groups[[groupName]]$bamFiles)
+		return(currentGroup)
+	}
+	# 1 Parse every bam file individually
+	groupNames <- names(groups)
+	groups <- lapply(groupNames, function(x) parseGroup(x, featuresGroups))
+	names(groups) <- groupNames
+	return(groups)
+	# 2 Remove control
+	# Average:
+	# p <- lapply(1:length(y), function(x) rowMeans(cbind(unlist(y[[x]]), unlist(u[[x]]))))
+	# substract
+	# p < lapply(1:length(y), function(x) unlist(y[[x]]) - unlist(u[[x]]))
+}
+
+parseBamFile <- function(bamFile, bamFiles, features, cores=1) {
+	print(paste("Current bam:", bamFile))
 	extractReadsDensity <- function(feature, bamFile) {
 		# Extract raw counts
 		currentReads <- extractReadsInRegion(bamFile, feature$space, feature$start_position, feature$end_position)
@@ -323,17 +343,12 @@ parseBamFiles <- function(features, groups, cores=1) {
 		return(vectorResult)
 
 	}
-	parseBam <- function(bamFile, features) {
-		print(paste("Current bam:", bamFile))
-		if (cores > 1) {
-			library(parallel)
-			return(mclapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile)), mc.cores=cores))
-		} else {
-			return(lapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile))))
-		}
+	if (cores > 1) {
+		library(parallel)
+		return(mclapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile)), mc.cores=cores))
+	} else {
+		return(lapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile))))
 	}
-
-	return(lapply(bamFiles$bam, parseBam, features=features))
 }
 
 # Extract read density from a region
@@ -348,6 +363,7 @@ parseBamFiles <- function(features, groups, cores=1) {
 # 	A matrix with the read density for the current regions with as many line as there are bam files.
 # TODO: return count as read per million aligned read (RPM)
 # TODO: replace knownGenes by GRanges
+# TODO: deprecate?
 getRegionReadDensity <- function(geneID, knownGenes, bamFiles, maxDistance) {
 	extractReadsDensity <- function(bamfile) {
 		# Fetch infos from current feature
