@@ -369,8 +369,7 @@ parseBamFile <- function(bamFile, alignedCount, features, cores=1) {
 		}
 
 		# Convert to RPM
-		currentAlignedCount <- bamFiles[bamFiles$bam == bamFile,]$alignedCount
-		vectorResult <- vectorResult / (currentAlignedCount / 1000000)
+		vectorResult <- vectorResult / (alignedCount / 1000000)
 		return(vectorResult)
 
 	}
