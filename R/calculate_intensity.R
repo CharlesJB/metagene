@@ -138,6 +138,8 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
     		stop("The number of cores has to be a positive integer.")
   	}
     
+	# TODO: add validation for bamFiles argument
+	
 	# This function will only index a file if there is no index file
 	indexBamFiles <- function(bamFile) {
 		if (file.exists(paste(bamFile, ".bai", sep=""))  == FALSE) {

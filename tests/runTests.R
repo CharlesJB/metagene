@@ -1,2 +1,2 @@
-## TODO: Change name to the name of the package
+## Run all tests in the MetaFeatures package
 BiocGenerics:::testPackage("MetaFeatures")
