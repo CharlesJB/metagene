@@ -131,10 +131,12 @@ checkParams <- function(bamfiles, features=NULL, maxDistance=NULL, ranges=NULL, 
 prepareBamFiles <- function(bamFiles, cores = 1) {
 	library(Rsamtools)
 
-  # The number of cores has to be a positive integer
-  if(!is.integer(cores) || cores <= 0) {
-    stop("The number of cores has to be a positive integer.")
-  }
+	# Check prerequisites
+	
+   	# The number of cores has to be a positive integer
+  	if(!is.integer(cores) || cores <= 0) {
+    		stop("The number of cores has to be a positive integer.")
+  	}
     
 	# This function will only index a file if there is no index file
 	indexBamFiles <- function(bamFile) {
