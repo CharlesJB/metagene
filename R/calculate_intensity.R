@@ -51,7 +51,11 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 
 	# 5. Bootstrap
 	cat("Step 5: Bootstrap...")
-	groups <- applyOnBamFiles(groups=groups, cores=1, FUN=function(x) bootstrapAnalysis(x, binSize=binSize, alpha=alpha, cores=cores))
+	bootstrap <- function(x) {
+		x$bootstrap <- bootstrapAnalysis(x, binSize=binSize, alpha=alpha, sampleSize=sampleSize, cores=cores)
+		return(x)
+	}
+	groups <- applyOnGroups(groups=groups, cores=1, FUN=bootstrap)
 	cat(" Done!\n")
 	return(groups)
 
@@ -585,24 +589,14 @@ convertReadsToDensity <- function(currentReads, currentFeature) {
 	return(vectorResult)
 }
 
-bootstrapAnalysis <- function(bamFile, binSize, alpha, sampleSize, cores=1) {
-	binnedBamFile <- binMatrix(bamFile, binSize)
+bootstrapAnalysis <- function(currentGroup, binSize, alpha, sampleSize, cores=1) {
+	binnedMatrix <- binMatrix(currentGroup$matrix, binSize)
 	if (cores > 1) {
-		return(mclapply(1:ncol(binnedBamFile), function(x) binBootstrap(binnedBamFile[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores))
+		return(mclapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores))
 	} else {
-		return(lapply(1:ncol(binnedBamFile), function(x) binBootstrap(binnedBamFile[,x], alpha=alpha, sampleSize=sampleSize)))
+		return(lapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize)))
 	}
 }
-	#bootstrapData <- function(i) {
-		#binnedMatrix <- binMatrix(mergedMatrix[[i]],binSize)
-		#if (cores > 1) {
-			#bootstrapedData <- mclapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores)
-		#} else {
-			#bootstrapedData <- lapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize))
-		#}
-		#return(bootstrapedData)
-	#}
-	#bootstrapedDataList <- lapply(1:length(mergedMatrix), bootstrapData)
 
 # Bin matrix columns
 #
