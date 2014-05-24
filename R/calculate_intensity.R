@@ -47,19 +47,10 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 
 	# 5. Bootstrap
 	cat("Step 5: Bootstrap...")
-	bootstrapData <- function(i) {
-		binnedMatrix <- binMatrix(mergedMatrix[[i]],binSize)
-		if (cores > 1) {
-			bootstrapedData <- mclapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores)
-		} else {
-			bootstrapedData <- lapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize))
-		}
-		return(bootstrapedData)
-	}
-	bootstrapedDataList <- lapply(1:length(mergedMatrix), bootstrapData)
+	groups <- applyOnBamFiles(groups=groups, cores=1, FUN=function(x) bootstrapAnalysis(x, binSize=binSize, alpha=alpha, cores=cores))
 	cat(" Done!\n")
-	return(bootstrapedDataList)
-	# TODO: Check param with Rawane
+	return(groups)
+
 	# TODO: Add previous params to plotFeatures function
 	# 6. Plot
 }
@@ -599,6 +590,25 @@ convertReadsToDensity <- function(currentReads, currentFeature) {
 	return(vectorResult)
 }
 
+bootstrapAnalysis <- function(bamFile, binSize, alpha, sampleSize, cores=1) {
+	binnedBamFile <- binMatrix(bamFile, binSize)
+	if (cores > 1) {
+		return(mclapply(1:ncol(binnedBamFile), function(x) binBootstrap(binnedBamFile[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores))
+	} else {
+		return(lapply(1:ncol(binnedBamFile), function(x) binBootstrap(binnedBamFile[,x], alpha=alpha, sampleSize=sampleSize)))
+	}
+}
+	#bootstrapData <- function(i) {
+		#binnedMatrix <- binMatrix(mergedMatrix[[i]],binSize)
+		#if (cores > 1) {
+			#bootstrapedData <- mclapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores)
+		#} else {
+			#bootstrapedData <- lapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize))
+		#}
+		#return(bootstrapedData)
+	#}
+	#bootstrapedDataList <- lapply(1:length(mergedMatrix), bootstrapData)
+
 # Bin matrix columns
 #
 # INPUT:
@@ -607,11 +617,11 @@ convertReadsToDensity <- function(currentReads, currentFeature) {
 #
 # OUPUT:
 #	A matrix with each column representing the mean of binSize nucleotides.
-binMatrix <- function(data,bin)
+binMatrix <- function(data,binSize)
 {
-	n <- ((ncol(data)-1)/bin + 1)
-	a <- sapply(1:n, function(j){(j-1)*bin+1})
-	newdata <- matrix(0, nrow=nrow(data), ncol=(ncol(data)-1)/bin)
+	n <- ((ncol(data)-1)/binSize + 1)
+	a <- sapply(1:n, function(j){(j-1)*binSize+1})
+	newdata <- matrix(0, nrow=nrow(data), ncol=(ncol(data)-1)/binSize)
 	for (j in 1:(n-1)) {
 		newdata[,j] <- sapply(1:nrow(data), function(i){mean(data[i,a[j]:a[j+1]])}) }
 	return(newdata)
