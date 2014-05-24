@@ -605,10 +605,16 @@ convertReadsToDensity <- function(currentReads, currentFeature) {
 bootstrapAnalysis <- function(currentGroup, binSize, alpha, sampleSize, cores=1) {
 	binnedMatrix <- binMatrix(currentGroup$matrix, binSize)
 	if (cores > 1) {
-		return(mclapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores))
+		bootResults <- mclapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores)
 	} else {
-		return(lapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize)))
+		bootResults <- lapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize))
 	}
+	bootResults <- do.call(rbind, bootResults)
+	toReturn <- list()
+	toReturn$mean <- unlist(bootResults[,1])
+	toReturn$qinf <- as.numeric(unlist(bootResults[,2]))
+	toReturn$qsup <- as.numeric(unlist(bootResults[,3]))
+	return(toReturn)
 }
 
 # Bin matrix columns
