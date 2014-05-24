@@ -108,6 +108,75 @@ plotFeaturesByRegions <- function(bamFiles, file="regions.pdf", ranges=NULL, des
 	# 3. Realign regions
 }
 
+extractNames <- function(groups) {
+	toReturn <- list()
+	for (groupName in names(groups)) {
+		toReturn[[groupName]] <- list()
+		toReturn[[groupName]]$featureName <- groups[[groupName]]$featureName
+		toReturn[[groupName]]$designName <- groups[[groupName]]$designName
+		toReturn[[groupName]]$bamFiles <- list()
+		for (bamFile in groups[[groupName]]$bamFiles) {
+			toReturn[[groupName]]$bamFiles[[bamFile]] <- ""
+		}
+	}
+	return(toReturn)
+}
+
+copyNames <- function(newNames, groups) {
+	names(groups) <- names(newNames)
+	for (groupName in names(newNames)) {
+		for (i in 1:length(groups[[groupName]])) {
+			if (class(groups[[groupName]][[i]]) == "list") {
+				names(groups[[groupName]])[i] <- "bamFiles"
+			}
+		}
+		groups[[groupName]]$featureName <- newNames[[groupName]]$featureName
+		groups[[groupName]]$designName <- newNames[[groupName]]$designName
+		names(groups[[groupName]]$bamFiles) <- names(newNames[[groupName]]$bamFiles)
+	}
+	return(groups)
+}
+
+applyOnGroups <- function(groups, cores=1, FUN, ...) {
+	toReturn <- list()
+	if (cores > 1) {
+		library(parallel)
+		toReturn <- mclapply(groups, function(x) FUN(x, ...), mc.cores=cores)
+	} else {
+		toReturn <- lapply(groups, function(x) FUN(x, ...))
+	}
+	return(copyNames(extractNames(groups), toReturn))
+}
+
+applyOnExperiments <- function(groups, cores=1, FUN, ...) {
+	oldNames <- extractNames(groups)
+	for (i in 1:length(groups)) {
+		if (cores > 1) {
+			library(parallel)
+			groups[[i]] <- mclapply(groups[[i]], function(x) FUN(x, ...), mc.cores=cores)
+		} else {
+			groups[[i]] <- lapply(groups[[i]], function(x) FUN(x, ...))
+		}
+	}
+	return(copyNames(oldNames, groups))
+}
+
+applyOnBamFiles <- function(groups, cores=1, FUN, ...) {
+	oldNames <- extractNames(groups)
+	for (group in groups) {
+		for (experiment in group$bamFiles) {
+			if (cores > 1) {
+				library(parallel)
+				groups[[group]][[experiment]] <- mclapply(groups[[group]][[experiment]], function(x) FUN(x, ...), mc.cores=cores)
+			} else {
+				groups[[group]] <- lapply(groups[[group]][[experiment]], function(x) FUN(x, ...))
+			}
+		}
+	}
+	return(copyNames(oldNames, groups))
+}
+
+
 # Check parameters for the plot functions
 checkParams <- function(bamfiles, features=NULL, maxDistance=NULL, ranges=NULL, design=NULL, scaling="median", filling=NULL, padding=NULL, centering=NULL) {
 
