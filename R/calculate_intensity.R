@@ -47,7 +47,6 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	}
 	groups <- applyOnGroups(groups=groups, cores=cores, FUN=mergeMatrix)
 	cat(" Done!\n")
-	return(groups)
 
 	# 5. Bootstrap
 	cat("Step 5: Bootstrap...")
@@ -57,10 +56,13 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	}
 	groups <- applyOnGroups(groups=groups, cores=1, FUN=bootstrap)
 	cat(" Done!\n")
-	return(groups)
 
 	# TODO: Add previous params to plotFeatures function
 	# 6. Plot
+	cat("Step 6: Plot...")
+	plotGroups(groups)
+	cat(" Done!\n")
+	return(groups)
 }
 
 # Create a metagene plot based on a list of genomic regions
@@ -654,4 +656,30 @@ binBootstrap <- function(data, alpha, sampleSize)
 	qsup <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=(1-alpha/2))
 	liste <- list(mean=mean, qinf=qinf, qsup=qsup)
 	return(liste)
+}
+
+plotGroups <- function(groups) {
+	plot.graphic <- function(DF, title) {
+		p <- ggplot(DF, aes(x=distances, y=means, ymin=qinf, ymax=qsup)) +
+		geom_ribbon(aes(fill=Groups), alpha=0.2) +
+		geom_line(aes(color=Groups),size=1,litype=1,bg="transparent")+
+		theme(panel.grid.major = element_line())+
+		theme(panel.grid.minor = element_line())+
+		theme(panel.background = element_blank())+
+		theme(panel.background = element_rect())+
+		theme_bw()+
+		theme(axis.title.x = element_blank())+
+		ylab("Mean of RPM for each 100 bps")+
+		ggtitle(title)
+		print(p)
+	}
+	lists <- lapply(groups, function(x) return(x$bootstrap))
+	grid = seq(-5000,5000,length=length(lists[[1]]$mean))
+	DF = data.frame (
+		Groups <- factor(rep(names(groups), each=length(grid))), distances <- rep(grid, length(lists)),
+		means <- c(sapply(1:length(lists), function(x) lists[[x]]$mean)),
+		qinf <-  c(sapply(1:length(lists), function(x) lists[[x]]$qinf)),
+		qsup <-  c(sapply(1:length(lists), function(x) lists[[x]]$qsup))
+	)
+	plot.graphic(DF=DF, title=paste(names(groups)))
 }
