@@ -35,13 +35,17 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 
 	# 3. Parse bam files
 	cat("Step 3: Parse bam files...\n")
-	groups <- prepareGroups(names(featuresGroups), bamFiles=bamFiles, design=design)
-	groups <- parseBamFiles(bamFiles, featuresGroups, groups=groups, design=design, cores=cores)
+	groupNames <- prepareGroups(names(featuresGroups), bamFiles=bamFiles, design=design)
+	groups <- parseBamFiles(bamFiles, featuresGroups, groups=groupNames, design=design, cores=cores)
 	cat("Step 3: Parse bam files... Done!\n")
 
 	# 4. Merge matrix
 	cat("Step 4: Merge matrix...")
-	groups <- applyOnBamFiles(groups=groups, cores=cores, FUN=function(x) do.call(rbind, x))
+	mergeMatrix <- function(x) {
+		x$matrix <- do.call(rbind, mergeMatrixFixedLengthFeatures(x))
+		return(x)
+	}
+	groups <- applyOnGroups(groups=groups, cores=cores, FUN=mergeMatrix)
 	cat(" Done!\n")
 	return(groups)
 
@@ -129,27 +133,12 @@ copyNames <- function(newNames, groups) {
 }
 
 applyOnGroups <- function(groups, cores=1, FUN, ...) {
-	toReturn <- list()
 	if (cores > 1) {
 		library(parallel)
-		toReturn <- mclapply(groups, function(x) FUN(x, ...), mc.cores=cores)
+		return(mclapply(groups, function(x) FUN(x, ...), mc.cores=cores))
 	} else {
-		toReturn <- lapply(groups, function(x) FUN(x, ...))
+		return(lapply(groups, function(x) FUN(x, ...)))
 	}
-	return(copyNames(extractNames(groups), toReturn))
-}
-
-applyOnExperiments <- function(groups, cores=1, FUN, ...) {
-	oldNames <- extractNames(groups)
-	for (i in 1:length(groups)) {
-		if (cores > 1) {
-			library(parallel)
-			groups[[i]] <- mclapply(groups[[i]], function(x) FUN(x, ...), mc.cores=cores)
-		} else {
-			groups[[i]] <- lapply(groups[[i]], function(x) FUN(x, ...))
-		}
-	}
-	return(copyNames(oldNames, groups))
 }
 
 applyOnBamFiles <- function(groups, cores=1, FUN, ...) {
@@ -446,6 +435,12 @@ removeControls <- function(currentGroup, design, cores=1) {
 	currentGroup$bamFiles <- lapply(treatmentNames, substractControl)
 	names(currentGroup$bamFiles) <- treatmentNames
 	return(currentGroup)
+}
+
+# Convert list of vectors in matrix for a single group
+mergeMatrixFixedLengthFeatures <- function(currentExperiment) {
+	currentBamFiles <- currentExperiment$bamFiles
+	return(lapply(1:length(currentBamFiles), function(x) currentBamFiles[[x]] <- do.call(rbind, currentBamFiles[[x]])))
 }
 
 # Parse a single bam file
