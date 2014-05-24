@@ -36,17 +36,14 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	# 3. Parse bam files
 	cat("Step 3: Parse bam files...\n")
 	groups <- prepareGroups(names(featuresGroups), bamFiles=bamFiles, design=design)
-	parsedBam <- parseBamFiles(bamFiles, featuresGroups, groups=groups, design=design, cores=cores)
-	return(parsedBam)
+	groups <- parseBamFiles(bamFiles, featuresGroups, groups=groups, design=design, cores=cores)
 	cat("Step 3: Parse bam files... Done!\n")
 
 	# 4. Merge matrix
 	cat("Step 4: Merge matrix...")
-	mergeMatrix <- function(bamList) {
-		lapply(1:length(bamList), function(x) bamList[[x]] <- do.call(rbind,bamList[[x]]))
-	}
-	mergedMatrix <- lapply(1:length(listMatrixByGroup), function(x) do.call(rbind, mergeMatrix(listMatrixByGroup[[x]])))
+	groups <- applyOnBamFiles(groups=groups, cores=cores, FUN=function(x) do.call(rbind, x))
 	cat(" Done!\n")
+	return(groups)
 
 	# 5. Bootstrap
 	cat("Step 5: Bootstrap...")
