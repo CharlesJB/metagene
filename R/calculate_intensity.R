@@ -186,7 +186,7 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
 	# Check prerequisites
 	
    	# The number of cores has to be a positive integer
-  	if(!is.integer(cores) || cores <= 0) {
+	if(!is.numeric(cores) || cores <= 0) {
     		stop("The number of cores has to be a positive integer.")
   	}
     
@@ -416,7 +416,7 @@ removeControlsFromGroups <- function(groups, design, cores=1) {
 # Substract controls from a single group
 removeControls <- function(currentGroup, design, cores=1) {
 	# 1. Extract relevant design columns
-	currentDesign <- design[,c(1,which(colnames(design) == group$designName))]
+	currentDesign <- design[,c(1,which(colnames(design) == currentGroup$designName))]
 	treatmentNames <- currentDesign[currentDesign[,2] == 1, 1]
 	controlNames <- currentDesign[currentDesign[,2] == 2, 1]
 
