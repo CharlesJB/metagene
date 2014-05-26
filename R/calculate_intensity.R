@@ -41,6 +41,11 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 
 	# 4. Merge matrix
 	cat("Step 4: Merge matrix...")
+	# Convert list of vectors in matrix for a single group
+	mergeMatrixFixedLengthFeatures <- function(currentExperiment) {
+		currentBamFiles <- currentExperiment$bamFiles
+		return(lapply(1:length(currentBamFiles), function(x) currentBamFiles[[x]] <- do.call(rbind, currentBamFiles[[x]])))
+	}
 	mergeMatrix <- function(x) {
 		x$matrix <- do.call(rbind, mergeMatrixFixedLengthFeatures(x))
 		return(x)
@@ -110,6 +115,13 @@ plotFeaturesByRegions <- function(bamFiles, file="regions.pdf", ranges=NULL, des
 	# 3. Realign regions
 }
 
+# Extract the names from the main data structure
+#
+# Input:
+#	groups:	The main data structure
+#
+# Output:
+#	A data structure similar to the main data structure of MetaFeatures, but with no data
 extractNames <- function(groups) {
 	toReturn <- list()
 	for (groupName in names(groups)) {
@@ -124,6 +136,14 @@ extractNames <- function(groups) {
 	return(toReturn)
 }
 
+# Copy extracted names to the main data structures
+#
+# Input:
+#	newNames:	The output of extractNames function
+#	groups:		The main data structure of MetaFeatures
+#
+# Output:
+#	The group input with new names
 copyNames <- function(newNames, groups) {
 	names(groups) <- names(newNames)
 	for (groupName in names(newNames)) {
@@ -139,6 +159,16 @@ copyNames <- function(newNames, groups) {
 	return(groups)
 }
 
+# Apply a function on every groups of the main data structure
+#
+# Input:
+#	groups:		The main data structure
+#	cores:		Number of cores for parallel processing (require parallel package).
+#	FUN:		The function to apply on every groups
+#	...:		Extract arguments for FUN
+#
+# Output:
+#	The result of the function applied
 applyOnGroups <- function(groups, cores=1, FUN, ...) {
 	if (cores > 1) {
 		library(parallel)
@@ -148,6 +178,16 @@ applyOnGroups <- function(groups, cores=1, FUN, ...) {
 	}
 }
 
+# Apply a function on every bam files of the main data structure
+#
+# Input:
+#	groups:		The main data structure
+#	cores:		Number of cores for parallel processing (require parallel package).
+#	FUN:		The function to apply on every groups
+#	...:		Extract arguments for FUN
+#
+# Output:
+#	The result of the function applied
 applyOnBamFiles <- function(groups, cores=1, FUN, ...) {
 	oldNames <- extractNames(groups)
 	for (group in groups) {
@@ -408,6 +448,14 @@ parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1
 }
 
 # Substract controls from multiple groups
+#
+# Input:
+#	groups:	The main data structure
+#	design:	A matrix explaining the relationship between multiple samples.
+#	cores:	Number of cores for parallel processing (require parallel package).
+#
+# Output:
+#	The main data structure from which the controls were substracted then deleted
 removeControlsFromGroups <- function(groups, design, cores=1) {
 	newGroups <- lapply(1:length(groups), function(x) removeControls(currentGroup=groups[[x]], design=design, cores=cores))
 	names(newGroups) <- names(groups)
@@ -415,6 +463,14 @@ removeControlsFromGroups <- function(groups, design, cores=1) {
 }
 
 # Substract controls from a single group
+#
+# Input:
+#	currentGroup:	A group extracted from the main data structure
+#	design:		A matrix explaining the relationship between multiple samples.
+#	cores:		Number of cores for parallel processing (require parallel package).
+#
+# Output:
+#	The group extracted from the main data structure from which the controls were substracted then deleted
 removeControls <- function(currentGroup, design, cores=1) {
 	# 1. Extract relevant design columns
 	currentDesign <- design[,c(1,which(colnames(design) == currentGroup$designName))]
@@ -457,12 +513,6 @@ removeControls <- function(currentGroup, design, cores=1) {
 	return(currentGroup)
 }
 
-# Convert list of vectors in matrix for a single group
-mergeMatrixFixedLengthFeatures <- function(currentExperiment) {
-	currentBamFiles <- currentExperiment$bamFiles
-	return(lapply(1:length(currentBamFiles), function(x) currentBamFiles[[x]] <- do.call(rbind, currentBamFiles[[x]])))
-}
-
 # Parse a single bam file
 #
 # Input:
@@ -498,62 +548,6 @@ parseBamFile <- function(bamFile, alignedCount, features, cores=1) {
 	} else {
 		return(lapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile))))
 	}
-}
-
-# Extract read density from a region
-#
-# Input:
-#	geneID:		The current ensembl gene id to parse
-#	knownGenes:	The annotation to translate ID into genomic positions
-#	bamFiles:	The data.frame obtained with the prepareBamFiles function.
-#	maxDistance:	The distance on each side of the beginning of feature to include in the analysis.
-#
-# Output:
-# 	A matrix with the read density for the current regions with as many line as there are bam files.
-# TODO: return count as read per million aligned read (RPM)
-# TODO: replace knownGenes by GRanges
-# TODO: deprecate?
-getRegionReadDensity <- function(geneID, knownGenes, bamFiles, maxDistance) {
-	extractReadsDensity <- function(bamfile) {
-		# Fetch infos from current feature
-		currentFeature <- knownGenes[knownGenes$feature == geneID,]
-		currentSpace <- currentFeature$space
-		currentStart <- currentFeature$start - maxDistance
-		currentEnd <- currentFeature$start + maxDistance
-		currentStrand <- currentFeature$strand
-
-		# Extract raw counts
-		currentReads <- extractReadsInRegion(bamFile, currentSpace, currentStart, currentEnd)
-		vectorResult <- convertReadsToDensity(currentReads, currentFeature$start, maxDistance)
-
-		# If on negative strand, invert the current vector
-		if (currentStrand == "-1" |  currentStrand == -1 | currentStrand == "-") {
-			vectorResult <- rev(vectorResult)
-		}
-
-		# Convert to RPM
-		currentAlignedCount <- bamFiles[bamFiles$bam == bamFile,]$alignedCount
-		vectorResult <- vectorResult / (currentAlignedCount / 1000000)
-		return(vectorResult)
-	}
-
-	# TODO: use parallel with next line (?)
-	listResults <- lapply(bamFiles$bam, extractReadsDensity)
-	#rawMatrix <- lapply(nrow(featuresGroups), extractReadsDensity)
-	#rawMatrix <- do.call(rbind, rawMatrix)
-	#return(rawMatrix)
-}
-
-# Extract read density information from a list of regions and convert them into a matrix
-#
-# Input:
-#	bamFile:	The bam file to parse.
-#	regions:	GRanges object representing the list of genomic ranges for the current group of file.
-#
-# Output:
-#	A matrix with as much columns as the largest region and as many line as the number of regions.
-parseRegions <- function(bamFile, regions) {
-
 }
 
 # Extract reads from bam file that overlap with a genomic region
@@ -605,6 +599,18 @@ convertReadsToDensity <- function(currentReads, currentFeature) {
 	return(vectorResult)
 }
 
+# Perform the bootstrap analysis
+#
+# Input:
+#	currentGroup:	A group extracted from the main data structure
+#	binSize:	The number of nucleotides in each bin for the bootstrap step.
+#	alpha: 		Confidence interval.
+# 	sampleSize:	Number of time each bin will be resampled (should be at least 1000).
+#	cores:		Number of cores for parallel processing (require parallel package).
+#
+# Output:
+#	A list with the mean of the bootstraped vector and the quartile of order alpha/2 and (1-alpha/2)
+#
 bootstrapAnalysis <- function(currentGroup, binSize, alpha, sampleSize, cores=1) {
 	binnedMatrix <- binMatrix(currentGroup$matrix, binSize)
 	if (cores > 1) {
@@ -659,6 +665,19 @@ binBootstrap <- function(data, alpha, sampleSize)
 	return(liste)
 }
 
+# Convert the main data structure into a data.frame
+#
+# Input:
+#	groups:	The main data structure
+#
+# Output:
+#	A data.frame with the condensed results from the main data structure
+#		Columns:
+#		 * Groups: name of current group
+#		 * distances: the number of bin for each entry
+#		 * means: the means to plot
+#		 * qinf: the lower end of the confidence interval
+#		 * qsup: the higher end of the confidence interval
 plot.getDataFrame <- function(groups) {
 	lists <- lapply(groups, function(x) return(x$bootstrap))
 	grid = seq(-5000,5000,length=length(lists[[1]]$mean))
@@ -673,6 +692,14 @@ plot.getDataFrame <- function(groups) {
 	return(DF)
 }
 
+# Produce a plot with based on a data.frame
+#
+# Input:
+#	DF:	The data frame produced by the plot.getDataFrame function
+#	title:	The title of the graph
+#
+# Ouput:
+#	The graph that is printed on the screen.
 plot.graphic <- function(DF, title) {
 	library(ggplot2)
 	p <- ggplot(DF, aes(x=distances, y=means, ymin=qinf, ymax=qsup)) +
