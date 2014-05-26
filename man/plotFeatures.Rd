@@ -18,7 +18,10 @@
     specie="hs", 
     maxDistance=5000, 
     design=NULL, 
-    binSize=100)
+    binSize=100,
+    alpha=0.05,
+    sampleSize=1000,
+    cores=1)
 }
 
 \arguments{
@@ -41,6 +44,16 @@
     1: treatment file(s). 2: control file(s).}
 
   \item{binSize}{The number of nucleotides in each bin.}
+
+  \item{alpha}{Confidence interval to include in the plot. For
+    a value of 0.05, the confidence interval between 0.05 and
+    0.95 will be shown in the plot.}
+
+  \item{sampleSize}{Number of time each bin will be resampled.
+    Should be at least 1000.}
+
+  \item{cores}{Number of cores for parallel processing.
+    Require parallel package.}
 }
 
 \details{
@@ -54,8 +67,21 @@
 }
 
 \value{
-  \code{plotFeatures} silently returns a \code{data.frame} with
-  the data used to produce the plot.
+  \code{plotFeatures} silently returns an instance of the main
+  data structure used to produce the plot.
+
+  The main data structure is a list of list.
+  The first level contains all the groups to be plotted.
+  The second level contains an element for each bam file for the
+    current group.
+
+  When the data structure is completed, each group contains the
+    following elements:
+      * featureName
+      * designName
+      * bamFiles
+      * matrix
+      * bootstrap
 }
 
 \author{
