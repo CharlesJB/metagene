@@ -60,7 +60,8 @@ plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000,
 	# TODO: Add previous params to plotFeatures function
 	# 6. Plot
 	cat("Step 6: Plot...")
-	plotGroups(groups)
+	groups$graphData <- plot.getDataFrame(groups)
+	plot.graphic(groups$graphData, paste(names(groups)))
 	cat(" Done!\n")
 	return(groups)
 }
@@ -658,28 +659,32 @@ binBootstrap <- function(data, alpha, sampleSize)
 	return(liste)
 }
 
-plotGroups <- function(groups) {
-	plot.graphic <- function(DF, title) {
-		p <- ggplot(DF, aes(x=distances, y=means, ymin=qinf, ymax=qsup)) +
-		geom_ribbon(aes(fill=Groups), alpha=0.2) +
-		geom_line(aes(color=Groups),size=1,litype=1,bg="transparent")+
-		theme(panel.grid.major = element_line())+
-		theme(panel.grid.minor = element_line())+
-		theme(panel.background = element_blank())+
-		theme(panel.background = element_rect())+
-		theme_bw()+
-		theme(axis.title.x = element_blank())+
-		ylab("Mean of RPM for each 100 bps")+
-		ggtitle(title)
-		print(p)
-	}
+plot.getDataFrame <- function(groups) {
 	lists <- lapply(groups, function(x) return(x$bootstrap))
 	grid = seq(-5000,5000,length=length(lists[[1]]$mean))
 	DF = data.frame (
-		Groups <- factor(rep(names(groups), each=length(grid))), distances <- rep(grid, length(lists)),
+		Groups <- factor(rep(names(groups), each=length(grid))), 
+		distances <- rep(grid, length(lists)),
 		means <- c(sapply(1:length(lists), function(x) lists[[x]]$mean)),
 		qinf <-  c(sapply(1:length(lists), function(x) lists[[x]]$qinf)),
 		qsup <-  c(sapply(1:length(lists), function(x) lists[[x]]$qsup))
 	)
-	plot.graphic(DF=DF, title=paste(names(groups)))
+	colnames(DF) <- c("Groups", "distances", "means", "qinf", "qsup")
+	return(DF)
+}
+
+plot.graphic <- function(DF, title) {
+	library(ggplot2)
+	p <- ggplot(DF, aes(x=distances, y=means, ymin=qinf, ymax=qsup)) +
+	geom_ribbon(aes(fill=Groups), alpha=0.2) +
+	geom_line(aes(color=Groups),size=1,litype=1,bg="transparent")+
+	theme(panel.grid.major = element_line())+
+	theme(panel.grid.minor = element_line())+
+	theme(panel.background = element_blank())+
+	theme(panel.background = element_rect())+
+	theme_bw()+
+	theme(axis.title.x = element_blank())+
+	ylab("Mean of RPM for each 100 bps")+
+	ggtitle(title)
+	print(p)
 }
