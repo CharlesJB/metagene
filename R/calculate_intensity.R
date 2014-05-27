@@ -437,6 +437,7 @@ parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1
 		currentGroup$designName <- groups[[groupName]]$designName
 		currentGroup$bamFiles <- currentBamFiles
 		names(currentGroup$bamFiles) <- names(groups[[groupName]]$bamFiles)
+		currentGroup$bamFilesWithCTRL <- currentGroup$bamFiles
 		return(currentGroup)
 	}
 	# 1 Parse every bam file individually
