@@ -459,7 +459,7 @@ parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1
 # Output:
 #	The main data structure from which the controls were substracted then deleted
 removeControlsFromGroups <- function(groups, design, cores=1) {
-	newGroups <- lapply(1:length(groups), function(x) removeControls(currentGroup=groups[[x]], design=design, cores=cores))
+	newGroups <- lapply(groups, function(x) removeControls(currentGroup=x, design=design, cores=cores))
 	names(newGroups) <- names(groups)
 	return(newGroups)
 }
