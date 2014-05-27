@@ -188,20 +188,21 @@ applyOnGroups <- function(groups, cores=1, FUN, ...) {
 #
 # Output:
 #	The result of the function applied
-applyOnBamFiles <- function(groups, cores=1, FUN, ...) {
-	oldNames <- extractNames(groups)
-	for (group in groups) {
-		for (experiment in group$bamFiles) {
-			if (cores > 1) {
-				library(parallel)
-				groups[[group]][[experiment]] <- mclapply(groups[[group]][[experiment]], function(x) FUN(x, ...), mc.cores=cores)
-			} else {
-				groups[[group]] <- lapply(groups[[group]][[experiment]], function(x) FUN(x, ...))
-			}
-		}
-	}
-	return(copyNames(oldNames, groups))
-}
+# TODO: This function should be made more general and be debugged
+#applyOnBamFiles <- function(groups, cores=1, FUN, ...) {
+	#oldNames <- extractNames(groups)
+	#for (group in groups) {
+		#for (experiment in group$bamFiles) {
+			#if (cores > 1) {
+				#library(parallel)
+				#groups[[group]][[experiment]] <- mclapply(groups[[group]][[experiment]], function(x) FUN(x, ...), mc.cores=cores)
+			#} else {
+				#groups[[group]] <- lapply(groups[[group]][[experiment]], function(x) FUN(x, ...))
+			#}
+		#}
+	#}
+	#return(copyNames(oldNames, groups))
+#}
 
 
 # Check parameters for the plot functions
