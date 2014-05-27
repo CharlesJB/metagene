@@ -476,33 +476,19 @@ removeControlsFromGroups <- function(groups, design, cores=1) {
 removeControls <- function(currentGroup, design, cores=1) {
 	# 1. Extract relevant design columns
 	currentDesign <- design[,c(1,which(colnames(design) == currentGroup$designName))]
-	treatmentNames <- currentDesign[currentDesign[,2] == 1, 1]
-	controlNames <- currentDesign[currentDesign[,2] == 2, 1]
+	treatmentNames <- as.character(currentDesign[currentDesign[,2] == 1, 1])
+	controlNames <- as.character(currentDesign[currentDesign[,2] == 2, 1])
 
 	# 2. Merge controls
-	mergeFeatures <- function(i) {
-		controlsDataFrame <- as.data.frame(unlist(currentGroup$bamFiles[[1]][i]))
-		for (j in 2:length(controlNames)) {
-			controlsDataFrame <- cbind(controlsDataFrame, unlist(currentGroup$bamFiles[[j]][i]))
-		}
-		return(rowMeans(controlsDataFrame))
-	}
-	if (cores > 1) {
-		library(parallel)
-		mergedControls <- mclapply(1:length(currentGroup$bamFiles[[1]]), mergeFeatures, mc.cores=cores)
+	# TODO
+	if (length(controlNames) > 1) {
+		print("TODO")
 	} else {
-		mergedControls <- lapply(1:length(currentGroup$bamFiles[[1]]), mergeFeatures)
+		mergedControls <- currentGroup$bamFiles[[controlNames[1]]]
+		currentGroup$bamFiles[[controlNames[1]]] <- NULL
 	}
 
-	# TODO: Remove old controls?
-	# 3. Add the merged control to the list
-	currentGroup$bamFiles$mergedControls <- mergedControls # TODO: should we really keep the merge control in the main object?
-
-	# 4. Substract merged control from every treatment samples
-	substractControl <- function(treatmentName) {
-		currentTreatment <- currentGroup$bamFiles[[treatmentName]]
-		newTreatment <- lapply(1:length(currentTreatment), function(x) substractFeature(currentTreatment, x))
-	}
+	# 3. Substract merged control from every treatment samples
 	substractFeature <- function(treatment, i) {
 		currentFeatureTreatment <- unlist(treatment[i])
 		currentFeatureControl <- unlist(mergedControls[i])
@@ -510,7 +496,12 @@ removeControls <- function(currentGroup, design, cores=1) {
 		newValues[newValues < 0] <- 0
 		return(newValues)
 	}
-	currentGroup$bamFiles <- lapply(treatmentNames, substractControl)
+	#substractControl <- function(treatmentName) {
+	substractControl <- function(currentTreatment) {
+		newTreatment <- lapply(1:length(currentTreatment), function(x) substractFeature(currentTreatment, x))
+		return(newTreatment)
+	}
+	currentGroup$bamFiles <- lapply(currentGroup$bamFiles, substractControl)
 	names(currentGroup$bamFiles) <- treatmentNames
 	return(currentGroup)
 }
