@@ -213,10 +213,11 @@ checkParams <- function(bamfiles, features=NULL, maxDistance=NULL, ranges=NULL, 
 #
 # Input:
 #	bamFiles:	Vector containing the list of every bam filename to be included in the analysis.
-# cores: Number of cores used by the function.
+# 	cores: 		Number of cores used by the function.
 #
 # Prerequisites:
 # The number of cores has to be a positive integer.
+# All BAM files must exist.
 #
 # Output:
 #	A data.frame containing the indexed bam filename and number of aligned reads for each bam file.
@@ -231,7 +232,15 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
     		stop("The number of cores has to be a positive integer.")
   	}
     
-	# TODO: add validation for bamFiles argument
+	# All BAM file names must be of string type 
+	if (sum(unlist(lapply(bamFiles, is.character))) != length(bamFiles)) {
+		stop("At least one BAM file name is not a valid name (not a character string).")
+	}
+	
+	# All BAM files must exist
+ 	if (sum(unlist(lapply(bamFiles, file.exists))) != length(bamFiles)) {
+ 		stop("At least one BAM file does not exist.")
+ 	}
 	
 	# This function will only index a file if there is no index file
 	indexBamFiles <- function(bamFile) {
