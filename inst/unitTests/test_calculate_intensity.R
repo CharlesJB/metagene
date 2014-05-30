@@ -54,3 +54,14 @@ test.prepareBamFiles_not_existing_files<- function() {
 	exp <- "At least one BAM file does not exist."
 	checkEquals(obs, exp, msg="Not existing BAM file used as argument did not generate an exception with expected message.")	
 }
+
+###################################################
+## Test the getGenes() function
+###################################################
+
+## An invalid specie should not be accepted as an argument
+test.getGenes_not_valid_specie<- function() {
+	obs <- tryCatch(MetaFeatures:::getGenes("tomato"), error=conditionMessage)
+	exp <- "Incorrect parameter for specie name.\nCurrently supported species are \"human\" and \"mouse\"."
+	checkIdentical(obs, exp, msg="An invalid specie argument did not generate an exception with expected message.")
+}
