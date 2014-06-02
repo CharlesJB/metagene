@@ -8,7 +8,7 @@
 #	features:	Either a filename of a vector of filenames.
 #			Supported features: ensembl_gene_id
 #			File must contain a header that correspond to the name of the group
-#	specie:		hs: Homo sapiens (default) / mm: Mus musculus
+#	specie:		human: Homo sapiens (default) / mouse: Mus musculus
 #	maxDistance:	The distance around feature to include in the plot.
 #	design:		A matrix explaining the relationship between multiple samples.
 #			One line per samples.
@@ -20,7 +20,7 @@
 # 	sampleSize:	Number of time each bin will be resampled (should be at least 1000).
 #	cores:		Number of cores for parallel processing (require parallel package).
 # TODO: Add group of bam files in design file
-plotFeatures <- function(bamFiles, features=NULL, specie="hs", maxDistance=5000, design=NULL, binSize=100, alpha=0.05, sampleSize=1000, cores=1) {
+plotFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=5000, design=NULL, binSize=100, alpha=0.05, sampleSize=1000, cores=1) {
 	# 0. Check if params are valid
 
 	# 1. Prepare bam files
@@ -214,10 +214,11 @@ checkParams <- function(bamfiles, features=NULL, maxDistance=NULL, ranges=NULL, 
 #
 # Input:
 #	bamFiles:	Vector containing the list of every bam filename to be included in the analysis.
-# cores: Number of cores used by the function.
+# 	cores: 		Number of cores used by the function.
 #
 # Prerequisites:
 # The number of cores has to be a positive integer.
+# All BAM files must exist.
 #
 # Output:
 #	A data.frame containing the indexed bam filename and number of aligned reads for each bam file.
@@ -232,7 +233,15 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
     		stop("The number of cores has to be a positive integer.")
   	}
     
-	# TODO: add validation for bamFiles argument
+	# All BAM file names must be of string type 
+	if (sum(unlist(lapply(bamFiles, is.character))) != length(bamFiles)) {
+		stop("At least one BAM file name is not a valid name (not a character string).")
+	}
+	
+	# All BAM files must exist
+ 	if (sum(unlist(lapply(bamFiles, file.exists))) != length(bamFiles)) {
+ 		stop("At least one BAM file does not exist.")
+ 	}
 	
 	# This function will only index a file if there is no index file
 	indexBamFiles <- function(bamFile) {
@@ -270,7 +279,11 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
 # Fetch the annotation of all genes
 #
 # INPUT:
-#	specie: "mouse" or "human"
+#	
+#	specie:		human: Homo sapiens (default) / mouse: Mus musculus
+#
+# Prerequisites:
+# The specie has to be either "mouse" or "human" (default).
 #
 # OUTPUT:
 #	A data.frame with 5 columns:
@@ -279,18 +292,23 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
 #		3: space -> chromosome
 #		4: start_position -> position of the TSS
 #		5: end_position -> ending position of the last exon of the gene
-getGenes <- function(specie) {
+getGenes <- function(specie="human") {
 	require(biomaRt)
+	
+	# Check prerequisites
+	
+	# The specie argument has only two valid possibilities
+	if (! specie %in% c("mouse", "human")){
+		error("Incorrect parameter for specie name.\nCurrently supported species are \"human\" and \"mouse\".")	
+	}
+	
 	# Set the correct specie
-	if (specie == "hs") {
+	if (specie == "human") {
 		chrom <- c(as.character(seq(1,21)),"X","Y")
 		ensmart <- useMart("ensembl", dataset="hsapiens_gene_ensembl")
-	} else if (specie == "mm") {
+	} else {
 		chrom <- c(as.character(seq(1,19)),"X","Y")
 		ensmart <- useMart("ensembl", dataset="mmusculus_gene_ensembl")
-	} else {
-		print("Incorrect parameter for specie name")
-		print("Currently supported specie are human and mouse")
 	}
 
 	# Fetch the data
@@ -314,14 +332,14 @@ getGenes <- function(specie) {
 #	features:	Either a filename of a vector of filenames.
 #			Supported features: ensembl_gene_id
 #			File must contain a header that correspond to the name of the group
-#	specie:		hs: Homo sapiens (default) / mm: Mus musculus
+#	specie:		human: Homo sapiens (default) / mouse: Mus musculus
 #	maxDistance:	The distance around feature to include in the plot.
 #	cores:		Number of cores for parallel processing (require parallel package).
 #
 # Output:
 #	A list of data.frame. One data.frame by group of features.
 #	The names of each element of the list correspond to the name of the group.
-prepareRegions <- function(features, specie="hs", maxDistance=5000, cores=1) {
+prepareRegions <- function(features, specie="human", maxDistance=5000, cores=1) {
 	knownGenes <- getGenes(specie)
 	extractFeatures <- function(filename) {
 		currentFeatures <- read.table(filename, header = TRUE)
