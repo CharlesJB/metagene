@@ -700,7 +700,7 @@ plot.getDataFrame <- function(groups) {
 plot.graphic <- function(DF, title) {
 	library(ggplot2)
 	p <- ggplot(DF, aes(x=distances, y=means, ymin=qinf, ymax=qsup)) +
-	geom_ribbon(aes(fill=Groups), alpha=0.2) +
+	geom_ribbon(aes(fill=Groups), alpha=0.3) +
 	geom_line(aes(color=Groups),size=1,litype=1,bg="transparent")+
 	theme(panel.grid.major = element_line())+
 	theme(panel.grid.minor = element_line())+
