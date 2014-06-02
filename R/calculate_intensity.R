@@ -586,7 +586,8 @@ convertReadsToDensity <- function(currentReads, currentFeature) {
 	vectorResult <- numeric(maxSize)
 	if (nrow(currentReads) > 0) {
 		positions <- unlist(mapply(function(x,y) seq(x, x+y), currentReads$pos - currentFeature$start_position, currentReads$qwidth-1))
-		positions <- positions[positions > 0 && positions <= maxSize]
+		# TODO: add unit test -> first position < 0 used to return FALSE and skip current feature (when it was &&)
+		positions <- positions[positions > 0 & positions <= maxSize]
 		vectorResult <- tabulate(positions, nbins=maxSize)
 	}
 	return(vectorResult)
