@@ -651,7 +651,10 @@ binBootstrap <- function(data, alpha, sampleSize)
 {
 	# TODO: it would probably be more efficient to parallelize here
 	size <- length(data)
+	# TODO: try to sample data directly
 	S <- matrix(replicate(sampleSize, data[sample(1:length(data),size,replace=TRUE)]), nrow=sampleSize)
+	# TODO: We should also be able to plot non-bootstrapped mean
+	# TODO: Try to parallelize at this level instead to lower memory consumption
 	mean <- mean(sapply(1:sampleSize, function(i){mean(S[i,])}))
 	qinf <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=alpha/2)
 	qsup <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=(1-alpha/2))
