@@ -15,7 +15,7 @@
   plotFeatures(
     bamFiles, 
     features=NULL, 
-    specie="hs", 
+    specie="human", 
     maxDistance=5000, 
     design=NULL, 
     binSize=100,
@@ -32,7 +32,7 @@
     File must contain a header that correspond to the name of the 
     group.}
 
-  \item{specie}{hs: Homo sapiens (default). mm: Mus musculus.}
+  \item{specie}{human: Homo sapiens (default). mouse: Mus musculus.}
 
   \item{maxDistance}{The distance around feature to include 
     in the plot.}
