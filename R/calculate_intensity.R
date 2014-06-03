@@ -351,13 +351,20 @@ prepareRegions <- function(features, specie="human", maxDistance=5000, cores=1) 
 		currentFeature$end_position <- currentFeature$end_position + maxDistance
 		return(currentFeature)
 	}
-	if (cores > 1) {
-		library(parallel)
-		featuresGroups <- mclapply(features, extractFeatures, mc.cores=cores)
+	if (!is.null(features)) {
+		if (cores > 1) {
+			library(parallel)
+			featuresGroups <- mclapply(features, extractFeatures, mc.cores=cores)
+		} else {
+			featuresGroups <- lapply(features, extractFeatures)
+		}
+		names(featuresGroups) <- unlist(lapply(features, function(x) as.character(read.table(x, nrow=1)[1,])))
 	} else {
-		featuresGroups <- lapply(features, extractFeatures)
+		knownGenes$end_position <- knownGenes$start_position
+		knownGenes$start_position <- knownGenes$start_position - maxDistance
+		knownGenes$end_position <- knownGenes$end_position + maxDistance
+		featuresGroups$allTSS <- knownGenes
 	}
-	names(featuresGroups) <- unlist(lapply(features, function(x) as.character(read.table(x, nrow=1)[1,])))
 	return(featuresGroups)
 }
 
