@@ -403,7 +403,7 @@ prepareGroups <- function(featuresGroupsNames, bamFiles, design=NULL) {
 		} else {
 			for (i in 2:ncol(design)) {
 				name <- paste(featureName, colnames(design)[i], sep="_")
-				bam <- design[design[,i] != 0,]$Sample
+				bam <- design[design[,i] != 0,]$[,1]
 				designName <- colnames(design)[i]
 				# We want the sorted name of the bam files as the content of the list
 				j <- numeric()
