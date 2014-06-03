@@ -470,7 +470,9 @@ parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1
 	groups <- lapply(groupNames, function(x) parseGroup(x, featuresGroups))
 	names(groups) <- groupNames
 	# 2 Remove control
-	groups <- removeControlsFromGroups(groups=groups, design=design, cores=cores)
+	if (!is.null(design)) {
+		groups <- removeControlsFromGroups(groups=groups, design=design, cores=cores)
+	}
 	return(groups)
 }
 
