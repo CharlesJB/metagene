@@ -235,7 +235,7 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
     
 	# All BAM file names must be of string type 
 	if (sum(unlist(lapply(bamFiles, is.character))) != length(bamFiles)) {
-		stop("At least one BAM file name is not a valid name (not a character string).")
+		stop("At least one BAM file name is not a valid name (a character string).")
 	}
 	
 	# All BAM files must exist
@@ -299,7 +299,7 @@ getGenes <- function(specie="human") {
 	
 	# The specie argument has only two valid possibilities
 	if (! specie %in% c("mouse", "human")){
-		error("Incorrect parameter for specie name.\nCurrently supported species are \"human\" and \"mouse\".")	
+		stop("Incorrect parameter for specie name.\nCurrently supported species are \"human\" and \"mouse\".")	
 	}
 	
 	# Set the correct specie
@@ -336,10 +336,45 @@ getGenes <- function(specie="human") {
 #	maxDistance:	The distance around feature to include in the plot.
 #	cores:		Number of cores for parallel processing (require parallel package).
 #
+# Prerequisites:
+# All features files must exist.
+# The specie has to be either "mouse" or "human" (default).
+# The maximum distance has to be a positive integer.
+# The number of cores has to be a positive integer.
+#
 # Output:
 #	A list of data.frame. One data.frame by group of features.
 #	The names of each element of the list correspond to the name of the group.
 prepareRegions <- function(features, specie="human", maxDistance=5000, cores=1) {
+	
+	# Check prerequisites
+	
+	# All features file names must be of string type 
+	if (sum(unlist(lapply(features, is.character))) != length(features)) {
+		stop("At least one features file name is not a valid name (a character string).")
+	}
+	
+	# All festures files must exist
+	if (sum(unlist(lapply(features, file.exists))) != length(features)) {
+		stop("At least one features file does not exist.")
+	}
+	
+	# The specie argument has only two valid possibilities
+	if (! specie %in% c("mouse", "human")){
+		stop("Incorrect parameter for specie name.\nCurrently supported species are \"human\" and \"mouse\".")	
+	}
+	
+	# The maximum dsitance has to be a positive integer
+	if(!is.integer(maxDistance) || maxDistance <= 0) {
+		stop("The maximum distance has to be a positive integer.")
+	}	
+	
+	# The number of cores has to be a positive integer
+	if(!is.integer(cores) || cores <= 0) {
+		stop("The number of cores has to be a positive integer.")
+	}
+	
+	
 	knownGenes <- getGenes(specie)
 	extractFeatures <- function(filename) {
 		currentFeatures <- read.table(filename, header = TRUE)
@@ -570,7 +605,7 @@ parseBamFile <- function(bamFile, alignedCount, features, cores=1) {
 	}
 }
 
-# Extract reads from bam file that overlap with a genomic region
+# Extract reads from BAM file that overlap with a specified genomic region.
 #
 # INPUT:
 #	bamFile:	Path to the bam file.
@@ -578,12 +613,47 @@ parseBamFile <- function(bamFile, alignedCount, features, cores=1) {
 #	start:		Starting position of the current region.
 #	end:		Ending position of the current region.
 #
+# Prerequisites:
+# The BAM file must exist.
+# The chromosome name must be in character format.
+# The starting position has to be a positive integer.
+# The ending position has to be a positive integer.
+#
 # OUTPUT:
 #	A data.frame containing every reads overlapping the current genomic region:
 #		* rname
 #		* pos
 #		* qwidth
 extractReadsInRegion <- function(bamFile, chr, start, end) {
+	
+	# Check prerequisites
+	
+	# The BAM file name must be of string type 
+	if (!is.character(bamFile)) {
+		stop("The BAM file name is not a valid name (a character string).")
+	}
+	
+	# The BAM file name must exist
+	if (! file.exists(bamFile)) {
+		stop("The BAM file does not exist.")
+	}
+	
+	# TODO : VALIDER SI A FAIRE OU NON
+	#The chromosome name must be of string type 
+	#if (!is.character(chr)) {
+	#	stop("The chromosome name is not a valid name (a character string).")
+	#}
+		
+	# The starting position has to be a positive integer
+	if(!is.integer(start) || start <= 0) {
+		stop("The starting position has to be a positive integer.")
+	}	
+	
+	# The ending position has to be a positive integer
+	if(!is.integer(end) || end <= 0) {
+		stop("The ending position has to be a positive integer.")
+	}
+	
 	suppressMessages(library(Rsamtools))
 	if (start > end) {
 		tmp <- start
