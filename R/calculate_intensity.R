@@ -299,7 +299,7 @@ getGenes <- function(specie="human") {
 	
 	# The specie argument has only two valid possibilities
 	if (! specie %in% c("mouse", "human")){
-		error("Incorrect parameter for specie name.\nCurrently supported species are \"human\" and \"mouse\".")	
+		stop("Incorrect parameter for specie name.\nCurrently supported species are \"human\" and \"mouse\".")	
 	}
 	
 	# Set the correct specie
