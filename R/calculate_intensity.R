@@ -247,6 +247,8 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
 	indexBamFiles <- function(bamFile) {
 		if (file.exists(paste(bamFile, ".bai", sep=""))  == FALSE) {
 			# If there is no index file, we sort and index the current bam file
+			# TODO: we need to check if the sorted file was previously produced before
+			#       doing the costly sort operation
 			sortedBamFile <- sub("^([^.]*).*", "\\1", bamFile)
 			sortedBamFile <- paste(sortedBamFile, ".sorted", sep="")
 			cat(sortedBamFile)
