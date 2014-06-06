@@ -691,6 +691,39 @@ convertReadsToDensity <- function(currentReads, currentFeature) {
 	return(vectorResult)
 }
 
+# Scale the values of a vector to fit with predetermined size
+#
+# INPUT:
+#       values: the values to scale
+#       domain: the range to fit the value to
+#
+# OUTPUT:
+#       A vector with the scaled data
+scaleVector <- function(values, domain) {
+        to_return <- numeric(domain)
+        if (length(values) < domain) {
+                ratio <- domain / length(values)
+                for (i in seq(1, length(values))) {
+                        current_start <- round((i - 1) * ratio + 1)
+                        current_end <- round(i * ratio)
+                        to_return[current_start:current_end] <- values[i]
+                }
+        }
+        else if (length(values) > domain) {
+                ratio <- length(values) / domain
+                for (i in seq(1, domain)) {
+                        current_start <- round((i - 1) * ratio + 1)
+                        current_end <- round(i * ratio)
+                        to_return[i] <- mean(values[current_start:current_end])
+                }
+
+        }
+        else {
+                return(values)
+        }
+        return(to_return)
+}
+
 # Perform the bootstrap analysis
 #
 # Input:
