@@ -30,7 +30,7 @@ plotFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=50
 
 	# 2. Prepare regions
 	cat("Step 2: Prepare regions...")
-	featuresGroups <- prepareRegions(features=features, specie=specie, cores=cores)
+	featuresGroups <- prepareFeatures(features=features, specie=specie, cores=cores)
 	cat(" Done!\n")
 
 	# 3. Parse bam files
@@ -347,7 +347,7 @@ getGenes <- function(specie="human") {
 # Output:
 #	A list of data.frame. One data.frame by group of features.
 #	The names of each element of the list correspond to the name of the group.
-prepareRegions <- function(features, specie="human", maxDistance=5000, cores=1) {
+prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1) {
 	
 	# Check prerequisites
 	
@@ -375,7 +375,6 @@ prepareRegions <- function(features, specie="human", maxDistance=5000, cores=1) 
 	if(!is.integer(cores) || cores <= 0) {
 		stop("The number of cores has to be a positive integer.")
 	}
-	
 	
 	knownGenes <- getGenes(specie)
 	extractFeatures <- function(filename) {

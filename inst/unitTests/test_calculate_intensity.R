@@ -81,91 +81,91 @@ test.getGenes_mouse<- function() {
 }
 
 ###################################################
-## Test the prepareRegions() function
+## Test the prepareFeatures() function
 ###################################################
 
 ## An invalid specie should not be accepted as an argument
-test.prepareRegions_not_valid_specie<- function() {
+test.prepareFeatures_not_valid_specie<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
-	obs <- tryCatch(MetaFeatures:::prepareRegions(temp_file, "tomato"), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, "tomato"), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
 	exp <- "Incorrect parameter for specie name.\nCurrently supported species are \"human\" and \"mouse\"."
 	checkIdentical(obs, exp, msg="An invalid specie argument did not generate an exception with expected message.")
 }
 
 ## Zero core should not be accepted as an argument
-test.prepareRegions_zero_core_number<- function() {
+test.prepareFeatures_zero_core_number<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
-	obs <- tryCatch(MetaFeatures:::prepareRegions(temp_file, cores=0), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, cores=0), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
 	exp <- "The number of cores has to be a positive integer."
 	checkIdentical(obs, exp, msg="A zero core number argument did not generate an exception with expected message.")
 }
 
 ## Negative core number should not be accepted as an argument
-test.prepareRegions_negative_core_number<- function() {
+test.prepareFeatures_negative_core_number<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
-	obs <- tryCatch(MetaFeatures:::prepareRegions(temp_file, cores=-2), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, cores=-2), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
 	exp <- "The number of cores has to be a positive integer."
 	checkIdentical(obs, exp, msg="A negative core number argument did not generate an exception with expected message.")
 }
 
 ## Something other than an integer number should not be accepted as an core number argument 
-test.prepareRegions_not_integer_core_number<- function() {
+test.prepareFeatures_not_integer_core_number<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
-	obs <- tryCatch(MetaFeatures:::prepareRegions(temp_file, cores=2.22), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, cores=2.22), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
 	exp <- "The number of cores has to be a positive integer."
 	checkIdentical(obs, exp, msg="A decimal core number argument did not generate an exception with expected message.")
 }
 
 ## Zero maximum distance should not be accepted as an argument
-test.prepareRegions_zero_max_distance<- function() {
+test.prepareFeatures_zero_max_distance<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
-	obs <- tryCatch(MetaFeatures:::prepareRegions(temp_file, cores=0), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, cores=0), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
 	exp <- "The number of cores has to be a positive integer."
 	checkIdentical(obs, exp, msg="A zero maximum distance argument did not generate an exception with expected message.")
 }
 
 ## Negative maximum distance should not be accepted as an argument
-test.prepareRegions_negative_max_distance<- function() {
+test.prepareFeatures_negative_max_distance<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
-	obs <- tryCatch(MetaFeatures:::prepareRegions(temp_file, cores=-2), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, cores=-2), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
 	exp <- "The maximum dsitance has to be a positive integer."
 	checkIdentical(obs, exp, msg="A negative maximum distance argument did not generate an exception with expected message.")
 }
 
 ## Something other than an integer number should not be accepted as a maximum distance argument 
-test.prepareRegions_not_integer_max_distance<- function() {
+test.prepareFeatures_not_integer_max_distance<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
-	obs <- tryCatch(MetaFeatures:::prepareRegions(temp_file, cores=2.33), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, cores=2.33), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
 	exp <- "The maximum dsitance has to be a positive integer."
 	checkIdentical(obs, exp, msg="A decimal maximum distance argument did not generate an exception with expected message.")
 }
 
 ## Something other than an integer number should not be accepted as a core number argument 
-test.prepareRegions_not_integer_max_distance<- function() {
+test.prepareFeatures_not_integer_max_distance<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
-	obs <- tryCatch(MetaFeatures:::prepareRegions(temp_file,  "NotAInteger"), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file,  "NotAInteger"), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
 	exp <- "The maximum dsitance has to be a positive integer."
 	checkIdentical(obs, exp, msg="A generic text used as a maximum distance did not generate an exception with expected message.")
 }
 
 ## All features files must be in string format
-test.prepareRegions_file_name_not_in_string_format<- function() {
-	obs <- tryCatch(MetaFeatures:::prepareRegions(c(1, 2)), error=conditionMessage)
+test.prepareFeatures_file_name_not_in_string_format<- function() {
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(c(1, 2)), error=conditionMessage)
 	exp <- "At least one features file name is not a valid name (a character string)."
 	checkEquals(obs, exp, msg="Integers used as features files argument did not generate an exception with expected message.")	
 }
 
 ## All features files must exist
-test.prepareRegions_not_existing_files<- function() {
-	obs <- tryCatch(MetaFeatures:::prepareRegions(c("NotExistingFile", "NotExistingFile2")), error=conditionMessage)
+test.prepareFeatures_not_existing_files<- function() {
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(c("NotExistingFile", "NotExistingFile2")), error=conditionMessage)
 	exp <- "At least one features file does not exist."
 	checkEquals(obs, exp, msg="Not existing features files used as argument did not generate an exception with expected message.")	
 }
