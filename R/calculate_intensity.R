@@ -263,6 +263,8 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
 	results <- as.data.frame(unlist(lapply(bamFiles, indexBamFiles)))
 	colnames(results) <- "bam"
 	results$oldBam <- bamFiles
+	results$bam <- as.character(results$bam)
+	results$oldBam <- as.character(results$oldBam)
 
 	# This function will calculate the number of aligned read in each bam file
 	countAlignedReads <- function(bamFile) {
