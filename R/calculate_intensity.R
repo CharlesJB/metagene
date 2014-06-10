@@ -536,7 +536,7 @@ parseBamFiles.old <- function(bamFiles, featuresGroups, groups, design=NULL, cor
 #	First level:	One entry by features group
 #	Second level:	One entry per bamFile in current features group
 #	Third level:	One entry per feature in current features group
-parseBamFiles <- function(bamFilesDescription, featuresGroups, cores=1) {
+parseBamFiles <- function(bamFiles, featuresGroups, cores=1) {
 	parseFeatures <- function(features, bamFiles, cores) {
 		raw.counts <- lapply(bamFiles, parseBamFile, features=features, cores=cores)
 		names(raw.counts) <- bamFiles
