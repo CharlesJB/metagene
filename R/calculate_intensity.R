@@ -36,7 +36,7 @@ plotFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=50
 	# 3. Parse bam files
 	cat("Step 3: Parse bam files...\n")
 	groupNames <- prepareGroups(names(featuresGroups), bamFiles=bamFiles, design=design)
-	groups <- parseBamFiles(bamFiles, featuresGroups, groups=groupNames, design=design, cores=cores)
+	groups <- parseBamFiles.old(bamFiles, featuresGroups, groups=groupNames, design=design, cores=cores)
 	cat("Step 3: Parse bam files... Done!\n")
 
 	# 4. Merge matrix
