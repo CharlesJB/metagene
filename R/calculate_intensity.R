@@ -491,7 +491,7 @@ prepareGroups <- function(featuresGroupsNames, bamFiles, design=NULL) {
 #	The third level is the bamFiles, which are a list of the normalized expression of every features.
 #		There are as many elements in the list as there are features to parse.
 #		Each bam files has a list containing every features.
-parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1) {
+parseBamFiles.old <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1) {
 	parseGroup <- function(groupName, featuresGroups) {
 		print(paste("parseGroup:", groupName))
 		# Get bam files
@@ -502,7 +502,7 @@ parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1
 		currentFeatures <- featuresGroups[[currentFeatureName]]
 
 		# Parse each bam
-		currentBamFiles <- lapply(currentBamFiles, function(x) parseBamFile(x, bamFiles[bamFiles$bam == x,]$alignedCount, currentFeatures, cores))
+		currentBamFiles <- lapply(currentBamFiles, function(x) parseBamFile.old(x, bamFiles[bamFiles$bam == x,]$alignedCount, currentFeatures, cores))
 		# Add the names
 		currentGroup <- list()
 		currentGroup$featureName <- groups[[groupName]]$featureName
@@ -518,38 +518,75 @@ parseBamFiles <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1
 	names(groups) <- groupNames
 	# 2 Remove control
 	if (!is.null(design)) {
-		groups <- removeControlsFromGroups(groups=groups, design=design, cores=cores)
+		groups <- applyOnGroups(groups=groups, cores=cores, FUN=removeControls.old, design=design)
 	}
 	return(groups)
 }
 
-# Substract controls from multiple groups
+# Parse multiple bamFiles
 #
 # Input:
-#	groups:	The main data structure
-#	design:	A matrix explaining the relationship between multiple samples.
-#	cores:	Number of cores for parallel processing (require parallel package).
+#	bamFilesDescription:	The data.frame obtained with the prepareBamFiles function.
+#	featuresGroups:		A list of data.frame. One data.frame by group of features.
+#				The names of each element of the list correspond to the name of the group.
+#	cores:			Number of cores for parallel processing (require parallel package).
 #
 # Output:
-#	The main data structure from which the controls were substracted then deleted
-removeControlsFromGroups <- function(groups, design, cores=1) {
-	newGroups <- lapply(groups, function(x) removeControls(currentGroup=x, design=design, cores=cores))
-	names(newGroups) <- names(groups)
-	return(newGroups)
+#	A list of list of list that contains the raw counts for every features groups:
+#	First level:	One entry by features group
+#	Second level:	One entry per bamFile in current features group
+#	Third level:	One entry per feature in current features group
+parseBamFiles <- function(bamFilesDescription, featuresGroups, cores=1) {
+	parseFeatures <- function(features, bamFiles, cores) {
+		raw.counts <- lapply(bamFiles, parseBamFile, features=features, cores=cores)
+		names(raw.counts) <- bamFiles
+		return(raw.counts)
+	}
+	raw.data <- lapply(featuresGroups, parseFeatures, bamFiles=bamFiles, cores=cores)
+	names(raw.data) <- names(featuresGroups)
+	return(raw.data)
+}
+
+# Convert the raw counts into reads per million aligned (rpm)
+#
+# Input:
+#	rawCounts:		The data structure returned by the parseBamFiles function.
+#	bamFilesDescription:	The data.frame obtained with the prepareBamFiles function.
+#	cores:			Number of cores for parallel processing (require parallel package).
+#
+# Output:
+#	A list of list of list that contains the rpm for every features groups:
+#	First level:	One entry by features group
+#	Second level:	One entry per bamFile in current features group
+#	Third level:	One entry per feature in current features group
+rawCountsToRPM <- function(rawCounts, bamFilesDescription, cores=1) {
+	convertToRPM <- function(bamFile, bamFilesDescription, cores) {
+		alignedCount <- bamFilesDescription[bamFilesDescription$bam == names(bamFile),]$alignedCount
+		bamFile <- bamFile[[1]]
+		return(applyOnGroups(bamFile, cores, FUN=function(x) { x / (alignedCount / 1000000) }))
+	}
+	rpmCounts <- list()
+	for (i in 1:length(rawCounts)) {
+		currentFeaturesGroupName <- names(rawCounts)[i]
+		featuresGroup <- rawCounts[[i]]
+		rpmCounts[[currentFeaturesGroupName]] <-
+			lapply(1:length(featuresGroup), function(x) convertToRPM(featuresGroup[x], bamFilesDescription=bamFilesDescription, cores=cores))
+		names(rpmCounts[[currentFeaturesGroupName]]) <- names(featuresGroup)
+	}
+	return(rpmCounts)
 }
 
 # Substract controls from a single group
 #
 # Input:
-#	currentGroup:	A group extracted from the main data structure
-#	design:		A matrix explaining the relationship between multiple samples.
-#	cores:		Number of cores for parallel processing (require parallel package).
+#	group:		A group extracted from the main data structure
+#	currentDesign:	The line from matrix explaining the relationship between current samples.
 #
 # Output:
 #	The group extracted from the main data structure from which the controls were substracted then deleted
-removeControls <- function(currentGroup, design, cores=1) {
+removeControls.old <- function(group, design) {
 	# 1. Extract relevant design columns
-	currentDesign <- design[,c(1,which(colnames(design) == currentGroup$designName))]
+	currentDesign <- design[,c(1,which(colnames(design) == group$designName))]
 	treatmentNames <- as.character(currentDesign[currentDesign[,2] == 1, 1])
 	controlNames <- as.character(currentDesign[currentDesign[,2] == 2, 1])
 
@@ -558,8 +595,8 @@ removeControls <- function(currentGroup, design, cores=1) {
 	if (length(controlNames) > 1) {
 		print("TODO")
 	} else {
-		mergedControls <- currentGroup$bamFiles[[controlNames[1]]]
-		currentGroup$bamFiles[[controlNames[1]]] <- NULL
+		mergedControls <- group$bamFiles[[controlNames[1]]]
+		group$bamFiles[[controlNames[1]]] <- NULL
 	}
 
 	# 3. Substract merged control from every treatment samples
@@ -575,9 +612,58 @@ removeControls <- function(currentGroup, design, cores=1) {
 		newTreatment <- lapply(1:length(currentTreatment), function(x) substractFeature(currentTreatment, x))
 		return(newTreatment)
 	}
-	currentGroup$bamFiles <- lapply(currentGroup$bamFiles, substractControl)
-	names(currentGroup$bamFiles) <- treatmentNames
-	return(currentGroup)
+	group$bamFiles <- lapply(group$bamFiles, substractControl)
+	names(group$bamFiles) <- treatmentNames
+	return(group)
+}
+
+# Substract controls from a single group
+#
+# Input:
+#	group:		A group extracted from the main data structure
+#	currentDesign:	The line from matrix explaining the relationship between current samples.
+#
+# Output:
+#	The group extracted from the main data structure from which the controls were substracted then deleted
+removeControls <- function(group, data.rpm, design=NULL, controlCores=1) {
+	if (!is.null(design)) {
+		designName <- group$designName
+
+		# 1. Extract relevant design columns
+		currentDesign <- design[,c(1,which(colnames(design) == designName))]
+		treatmentNames <- as.character(currentDesign[currentDesign[,2] == 1, 1])
+		controlNames <- as.character(currentDesign[currentDesign[,2] == 2, 1])
+
+		# 2 Get the relevant group of rpm
+		current.rpm <- data.rpm[[group$featureName]]
+
+		# 3. Merge controls
+		# TODO
+		if (length(controlNames) > 1) {
+			print("TODO")
+			# uuu <- data.frame(zzz <- c(1,2,3), xxx <- c(4,5,6), yyy <- c(7,8,9))
+		} else {
+			mergedControls <- current.rpm[[controlNames[1]]]
+		}
+
+		# 4. Substract merged control from every treatment samples
+		substractFeature <- function(treatment, i) {
+			currentFeatureTreatment <- unlist(treatment[i])
+			currentFeatureControl <- unlist(mergedControls[i])
+			newValues <- currentFeatureTreatment - currentFeatureControl
+			newValues[newValues < 0] <- 0
+			return(newValues)
+		}
+		substractControl <- function(currentTreatment) {
+			newTreatment <- applyOnGroups(1:length(currentTreatment), cores=controlCores, FUN=function(x) substractFeature(currentTreatment, x))
+			return(newTreatment)
+		}
+		treatment.rpm <- current.rpm[names(current.rpm) %in% treatmentNames]
+		group$noCTRL <- lapply(treatment.rpm, substractControl)
+		names(group$noCTRL) <- treatmentNames
+		return(group)
+	}
+	return(group)
 }
 
 # Parse a single bam file
@@ -592,7 +678,7 @@ removeControls <- function(currentGroup, design, cores=1) {
 #
 # Output:
 #	A list with an element for every feature to parse. Each element contains a vector of normalized reads expression.
-parseBamFile <- function(bamFile, alignedCount, features, cores=1) {
+parseBamFile.old <- function(bamFile, alignedCount, features, cores=1) {
 	print(paste("Current bam:", bamFile))
 	extractReadsDensity <- function(feature, bamFile) {
 		# Extract raw counts
@@ -600,7 +686,8 @@ parseBamFile <- function(bamFile, alignedCount, features, cores=1) {
 		vectorResult <- convertReadsToDensity(currentReads, feature)
 
 		# If on negative strand, invert the current vector
-		if (feature$strand == "-1" |  feature$strand == -1 | feature$strand == "-") {
+		#if (feature$strand == "-1" |  feature$strand == -1 | feature$strand == "-") {
+		if (feature$start > feature$end) {
 			vectorResult <- rev(vectorResult)
 		}
 
@@ -615,6 +702,22 @@ parseBamFile <- function(bamFile, alignedCount, features, cores=1) {
 	} else {
 		return(lapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile))))
 	}
+}
+
+parseBamFile <- function(bamFile, features, cores=1) {
+	print(paste("Current bam:", bamFile))
+	extractReadsDensity <- function(feature, bamFile) {
+		# Extract raw counts
+		currentReads <- extractReadsInRegion(bamFile, feature$space, feature$start_position, feature$end_position)
+		vectorResult <- convertReadsToDensity(currentReads, feature)
+
+		# If on negative strand, invert the current vector
+		if (feature$start > feature$end) {
+			vectorResult <- rev(vectorResult)
+		}
+		return(vectorResult)
+	}
+	return(applyOnGroups(1:nrow(features), cores=cores, FUN=function(x) extractReadsDensity(features[x,], bamFile=bamFile)))
 }
 
 # Extract reads from BAM file that overlap with a specified genomic region.
