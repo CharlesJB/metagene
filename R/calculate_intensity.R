@@ -41,15 +41,6 @@ plotFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=50
 
 	# 4. Merge matrix
 	cat("Step 4: Merge matrix...")
-	# Convert list of vectors in matrix for a single group
-	mergeMatrixFixedLengthFeatures <- function(currentExperiment) {
-		currentBamFiles <- currentExperiment$bamFiles
-		return(lapply(1:length(currentBamFiles), function(x) currentBamFiles[[x]] <- do.call(rbind, currentBamFiles[[x]])))
-	}
-	mergeMatrix <- function(x) {
-		x$matrix <- do.call(rbind, mergeMatrixFixedLengthFeatures(x))
-		return(x)
-	}
 	groups <- applyOnGroups(groups=groups, cores=cores, FUN=mergeMatrix)
 	cat(" Done!\n")
 
@@ -69,6 +60,22 @@ plotFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=50
 	plot.graphic(groups$graphData, paste(names(groups)))
 	cat(" Done!\n")
 	return(groups)
+}
+
+# Convert list of vectors in matrix for a single group
+#
+# Input:
+#	group:	Correspond to an element in the data subsection of the main data structure.
+#
+# Output:
+#	The group in input with an extra element named matrix (group$matrix).
+mergeMatrix <- function(group) {
+	mergeMatrixFixedLengthFeatures <- function(currentExperiment) {
+		currentBamFiles <- currentExperiment$bamFiles
+		return(lapply(1:length(currentBamFiles), function(x) currentBamFiles[[group]] <- do.call(rbind, currentBamFiles[[group]])))
+	}
+	group$matrix <- do.call(rbind, mergeMatrixFixedLengthFeatures(group))
+	return(group)
 }
 
 # Create a metagene plot based on a list of genomic regions
