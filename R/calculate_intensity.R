@@ -78,6 +78,23 @@ mergeMatrix <- function(group) {
 	return(group)
 }
 
+# Resize the vectors of every group so they have the same length
+# Note: For this function to work correctly, we must have substracted and removed the controls.
+#	This is because the controls can be redundant between groups, so the median could be influenced.
+scaleVectors <- function(group, medianLength, scaleCores=1) {
+	scaleBamFile <- function(bamFile, domain, scaleCores=1) {
+		if (scaleCores > 1) {
+			return(mclapply(bamFile, scaleVector, domain, mc.cores=scaleCores))
+		} else {
+			return(lapply(bamFile, scaleVector, domain))
+		}
+	}
+	#group$bamFilesBeforeScaling <- group$bamFiles
+	group$scaled <- lapply(group$noCTRL, scaleBamFile, domain=medianLength, scaleCores=scaleCores)
+	names(group$bamFiles) <- names(group$bamFilesBeforeScaling)
+	return(group)
+}
+
 # Create a metagene plot based on a list of genomic regions
 #
 # Input:
