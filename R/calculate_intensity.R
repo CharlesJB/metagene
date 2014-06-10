@@ -387,6 +387,34 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
 	return(featuresGroups)
 }
 
+# Parse bed files and convert them in a list of data.frames
+#	regions:	A vector of bed file names corresponding to the regions to include in the analysis.
+#			The file name (minus the extension) will be used as the name of the region.
+#	cores:		Number of cores for parallel processing (require parallel package).
+#
+# Output:
+#	A list of data.frame. One data.frame by group of features.
+#	The names of each element of the list correspond to the name of the group.
+prepareRegions <- function(regions, cores=1) {
+	# 1. Parse the bed files
+	readBedFile <- function(bedFileName) {
+		currentBed <- read.table(bedFileName, header=FALSE)
+		# We only need the infos of the first three columns
+		colnames(currentBed)[1:3] <- c("space", "start_position", "end_position")
+		# TODO: should we check is start_position is always smaller than end_position?
+		return(currentBed)
+	}
+	toReturn <- lapply(regions, readBedFile)
+
+	# 2. Add the names
+	getBaseName <- function(bedFileName) {
+		return(sub("^([^.]*).*", "\\1", basename(bedFileName)))
+	}
+	names(toReturn) <- sapply(regions, getBaseName)
+
+	return(toReturn)
+}
+
 # Distribute the bam filenames in their respective groups.
 #
 # Input:
