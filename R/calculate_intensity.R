@@ -185,32 +185,6 @@ applyOnGroups <- function(groups, cores=1, FUN, ...) {
 	}
 }
 
-# Apply a function on every bam files of the main data structure
-#
-# Input:
-#	groups:		The main data structure
-#	cores:		Number of cores for parallel processing (require parallel package).
-#	FUN:		The function to apply on every groups
-#	...:		Extract arguments for FUN
-#
-# Output:
-#	The result of the function applied
-# TODO: This function should be made more general and be debugged
-#applyOnBamFiles <- function(groups, cores=1, FUN, ...) {
-	#oldNames <- extractNames(groups)
-	#for (group in groups) {
-		#for (experiment in group$bamFiles) {
-			#if (cores > 1) {
-				#library(parallel)
-				#groups[[group]][[experiment]] <- mclapply(groups[[group]][[experiment]], function(x) FUN(x, ...), mc.cores=cores)
-			#} else {
-				#groups[[group]] <- lapply(groups[[group]][[experiment]], function(x) FUN(x, ...))
-			#}
-		#}
-	#}
-	#return(copyNames(oldNames, groups))
-#}
-
 
 # Check parameters for the plot functions
 checkParams <- function(bamfiles, features=NULL, maxDistance=NULL, ranges=NULL, design=NULL, scaling="median", filling=NULL, padding=NULL, centering=NULL) {
