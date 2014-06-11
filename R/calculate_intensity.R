@@ -703,10 +703,10 @@ parseBamFiles.old <- function(bamFiles, featuresGroups, groups, design=NULL, cor
 # Parse multiple bamFiles
 #
 # Input:
-#	bamFilesDescription:	The data.frame obtained with the prepareBamFiles function.
-#	featuresGroups:		A list of data.frame. One data.frame by group of features.
-#				The names of each element of the list correspond to the name of the group.
-#	cores:			Number of cores for parallel processing (require parallel package).
+#	bamFiles:	A vector of bam files
+#	featuresGroups:	A list of data.frame. One data.frame by group of features.
+#			The names of each element of the list correspond to the name of the group.
+#	cores:		Number of cores for parallel processing (require parallel package).
 #
 # Output:
 #	A list of list of list that contains the raw counts for every features groups:
