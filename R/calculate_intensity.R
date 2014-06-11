@@ -937,12 +937,12 @@ extractReadsInRegion <- function(bamFile, chr, start, end) {
 	#}
 		
 	# The starting position has to be a positive integer
-	if(!is.integer(start) || start <= 0) {
+	if(!is.numeric(start) || start <= 0) {
 		stop("The starting position has to be a positive integer.")
 	}	
 	
 	# The ending position has to be a positive integer
-	if(!is.integer(end) || end <= 0) {
+	if(!is.numeric(end) || end <= 0) {
 		stop("The ending position has to be a positive integer.")
 	}
 	
