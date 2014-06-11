@@ -1,7 +1,7 @@
 # Created by Charles Joly Beauparlant
 # 2013-11-26
 
-# Create a metagene plot based on a list of genomic features
+# Parse an experiment using a list of features
 #
 # Input:
 #	bamFiles:	A vector of bamFile to plot. TODO: Should also accept a list of bamfiles where each elements would be grouped together
@@ -19,45 +19,62 @@
 #	alpha: 		Confidence interval.
 # 	sampleSize:	Number of time each bin will be resampled (should be at least 1000).
 #	cores:		Number of cores for parallel processing (require parallel package).
-# TODO: Add group of bam files in design file
-plotFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=5000, design=NULL, binSize=100, alpha=0.05, sampleSize=1000, cores=1) {
+#	debug:		Keep intermediate files (can use a lot of memory). TRUE or FALSE.
+#
+# Output:
+#	A list of list of list of list.
+#	First level is the name of the group.
+#	Second level is the metadata of the group:
+#		featureName:	The name of the group of regions.
+#		designName:	The name of the column in the design file.
+#		bamFiles:	The list of bam files associated with this combination of featureName/designName
+#	The third level is the bamFiles, which are a list of the normalized expression of every regions.
+#		There are as many elements in the list as there are regions to parse.
+#		Each bam files has a list containing every regions.
+parseFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=5000, design=NULL, cores=1, debug=FALSE) {
+	groups <- list()
+	if (! is.null(design)) {
+		groups$design <- design
+	}
+
 	# 0. Check if params are valid
+	groups$param <- list()
+	groups$param$specie <- specie
+	groups$param$maxDistance <- maxDistance
+	groups$param$cores <- cores
 
 	# 1. Prepare bam files
 	cat("Step 1: Prepare bam files...")
-	bamFiles <- prepareBamFiles(bamFiles, cores=cores)
+	groups$bamFilesDescription <- prepareBamFiles(bamFiles, cores=cores)
 	cat(" Done!\n")
 
 	# 2. Prepare regions
 	cat("Step 2: Prepare regions...")
-	featuresGroups <- prepareFeatures(features=features, specie=specie, cores=cores)
+	groups$regionsGroups <- prepareFeatures(regions, cores=cores)
 	cat(" Done!\n")
 
 	# 3. Parse bam files
 	cat("Step 3: Parse bam files...\n")
-	groupNames <- prepareGroups(names(featuresGroups), bamFiles=bamFiles, design=design)
-	groups <- parseBamFiles.old(bamFiles, featuresGroups, groups=groupNames, design=design, cores=cores)
+	groups$raw <- parseBamFiles(groups$bamFilesDescription$bam, groups$regionsGroups, cores=cores)
+	groups$rpm <- rawCountsToRPM(groups$raw, groups$bamFilesDescription)
+	if (debug == FALSE) groups$raw <- NULL
+	groups$data <- prepareGroups(names(groups$regionsGroups), bamFiles=groups$bamFilesDescription, design=groups$design)
+	groups$data <- applyOnGroups(groups=groups$data, cores=1, FUN=removeControls, data.rpm=groups$rpm, design=groups$design, controlCores=cores)
+	if (debug == FALSE) groups$rpm <- NULL
 	cat("Step 3: Parse bam files... Done!\n")
 
 	# 4. Merge matrix
 	cat("Step 4: Merge matrix...")
-	groups <- applyOnGroups(groups=groups, cores=cores, FUN=mergeMatrix.old)
-	cat(" Done!\n")
-
-	# 5. Bootstrap
-	cat("Step 5: Bootstrap...")
-	bootstrap <- function(x) {
-		x$bootstrap <- bootstrapAnalysis.old(x, binSize=binSize, alpha=alpha, sampleSize=sampleSize, cores=cores)
-		return(x)
+	groups$data <- applyOnGroups(groups=groups$data, cores=cores, FUN=mergeMatrix, level="noCTRL")
+	if (debug == FALSE) {
+		groups$data <- applyOnGroups(groups=groups$data, cores=cores, FUN=function(x) { x$noCTRL <- NULL; return(x) })
 	}
-	groups <- applyOnGroups(groups=groups, cores=1, FUN=bootstrap)
-	cat(" Done!\n")
-
-	# TODO: Add previous params to plotFeatures function
-	# 6. Plot
-	cat("Step 6: Plot...")
-	groups$graphData <- plot.getDataFrame.old(groups)
-	plot.graphic(groups$graphData, paste(names(groups)))
+	groups$matrix <- lapply(1:length(groups$data), function(x) cbind(groups$data.leftPaddings[[x]]$matrix, groups$data[[x]]$matrix, groups$data.rightPaddings[[x]]$matrix))
+	names(groups$matrix) <- names(groups$data)
+	if (debug == FALSE) {
+		groups$data <- NULL
+		groups$regionsGroups <- NULL
+	}
 	cat(" Done!\n")
 	return(groups)
 }
@@ -79,22 +96,6 @@ mergeMatrix <- function(group, level) {
 	}
 	group$matrix <- do.call(rbind, mergeMatrixFixedLengthFeatures(group))
 	return(group)
-}
-
-# Convert list of vectors in matrix for a single group
-#
-# Input:
-#	group:	Correspond to an element in the data subsection of the main data structure.
-#
-# Output:
-#	The group in input with an extra element named matrix (group$matrix).
-mergeMatrix.old <- function(group) {
-       mergeMatrixFixedLengthFeatures <- function(currentExperiment) {
-               currentBamFiles <- currentExperiment$bamFiles
-               return(lapply(1:length(currentBamFiles), function(x) currentBamFiles[[group]] <- do.call(rbind, currentBamFiles[[group]])))
-        }
-	group$matrix <- do.call(rbind, mergeMatrixFixedLengthFeatures(group))
-        return(group)
 }
 
 # Parse an experiment using regions that can be of different length.
@@ -579,59 +580,6 @@ prepareGroups <- function(featuresGroupsNames, bamFiles, design=NULL) {
 # Parse multiple bamFiles
 #
 # Input:
-#	bamFiles:	The data.frame obtained with the prepareBamFiles function.
-#	featuresGroups:	A list of data.frame. One data.frame by group of features.
-#			The names of each element of the list correspond to the name of the group.
-#	design:		A matrix explaining the relationship between multiple samples.
-#			If there is a design, the controls will automatically be substracted from every
-#			replicates of the input files.
-#	cores:		Number of cores for parallel processing (require parallel package).
-#
-# Output:
-#	A list of list of list of list.
-#	First level is the name of the group.
-#	Second level is the metadata of the group:
-#		featureName:	The name of the group of features.
-#		designName:	The name of the column in the design file.
-#		bamFiles:	The list of bam files associated with this combination of featureName/designName
-#	The third level is the bamFiles, which are a list of the normalized expression of every features.
-#		There are as many elements in the list as there are features to parse.
-#		Each bam files has a list containing every features.
-parseBamFiles.old <- function(bamFiles, featuresGroups, groups, design=NULL, cores=1) {
-	parseGroup <- function(groupName, featuresGroups) {
-		print(paste("parseGroup:", groupName))
-		# Get bam files
-		currentBamFiles <- groups[[groupName]]$bamFiles
-
-		# Get features
-		currentFeatureName <- groups[[groupName]]$featureName
-		currentFeatures <- featuresGroups[[currentFeatureName]]
-
-		# Parse each bam
-		currentBamFiles <- lapply(currentBamFiles, function(x) parseBamFile.old(x, bamFiles[bamFiles$bam == x,]$alignedCount, currentFeatures, cores))
-		# Add the names
-		currentGroup <- list()
-		currentGroup$featureName <- groups[[groupName]]$featureName
-		currentGroup$designName <- groups[[groupName]]$designName
-		currentGroup$bamFiles <- currentBamFiles
-		names(currentGroup$bamFiles) <- names(groups[[groupName]]$bamFiles)
-		currentGroup$bamFilesWithCTRL <- currentGroup$bamFiles
-		return(currentGroup)
-	}
-	# 1 Parse every bam file individually
-	groupNames <- names(groups)
-	groups <- lapply(groupNames, function(x) parseGroup(x, featuresGroups))
-	names(groups) <- groupNames
-	# 2 Remove control
-	if (!is.null(design)) {
-		groups <- applyOnGroups(groups=groups, cores=cores, FUN=removeControls.old, design=design)
-	}
-	return(groups)
-}
-
-# Parse multiple bamFiles
-#
-# Input:
 #	bamFiles:	A vector of bam files
 #	featuresGroups:	A list of data.frame. One data.frame by group of features.
 #			The names of each element of the list correspond to the name of the group.
@@ -690,47 +638,6 @@ rawCountsToRPM <- function(rawCounts, bamFilesDescription, cores=1) {
 #
 # Output:
 #	The group extracted from the main data structure from which the controls were substracted then deleted
-removeControls.old <- function(group, design) {
-	# 1. Extract relevant design columns
-	currentDesign <- design[,c(1,which(colnames(design) == group$designName))]
-	treatmentNames <- as.character(currentDesign[currentDesign[,2] == 1, 1])
-	controlNames <- as.character(currentDesign[currentDesign[,2] == 2, 1])
-
-	# 2. Merge controls
-	# TODO
-	if (length(controlNames) > 1) {
-		print("TODO")
-	} else {
-		mergedControls <- group$bamFiles[[controlNames[1]]]
-		group$bamFiles[[controlNames[1]]] <- NULL
-	}
-
-	# 3. Substract merged control from every treatment samples
-	substractFeature <- function(treatment, i) {
-		currentFeatureTreatment <- unlist(treatment[i])
-		currentFeatureControl <- unlist(mergedControls[i])
-		newValues <- currentFeatureTreatment - currentFeatureControl
-		newValues[newValues < 0] <- 0
-		return(newValues)
-	}
-	#substractControl <- function(treatmentName) {
-	substractControl <- function(currentTreatment) {
-		newTreatment <- lapply(1:length(currentTreatment), function(x) substractFeature(currentTreatment, x))
-		return(newTreatment)
-	}
-	group$bamFiles <- lapply(group$bamFiles, substractControl)
-	names(group$bamFiles) <- treatmentNames
-	return(group)
-}
-
-# Substract controls from a single group
-#
-# Input:
-#	group:		A group extracted from the main data structure
-#	currentDesign:	The line from matrix explaining the relationship between current samples.
-#
-# Output:
-#	The group extracted from the main data structure from which the controls were substracted then deleted
 removeControls <- function(group, data.rpm, design=NULL, controlCores=1) {
 	if (!is.null(design)) {
 		designName <- group$designName
@@ -776,40 +683,12 @@ removeControls <- function(group, data.rpm, design=NULL, controlCores=1) {
 #
 # Input:
 #	bamFile:	The name of the bam file to parse. Must be sorted and indexed.
-#	alignedCount:	The number of aligned reads for the current sample.
-# 			TODO: if NULL, it should be calculated in the function.
 #	features:	A data.frame with the infos for every features to parse
 #			Must have the folowing columns: feature, strand, space, start_position and end_position
 #	cores:		Number of cores for parallel processing (require parallel package).
 #
 # Output:
-#	A list with an element for every feature to parse. Each element contains a vector of normalized reads expression.
-parseBamFile.old <- function(bamFile, alignedCount, features, cores=1) {
-	print(paste("Current bam:", bamFile))
-	extractReadsDensity <- function(feature, bamFile) {
-		# Extract raw counts
-		currentReads <- extractReadsInRegion(bamFile, feature$space, feature$start_position, feature$end_position)
-		vectorResult <- convertReadsToDensity(currentReads, feature)
-
-		# If on negative strand, invert the current vector
-		#if (feature$strand == "-1" |  feature$strand == -1 | feature$strand == "-") {
-		if (feature$start > feature$end) {
-			vectorResult <- rev(vectorResult)
-		}
-
-		# Convert to RPM
-		vectorResult <- vectorResult / (alignedCount / 1000000)
-		return(vectorResult)
-
-	}
-	if (cores > 1) {
-		library(parallel)
-		return(mclapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile)), mc.cores=cores))
-	} else {
-		return(lapply(1:nrow(features), function(x) extractReadsDensity(features[x,],  bamFile=as.character(bamFile))))
-	}
-}
-
+#	A list with an element for every feature to parse. Each element contains a vector of reads expression.
 parseBamFile <- function(bamFile, features, cores=1) {
 	print(paste("Current bam:", bamFile))
 	extractReadsDensity <- function(feature, bamFile) {
@@ -980,33 +859,6 @@ plot.matrices <- function(matricesGroups, data, binSize=100, alpha=0.05, sampleS
 # Perform the bootstrap analysis
 #
 # Input:
-#	currentGroup:	A group extracted from the main data structure
-#	binSize:	The number of nucleotides in each bin for the bootstrap step.
-#	alpha: 		Confidence interval.
-# 	sampleSize:	Number of time each bin will be resampled (should be at least 1000).
-#	cores:		Number of cores for parallel processing (require parallel package).
-#
-# Output:
-#	A list with the mean of the bootstraped vector and the quartile of order alpha/2 and (1-alpha/2)
-#
-bootstrapAnalysis.old <- function(currentGroup, binSize, alpha, sampleSize, cores=1) {
-	binnedMatrix <- binMatrix(currentGroup$matrix, binSize)
-	if (cores > 1) {
-		bootResults <- mclapply(1:ncol(binnedMatrix), function(x) binBootstrap.old(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores)
-	} else {
-		bootResults <- lapply(1:ncol(binnedMatrix), function(x) binBootstrap.old(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize))
-	}
-	bootResults <- do.call(rbind, bootResults)
-	toReturn <- list()
-	toReturn$mean <- unlist(bootResults[,1])
-	toReturn$qinf <- as.numeric(unlist(bootResults[,2]))
-	toReturn$qsup <- as.numeric(unlist(bootResults[,3]))
-	return(toReturn)
-}
-
-# Perform the bootstrap analysis
-#
-# Input:
 #	currentMatrix:	The matrix to use for the bootstrap analysis
 #	binSize:	The number of nucleotides in each bin for the bootstrap step.
 #	alpha: 		Confidence interval.
@@ -1054,24 +906,10 @@ binMatrix <- function(data,binSize)
 # 	data:		A vector representing a column from the binned matrix.
 #	alpha: 		Confidence interval.
 # 	sampleSize:	Number of time each bin will be resampled (should be at least 1000).
+#	cores:		Number of cores for parallel processing (require parallel package).
 #
 # OUPUT:
 #	A list with the mean of the bootstraped vector and the quartile of order alpha/2 and (1-alpha/2)
-binBootstrap.old <- function(data, alpha, sampleSize)
-{
-	# TODO: it would probably be more efficient to parallelize here
-	size <- length(data)
-	# TODO: try to sample data directly
-	S <- matrix(replicate(sampleSize, data[sample(1:length(data),size,replace=TRUE)]), nrow=sampleSize)
-	# TODO: We should also be able to plot non-bootstrapped mean
-	# TODO: Try to parallelize at this level instead to lower memory consumption
-	mean <- mean(sapply(1:sampleSize, function(i){mean(S[i,])}))
-	qinf <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=alpha/2)
-	qsup <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=(1-alpha/2))
-	liste <- list(mean=mean, qinf=qinf, qsup=qsup)
-	return(liste)
-}
-
 binBootstrap <- function(data, alpha, sampleSize, cores=cores)
 {
 	# TODO: it would probably be more efficient to parallelize here
@@ -1084,33 +922,6 @@ binBootstrap <- function(data, alpha, sampleSize, cores=cores)
 	qsup <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=(1-alpha/2))
 	liste <- list(mean=mean, qinf=qinf, qsup=qsup)
 	return(liste)
-}
-
-# Convert the main data structure into a data.frame
-#
-# Input:
-#	groups:	The main data structure
-#
-# Output:
-#	A data.frame with the condensed results from the main data structure
-#		Columns:
-#		 * Groups: name of current group
-#		 * distances: the number of bin for each entry
-#		 * means: the means to plot
-#		 * qinf: the lower end of the confidence interval
-#		 * qsup: the higher end of the confidence interval
-plot.getDataFrame.old <- function(groups) {
-	lists <- lapply(groups, function(x) return(x$bootstrap))
-	grid = seq(-5000,5000,length=length(lists[[1]]$mean))
-	DF= data.frame (
-		Groups <- factor(rep(names(groups), each=length(grid))),
-		distances <- rep(grid, length(lists)),
-		means <- c(sapply(1:length(lists), function(x) lists[[x]]$mean)),
-		qinf <-  c(sapply(1:length(lists), function(x) lists[[x]]$qinf)),
-		qsup <-  c(sapply(1:length(lists), function(x) lists[[x]]$qsup))
-	)
-	colnames(DF) <- c("Groups", "distances", "means", "qinf", "qsup")
-	return(DF)
 }
 
 # Convert the bootstrapped data into a data.frame
