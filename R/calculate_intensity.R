@@ -112,6 +112,7 @@ mergeMatrix.old <- function(group) {
 #	paddingSize:	The length padding we want to add on each side of each regions.
 #			The padding is added after the scaling step.
 #	cores:		Number of cores for parallel processing (require parallel package).
+#	debug:		Keep intermediate files (can use a lot of memory). TRUE or FALSE.
 #
 # Output:
 #	A list of list of list of list.
@@ -123,7 +124,7 @@ mergeMatrix.old <- function(group) {
 #	The third level is the bamFiles, which are a list of the normalized expression of every regions.
 #		There are as many elements in the list as there are regions to parse.
 #		Each bam files has a list containing every regions.
-parseRegions <- function(regions, bamFiles, specie="human", design=NULL, paddingSize=2000, cores=1) {
+parseRegions <- function(regions, bamFiles, specie="human", design=NULL, paddingSize=2000, cores=1, debug=FALSE) {
 	groups <- list()
 	if (! is.null(design)) {
 		groups$design <- design
@@ -153,8 +154,10 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
 	cat("Step 3: Parse bam files...\n")
 	groups$raw <- parseBamFiles(groups$bamFilesDescription$bam, groups$regionsGroups, cores=cores)
 	groups$rpm <- rawCountsToRPM(groups$raw, groups$bamFilesDescription)
+	if (debug == FALSE) groups$raw <- NULL
 	groups$data <- prepareGroups(names(groups$regionsGroups), bamFiles=groups$bamFilesDescription, design=groups$design)
 	groups$data <- applyOnGroups(groups=groups$data, cores=1, FUN=removeControls, data.rpm=groups$rpm, design=groups$design, controlCores=cores)
+	if (debug == FALSE) groups$rpm <- NULL
 	cat("Step 3: Parse bam files... Done!\n")
 
 	# 4. Scale vectors
@@ -169,6 +172,9 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
 	# Get the median length of every regions groups in the current experiment
 	medianLength <- median(unlist(applyOnGroups(groups$data, cores=cores, getLengthsGroup)))
 	groups$data <- applyOnGroups(groups=groups$data, cores=1, FUN=scaleVectors, medianLength=medianLength, scaleCores=cores)
+	if (debug == FALSE) {
+		groups$data <- applyOnGroups(groups=groups$data, cores=cores, FUN=function(x) { x$noCTRL <- NULL; return(x) })
+	}
 	cat(" Done!\n")
 
 	# 5. Parse padding
@@ -177,11 +183,15 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
 	groups$raw.leftPaddings <- parseBamFiles(groups$bamFilesDescription$bam, groups$regionsGroups.leftPaddings, cores=cores)
 	groups$raw.rightPaddings <- parseBamFiles(groups$bamFilesDescription$bam, groups$regionsGroups.rightPaddings, cores=cores)
 	groups$rpm.leftPaddings <- rawCountsToRPM(groups$raw.leftPaddings, groups$bamFilesDescription)
+	if (debug == FALSE) groups$raw.leftPaddings <- NULL
 	groups$rpm.rightPaddings <- rawCountsToRPM(groups$raw.rightPaddings, groups$bamFilesDescription)
+	if (debug == FALSE) groups$raw.rightPaddings <- NULL
 	groups$data.leftPaddings <- prepareGroups(names(groups$regionsGroups.leftPaddings), bamFiles=groups$bamFilesDescription, design=groups$design)
 	groups$data.rightPaddings <- prepareGroups(names(groups$regionsGroups.rightPaddings), bamFiles=groups$bamFilesDescription, design=groups$design)
 	groups$data.leftPaddings <- applyOnGroups(groups=groups$data.leftPaddings, cores=1, FUN=removeControls, data.rpm=groups$rpm.leftPaddings, design=groups$design, controlCores=cores)
+	if (debug == FALSE) groups$rpm.leftPaddings <- NULL
 	groups$data.rightPaddings <- applyOnGroups(groups=groups$data.rightPaddings, cores=1, FUN=removeControls, data.rpm=groups$rpm.rightPaddings, design=groups$design, controlCores=cores)
+	if (debug == FALSE) groups$rpm.rightPaddings <- NULL
 	cat(" Done!\n")
 
 	# 6. Merge matrix
@@ -189,8 +199,21 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
 	groups$data <- applyOnGroups(groups=groups$data, cores=cores, FUN=mergeMatrix, level="scaled")
 	groups$data.leftPaddings <- applyOnGroups(groups=groups$data.leftPaddings, cores=cores, FUN=mergeMatrix, level="noCTRL")
 	groups$data.rightPaddings <- applyOnGroups(groups=groups$data.rightPaddings, cores=cores, FUN=mergeMatrix, level="noCTRL")
+	if (debug == FALSE) {
+		groups$data <- applyOnGroups(groups=groups$data.left, cores=cores, FUN=function(x) { x$scaled <- NULL; return(x) })
+		groups$data.leftPaddings <- applyOnGroups(groups=groups$data.leftPaddings, cores=cores, FUN=function(x) { x$noCTRL <- NULL; return(x) })
+		groups$data.rightPaddings <- applyOnGroups(groups=groups$data.rightPaddings, cores=cores, FUN=function(x) { x$noCTRL <- NULL; return(x) })
+	}
 	groups$matrix <- lapply(1:length(groups$data), function(x) cbind(groups$data.leftPaddings[[x]]$matrix, groups$data[[x]]$matrix, groups$data.rightPaddings[[x]]$matrix))
 	names(groups$matrix) <- names(groups$data)
+	if (debug == FALSE) {
+		groups$data <- NULL
+		groups$data.leftPaddings <- NULL
+		groups$data.rightPaddings <- NULL
+		groups$regionsGroups <- NULL
+		groups$regionsGroups.leftPaddings <- NULL
+		groups$regionsGroups.rightPaddings <- NULL
+	}
 	cat(" Done!\n")
 	return(groups)
 }
