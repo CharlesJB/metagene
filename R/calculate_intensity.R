@@ -432,6 +432,48 @@ prepareRegions <- function(regions, cores=1) {
 	return(toReturn)
 }
 
+# Get the genomic position of the paddings
+#
+# Input:
+#	regionsGroups:	The output of prepareRegions or prepareFeatures functions.
+#	side:		The side of the padding to prepare. Either 'left' or 'right'.
+#	paddingSize:	The length padding we want to add on each side of each regions.
+#	cores:		Number of cores for parallel processing (require parallel package).
+#
+# Output:
+#	A list of data.frames, each data.frame corresponding to the paddings for a group
+#	of features.
+prepareRegionsPaddings <- function(regionsGroups, side, paddingSize=2000, cores=1) {
+	# Check prerequisites
+
+	# Side must be either 'left' or 'right'
+	if (! side %in% c("left", "right")) {
+		stop("Side argument must be either 'left' or 'right'.")
+	}
+
+	# The number of cores has to be a positive integer
+	if(!is.numeric(cores) || cores <= 0) {
+		stop("The number of cores has to be a positive integer.")
+	}
+
+	getPaddings <- function(currentRegions) {
+		currentPaddings <- currentRegions
+		if (side == "left") {
+			currentPaddings$start_position <- currentRegions$start_position - paddingSize
+			currentPaddings$end_position <- currentRegions$start_position
+			currentPaddings$start_position[currentPaddings$start_position < 0] <- 0
+		} else {
+			currentPaddings$start_position <- currentRegions$end_position
+			currentPaddings$end_position <- currentRegions$end_position + paddingSize
+		}
+		return(currentPaddings)
+	}
+
+	toReturn <- applyOnGroups(regionsGroups, cores=cores, FUN=getPaddings)
+	names(toReturn) <- names(regionsGroups)
+	return(toReturn)
+}
+
 
 # Distribute the bam filenames in their respective groups.
 #
