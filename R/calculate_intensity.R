@@ -47,7 +47,7 @@ plotFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=50
 	# 5. Bootstrap
 	cat("Step 5: Bootstrap...")
 	bootstrap <- function(x) {
-		x$bootstrap <- bootstrapAnalysis(x, binSize=binSize, alpha=alpha, sampleSize=sampleSize, cores=cores)
+		x$bootstrap <- bootstrapAnalysis.old(x, binSize=binSize, alpha=alpha, sampleSize=sampleSize, cores=cores)
 		return(x)
 	}
 	groups <- applyOnGroups(groups=groups, cores=1, FUN=bootstrap)
@@ -56,7 +56,7 @@ plotFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=50
 	# TODO: Add previous params to plotFeatures function
 	# 6. Plot
 	cat("Step 6: Plot...")
-	groups$graphData <- plot.getDataFrame(groups)
+	groups$graphData <- plot.getDataFrame.old(groups)
 	plot.graphic(groups$graphData, paste(names(groups)))
 	cat(" Done!\n")
 	return(groups)
@@ -200,7 +200,7 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
 	groups$data.leftPaddings <- applyOnGroups(groups=groups$data.leftPaddings, cores=cores, FUN=mergeMatrix, level="noCTRL")
 	groups$data.rightPaddings <- applyOnGroups(groups=groups$data.rightPaddings, cores=cores, FUN=mergeMatrix, level="noCTRL")
 	if (debug == FALSE) {
-		groups$data <- applyOnGroups(groups=groups$data.left, cores=cores, FUN=function(x) { x$scaled <- NULL; return(x) })
+		groups$data <- applyOnGroups(groups=groups$data, cores=cores, FUN=function(x) { x$scaled <- NULL; return(x) })
 		groups$data.leftPaddings <- applyOnGroups(groups=groups$data.leftPaddings, cores=cores, FUN=function(x) { x$noCTRL <- NULL; return(x) })
 		groups$data.rightPaddings <- applyOnGroups(groups=groups$data.rightPaddings, cores=cores, FUN=function(x) { x$noCTRL <- NULL; return(x) })
 	}
@@ -1038,6 +1038,39 @@ scaleVector <- function(values, domain) {
         return(to_return)
 }
 
+# Create a graph
+#
+# Input:
+#	matricesGroups:	A list with every groupsto include in the graph. A group is one or more
+#			combination of featureGroup/designGroup. The names must correspond to the
+#			names of the matrix object returned from the parse function.
+#	data:		The object returned by the parse functions.
+#	binSize:	The number of nucleotides in each bin for the bootstrap step.
+#	alpha: 		Confidence interval.
+# 	sampleSize:	Number of time each bin will be resampled (should be at least 1000).
+#	cores:		Number of cores for parallel processing (require parallel package).
+# Ouput:
+#	The data.frame used to produce the graph
+plot.matrices <- function(matricesGroups, data, binSize=100, alpha=0.05, sampleSize=1000, cores=1) {
+	# 1. Extract and/or combine relevant matrices
+	for (matrixName in names(matricesGroups)) {
+		conditions <- unlist(names(data$matrix) %in% matricesGroups[[matrixName]])
+		matricesGroups[[matrixName]] <- do.call(rbind, data$matrix[conditions])
+	}
+	# 2. Bootstrap
+	bootstrap <- function(x, bootstrapCores=1) {
+		return(bootstrapAnalysis(x, binSize=binSize, alpha=alpha, sampleSize=sampleSize, cores=bootstrapCores))
+	}
+	bootstrapResults <- applyOnGroups(matricesGroups, cores=1, FUN=bootstrap, bootstrapCores=cores)
+
+	# 3. Prepare data.frame
+	DF <- getDataFrame(bootstrapResults)
+
+	# 4. Create graph
+	plot.graphic(DF, paste(names(matricesGroups)))
+	return(DF)
+}
+
 # Perform the bootstrap analysis
 #
 # Input:
@@ -1050,8 +1083,35 @@ scaleVector <- function(values, domain) {
 # Output:
 #	A list with the mean of the bootstraped vector and the quartile of order alpha/2 and (1-alpha/2)
 #
-bootstrapAnalysis <- function(currentGroup, binSize, alpha, sampleSize, cores=1) {
+bootstrapAnalysis.old <- function(currentGroup, binSize, alpha, sampleSize, cores=1) {
 	binnedMatrix <- binMatrix(currentGroup$matrix, binSize)
+	if (cores > 1) {
+		bootResults <- mclapply(1:ncol(binnedMatrix), function(x) binBootstrap.old(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores)
+	} else {
+		bootResults <- lapply(1:ncol(binnedMatrix), function(x) binBootstrap.old(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize))
+	}
+	bootResults <- do.call(rbind, bootResults)
+	toReturn <- list()
+	toReturn$mean <- unlist(bootResults[,1])
+	toReturn$qinf <- as.numeric(unlist(bootResults[,2]))
+	toReturn$qsup <- as.numeric(unlist(bootResults[,3]))
+	return(toReturn)
+}
+
+# Perform the bootstrap analysis
+#
+# Input:
+#	currentMatrix:	The matrix to use for the bootstrap analysis
+#	binSize:	The number of nucleotides in each bin for the bootstrap step.
+#	alpha: 		Confidence interval.
+# 	sampleSize:	Number of time each bin will be resampled (should be at least 1000).
+#	cores:		Number of cores for parallel processing (require parallel package).
+#
+# Output:
+#	A list with the mean of the bootstraped vector and the quartile of order alpha/2 and (1-alpha/2)
+#
+bootstrapAnalysis <- function(currentMatrix, binSize, alpha, sampleSize, cores=1) {
+	binnedMatrix <- binMatrix(currentMatrix, binSize)
 	if (cores > 1) {
 		bootResults <- mclapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores)
 	} else {
@@ -1064,7 +1124,6 @@ bootstrapAnalysis <- function(currentGroup, binSize, alpha, sampleSize, cores=1)
 	toReturn$qsup <- as.numeric(unlist(bootResults[,3]))
 	return(toReturn)
 }
-
 # Bin matrix columns
 #
 # INPUT:
@@ -1092,7 +1151,7 @@ binMatrix <- function(data,binSize)
 #
 # OUPUT:
 #	A list with the mean of the bootstraped vector and the quartile of order alpha/2 and (1-alpha/2)
-binBootstrap <- function(data, alpha, sampleSize)
+binBootstrap.old <- function(data, alpha, sampleSize)
 {
 	# TODO: it would probably be more efficient to parallelize here
 	size <- length(data)
@@ -1100,6 +1159,20 @@ binBootstrap <- function(data, alpha, sampleSize)
 	S <- matrix(replicate(sampleSize, data[sample(1:length(data),size,replace=TRUE)]), nrow=sampleSize)
 	# TODO: We should also be able to plot non-bootstrapped mean
 	# TODO: Try to parallelize at this level instead to lower memory consumption
+	mean <- mean(sapply(1:sampleSize, function(i){mean(S[i,])}))
+	qinf <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=alpha/2)
+	qsup <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=(1-alpha/2))
+	liste <- list(mean=mean, qinf=qinf, qsup=qsup)
+	return(liste)
+}
+
+binBootstrap <- function(data, alpha, sampleSize, cores=cores)
+{
+	# TODO: it would probably be more efficient to parallelize here
+	size <- length(data)
+	# TODO: try to sample data directly
+	S <- matrix(replicate(sampleSize, data[sample(1:length(data),size,replace=TRUE)]), nrow=sampleSize)
+	# TODO: We should also be able to plot non-bootstrapped mean
 	mean <- mean(sapply(1:sampleSize, function(i){mean(S[i,])}))
 	qinf <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=alpha/2)
 	qsup <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=(1-alpha/2))
@@ -1120,15 +1193,43 @@ binBootstrap <- function(data, alpha, sampleSize)
 #		 * means: the means to plot
 #		 * qinf: the lower end of the confidence interval
 #		 * qsup: the higher end of the confidence interval
-plot.getDataFrame <- function(groups) {
+plot.getDataFrame.old <- function(groups) {
 	lists <- lapply(groups, function(x) return(x$bootstrap))
 	grid = seq(-5000,5000,length=length(lists[[1]]$mean))
-	DF = data.frame (
-		Groups <- factor(rep(names(groups), each=length(grid))), 
+	DF= data.frame (
+		Groups <- factor(rep(names(groups), each=length(grid))),
 		distances <- rep(grid, length(lists)),
 		means <- c(sapply(1:length(lists), function(x) lists[[x]]$mean)),
 		qinf <-  c(sapply(1:length(lists), function(x) lists[[x]]$qinf)),
 		qsup <-  c(sapply(1:length(lists), function(x) lists[[x]]$qsup))
+	)
+	colnames(DF) <- c("Groups", "distances", "means", "qinf", "qsup")
+	return(DF)
+}
+
+# Convert the bootstrapped data into a data.frame
+#
+# Input:
+#	bootstapData:	Data produced during the bootstrap analysis
+#
+# Output:
+#	A data.frame with the condensed results from the main data structure
+#		Columns:
+#		 * Groups: name of current group
+#		 * distances: the number of bin for each entry
+#		 * means: the means to plot
+#		 * qinf: the lower end of the confidence interval
+#		 * qsup: the higher end of the confidence interval
+getDataFrame <- function(bootstrapData) {
+	#lists <- lapply(groups, function(x) return(x$bootstrap))
+	#grid = seq(-5000,5000,length=length(bootstrapData[[1]]$mean))
+	grid = 1:length(bootstrapData[[1]]$mean)
+	DF = data.frame (
+		Groups <- factor(rep(names(bootstrapData), each=length(grid))),
+		distances <- rep(grid, length(bootstrapData)),
+		means <- c(sapply(1:length(bootstrapData), function(x) bootstrapData[[x]]$mean)),
+		qinf <-  c(sapply(1:length(bootstrapData), function(x) bootstrapData[[x]]$qinf)),
+		qsup <-  c(sapply(1:length(bootstrapData), function(x) bootstrapData[[x]]$qsup))
 	)
 	colnames(DF) <- c("Groups", "distances", "means", "qinf", "qsup")
 	return(DF)
