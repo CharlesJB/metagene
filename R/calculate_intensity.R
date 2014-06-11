@@ -421,16 +421,17 @@ prepareRegions <- function(regions, cores=1) {
 		# TODO: should we check is start_position is always smaller than end_position?
 		return(currentBed)
 	}
-	toReturn <- lapply(regions, readBedFile)
+	toReturn <- applyOnGroups(regions, cores=cores, FUN=readBedFile)
 
 	# 2. Add the names
 	getBaseName <- function(bedFileName) {
 		return(sub("^([^.]*).*", "\\1", basename(bedFileName)))
 	}
-	names(toReturn) <- sapply(regions, getBaseName)
+	names(toReturn) <- unlist(applyOnGroups(regions, cores=cores, FUN=getBaseName))
 
 	return(toReturn)
 }
+
 
 # Distribute the bam filenames in their respective groups.
 #
