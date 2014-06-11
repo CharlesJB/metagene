@@ -235,50 +235,6 @@ scaleVectors <- function(group, medianLength, scaleCores=1) {
 	return(group)
 }
 
-# Extract the names from the main data structure
-#
-# Input:
-#	groups:	The main data structure
-#
-# Output:
-#	A data structure similar to the main data structure of MetaFeatures, but with no data
-extractNames <- function(groups) {
-	toReturn <- list()
-	for (groupName in names(groups)) {
-		toReturn[[groupName]] <- list()
-		toReturn[[groupName]]$featureName <- groups[[groupName]]$featureName
-		toReturn[[groupName]]$designName <- groups[[groupName]]$designName
-		toReturn[[groupName]]$bamFiles <- list()
-		for (bamFile in groups[[groupName]]$bamFiles) {
-			toReturn[[groupName]]$bamFiles[[bamFile]] <- ""
-		}
-	}
-	return(toReturn)
-}
-
-# Copy extracted names to the main data structures
-#
-# Input:
-#	newNames:	The output of extractNames function
-#	groups:		The main data structure of MetaFeatures
-#
-# Output:
-#	The group input with new names
-copyNames <- function(newNames, groups) {
-	names(groups) <- names(newNames)
-	for (groupName in names(newNames)) {
-		for (i in 1:length(groups[[groupName]])) {
-			if (class(groups[[groupName]][[i]]) == "list") {
-				names(groups[[groupName]])[i] <- "bamFiles"
-			}
-		}
-		groups[[groupName]]$featureName <- newNames[[groupName]]$featureName
-		groups[[groupName]]$designName <- newNames[[groupName]]$designName
-		names(groups[[groupName]]$bamFiles) <- names(newNames[[groupName]]$bamFiles)
-	}
-	return(groups)
-}
-
 # Apply a function on every groups of the main data structure
 #
 # Input:
@@ -296,12 +252,6 @@ applyOnGroups <- function(groups, cores=1, FUN, ...) {
 	} else {
 		return(lapply(groups, function(x) FUN(x, ...)))
 	}
-}
-
-
-# Check parameters for the plot functions
-checkParams <- function(bamfiles, features=NULL, maxDistance=NULL, ranges=NULL, design=NULL, scaling="median", filling=NULL, padding=NULL, centering=NULL) {
-
 }
 
 # Sort and index bam files, if necessary. Return the number of aligned reads for each bam file.
