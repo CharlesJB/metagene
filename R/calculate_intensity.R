@@ -235,50 +235,6 @@ scaleVectors <- function(group, medianLength, scaleCores=1) {
 	return(group)
 }
 
-# Create a metagene plot based on a list of genomic regions
-#
-# Input:
-#	bamFiles:	A vector of bamFile to plot. TODO: Should also accept a list of bamfiles where each elements would be grouped together
-#	file:		The name of the output file. In pdf format. TODO: also send to screen
-#	ranges:		List of genomic regions. Path to a bed file. TODO: add genomic ranges class.
-#			TODO: Hard coder FANTOM enhancer -> default
-# 	design:		A matrix explaining the relationship between multiple samples.
-#			One line per samples.
-#			One column per group of samples. For example, biological replicates and corresponding controls are in the same group.
-#			1: treatment file(s)
-#			2: control file(s)
-#	scaling:	The way the regions should be scaled. Cannot be used with filling.
-#			"median": Default. Every regions are resized to fit the median size of the regions.
-#			"average": Every regions are resized to fit the average size of the regions.
-#			"largest": Every regions are resized to fit the largest size of the regions.
-#			"smallest": Every regions are resized to fit the smallest size of the regions.
-#			NULL: No scaling.
-#	filling:	Define how are smaller regions are fitted to the largest. Cannot be used with scaling.
-#			"extend": Resize all regions to fit largest.
-#			"NA": Fill smaller regions with NA.
-#			NULL: Default. No filling.
-#	padding:	Add nucleotides to the size of every regions.
-#			TODO: 2 arguments, type de padding (absolute ou relative) et taille du padding (paddingSize)
-#			If the value is greater than one, the rounded value will be added in both directions.
-#			If the value is smaller than one, a relative padding corresponding to the value will be added in both directions.
-#			NULL: Default. No padding
-#	centering:	A function to define how are the regions centered.
-#			NULL: Default. Regions are centered at the middle.
-#	...:		Extra arguments for centering function.
-#
-# TODO: nouvel argument pour normalisation qui fit avec edgeR
-# TODO: nouvel argument pour overlapping regions (merge, mean: on fait la moyenne)
-#
-# output:
-#
-plotFeaturesByRegions <- function(bamFiles, file="regions.pdf", ranges=NULL, design=NULL, scaling="median", filling=NULL, padding=NULL, centering=NULL, ...) {
-	# 0. Check if params are valid
-	# 1. Prepare bam files
-	# 2. Parse regions
-	# 	For loop for now. Eventually, this is the place that will be parallelized.
-	# 3. Realign regions
-}
-
 # Extract the names from the main data structure
 #
 # Input:
