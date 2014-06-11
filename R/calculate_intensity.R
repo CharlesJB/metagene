@@ -41,7 +41,7 @@ plotFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=50
 
 	# 4. Merge matrix
 	cat("Step 4: Merge matrix...")
-	groups <- applyOnGroups(groups=groups, cores=cores, FUN=mergeMatrix)
+	groups <- applyOnGroups(groups=groups, cores=cores, FUN=mergeMatrix.old)
 	cat(" Done!\n")
 
 	# 5. Bootstrap
@@ -66,16 +66,35 @@ plotFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=50
 #
 # Input:
 #	group:	Correspond to an element in the data subsection of the main data structure.
+#	level: 	The names of the element to merge.
 #
 # Output:
 #	The group in input with an extra element named matrix (group$matrix).
-mergeMatrix <- function(group) {
-	mergeMatrixFixedLengthFeatures <- function(currentExperiment) {
-		currentBamFiles <- currentExperiment$bamFiles
-		return(lapply(1:length(currentBamFiles), function(x) currentBamFiles[[group]] <- do.call(rbind, currentBamFiles[[group]])))
+mergeMatrix <- function(group, level) {
+	mergeMatrixFixedLengthFeatures <- function(currentGroup) {
+		#currentBamFiles <- currentGroup$bamFiles
+		#return(lapply(1:length(currentBamFiles), function(x) currentBamFiles[[group]] <- do.call(rbind, currentBamFiles[[group]])))
+		#return(lapply(1:length(currentBamFiles), function(x) currentGroup$noCTRL[[group]] <- do.call(rbind, currentGroup$noCTRL[[group]])))
+		return(lapply(currentGroup[[level]], function(x) do.call(rbind, x)))
 	}
 	group$matrix <- do.call(rbind, mergeMatrixFixedLengthFeatures(group))
 	return(group)
+}
+
+# Convert list of vectors in matrix for a single group
+#
+# Input:
+#	group:	Correspond to an element in the data subsection of the main data structure.
+#
+# Output:
+#	The group in input with an extra element named matrix (group$matrix).
+mergeMatrix.old <- function(group) {
+       mergeMatrixFixedLengthFeatures <- function(currentExperiment) {
+               currentBamFiles <- currentExperiment$bamFiles
+               return(lapply(1:length(currentBamFiles), function(x) currentBamFiles[[group]] <- do.call(rbind, currentBamFiles[[group]])))
+        }
+	group$matrix <- do.call(rbind, mergeMatrixFixedLengthFeatures(group))
+        return(group)
 }
 
 # Resize the vectors of every group so they have the same length
