@@ -217,9 +217,14 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
 }
 
 # Resize the vectors of every group so they have the same length
-# Note: For this function to work correctly, we must have substracted and removed the controls.
-#	This is because the controls can be redundant between groups, so the median could be influenced.
-scaleVectors <- function(group, medianLength, scaleCores=1) {
+#
+# Input:
+#	group:	From the main data structure after removeControls was called.
+#	domain:	The target length for the vectors
+#
+# Output:
+#	The same group that was used in input with an extra element named scaled.
+scaleVectors <- function(group, domain, scaleCores=1) {
 	scaleBamFile <- function(bamFile, domain, scaleCores=1) {
 		if (scaleCores > 1) {
 			return(mclapply(bamFile, scaleVector, domain, mc.cores=scaleCores))
@@ -227,9 +232,8 @@ scaleVectors <- function(group, medianLength, scaleCores=1) {
 			return(lapply(bamFile, scaleVector, domain))
 		}
 	}
-	#group$bamFilesBeforeScaling <- group$bamFiles
-	group$scaled <- lapply(group$noCTRL, scaleBamFile, domain=medianLength, scaleCores=scaleCores)
-	names(group$bamFiles) <- names(group$bamFilesBeforeScaling)
+	group$scaled <- lapply(group$noCTRL, scaleBamFile, domain=domain, scaleCores=scaleCores)
+	names(group$scaled) <- names(group$noCTRL)
 	return(group)
 }
 
