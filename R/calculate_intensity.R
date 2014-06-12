@@ -732,7 +732,7 @@ extractReadsInRegion <- function(bamFile, chr, start, end) {
 	
 	# Check prerequisites
 	
-	# The BAM file name must be of string type 
+	# The BAM file name must be of string type
 	if (!is.character(bamFile)) {
 		stop("The BAM file name is not a valid name (a character string).")
 	}
@@ -743,10 +743,10 @@ extractReadsInRegion <- function(bamFile, chr, start, end) {
 	}
 	
 	# TODO : VALIDER SI A FAIRE OU NON
-	#The chromosome name must be of string type 
-	#if (!is.character(chr)) {
-	#	stop("The chromosome name is not a valid name (a character string).")
-	#}
+	#The chromosome name must be of character type
+	if (!is.character(chr)) {
+		stop("The chromosome name is not a valid name (a character string).")
+	}
 		
 	# The starting position has to be a positive integer
 	if(!is.numeric(start) || start <= 0) {
