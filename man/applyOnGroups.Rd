@@ -45,17 +45,3 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
-
-\examples{
-  # We use the \code{demo.dataStructure.Rda} file available with
-  # this package:
-  bamFile <- system.file("extdata/demo.dataStructure.Rda",
-                         package="MetaFeatures")
-
-  # We create a simple function that will return the name of the
-  # features for each groups
-  extractFeatureNames <- function(group) {
-    return(g$featureName)
-  }
-  featureNames <- applyOnGroups(groups, FUN=extractFeatureNames)
-}

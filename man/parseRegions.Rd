@@ -83,10 +83,3 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
-
-\examples{
-  # We can also give the function a list of features:
-  \dontrun{regions <- system.file("extdata/demoRegions.txt", 
-                         package="MetaFeatures")}
-  \dontrun{parseRegions(bamFile, features=features)}
-}

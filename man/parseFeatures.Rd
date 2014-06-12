@@ -87,18 +87,3 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
-
-\examples{
-  # We use the \code{demo.bam} file available with this package:
-  \dontrun{bamFile <- system.file("extdata/demo.bam", 
-                         package="MetaFeatures")}
-
-  # The most basic usage is giving \code{plotFeatures} a single
-  # bam file:
-  \dontrun{groups <- parseFeatures(bamFile)}
-
-  # We can also give the function a list of features:
-  \dontrun{features <- system.file("extdata/demoFeatures.txt", 
-                         package="MetaFeatures")}
-  \dontrun{parseFeatures(bamFile, features=features)}
-}
