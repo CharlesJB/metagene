@@ -696,6 +696,8 @@ parseBamFile <- function(bamFile, features, cores=1) {
 	extractReadsDensity <- function(feature, bamFile) {
 		# Extract raw counts
 		currentReads <- extractReadsInRegion(bamFile, feature$space, feature$start_position, feature$end_position)
+		# TODO: sometimes there are NA, need to find why and replace this current hack
+                currentReads <- currentReads[!is.na(currentReads$pos),]
 		vectorResult <- convertReadsToDensity(currentReads, feature)
 
 		# If on negative strand, invert the current vector
