@@ -15,9 +15,6 @@
 #			One column per group of samples. For example, biological replicates and corresponding controls are in the same group.
 #			1: treatment file(s)
 #			2: control file(s)
-#	binSize:	The number of nucleotides in each bin for the bootstrap step.
-#	alpha: 		Confidence interval.
-# 	sampleSize:	Number of time each bin will be resampled (should be at least 1000).
 #	cores:		Number of cores for parallel processing (require parallel package).
 #	debug:		Keep intermediate files (can use a lot of memory). TRUE or FALSE.
 #
@@ -50,7 +47,7 @@ parseFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=5
 
 	# 2. Prepare regions
 	cat("Step 2: Prepare regions...")
-	groups$regionsGroups <- prepareFeatures(regions, cores=cores)
+	groups$regionsGroups <- prepareFeatures(features=features, specie=specie, maxDistance=maxDistance, cores=cores)
 	cat(" Done!\n")
 
 	# 3. Parse bam files
