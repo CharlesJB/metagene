@@ -219,12 +219,14 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
 # Resize the vectors of every group so they have the same length
 #
 # Input:
-#	group:	From the main data structure after removeControls was called.
-#	domain:	The target length for the vectors
+#	group:		A list that contains a list of list of vectors
+#	level: 		The names of the element of the group to merge.
+#	domain:		The target length for the vectors
+#	scaleCores:	Number of cores for parallel processing (require parallel package).
 #
 # Output:
 #	The same group that was used in input with an extra element named scaled.
-scaleVectors <- function(group, domain, scaleCores=1) {
+scaleVectors <- function(group, level, domain, scaleCores=1) {
 	scaleBamFile <- function(bamFile, domain, scaleCores=1) {
 		if (scaleCores > 1) {
 			return(mclapply(bamFile, scaleVector, domain, mc.cores=scaleCores))
@@ -232,8 +234,8 @@ scaleVectors <- function(group, domain, scaleCores=1) {
 			return(lapply(bamFile, scaleVector, domain))
 		}
 	}
-	group$scaled <- lapply(group$noCTRL, scaleBamFile, domain=domain, scaleCores=scaleCores)
-	names(group$scaled) <- names(group$noCTRL)
+	group$scaled <- lapply(group[[level]], scaleBamFile, domain=domain, scaleCores=scaleCores)
+	names(group$scaled) <- names(group[[level]])
 	return(group)
 }
 
@@ -636,7 +638,9 @@ rawCountsToRPM <- function(rawCounts, bamFilesDescription, cores=1) {
 #
 # Input:
 #	group:		A group extracted from the main data structure
-#	currentDesign:	The line from matrix explaining the relationship between current samples.
+#	data.rpm:	The normalized data for every bam files.
+#	design:		The line from matrix explaining the relationship between current samples.
+#	controlCores:	Number of cores for parallel processing (require parallel package).
 #
 # Output:
 #	The group extracted from the main data structure from which the controls were substracted then deleted
@@ -780,7 +784,7 @@ extractReadsInRegion <- function(bamFile, chr, start, end) {
 #	currentFeature:		The feature to parse.
 #
 # OUPUT:
-#	A vector of with the coverage of every positions calculated from the reads around the max distance from TSS.
+#	A vector with the coverage of every positions calculated from the reads around the max distance from TSS.
 convertReadsToDensity <- function(currentReads, currentFeature) {
 	maxSize <- abs(currentFeature$end_position - currentFeature$start_position)
 	start <- min(currentFeature$start_position, currentFeature$end_position)
@@ -886,6 +890,7 @@ bootstrapAnalysis <- function(currentMatrix, binSize, alpha, sampleSize, cores=1
 	toReturn$qsup <- as.numeric(unlist(bootResults[,3]))
 	return(toReturn)
 }
+
 # Bin matrix columns
 #
 # INPUT:
@@ -914,7 +919,7 @@ binMatrix <- function(data,binSize)
 #
 # OUPUT:
 #	A list with the mean of the bootstraped vector and the quartile of order alpha/2 and (1-alpha/2)
-binBootstrap <- function(data, alpha, sampleSize, cores=cores)
+binBootstrap <- function(data, alpha, sampleSize, cores=1)
 {
 	# TODO: it would probably be more efficient to parallelize here
 	size <- length(data)
@@ -963,7 +968,7 @@ getDataFrame <- function(bootstrapData) {
 #	title:	The title of the graph
 #
 # Ouput:
-#	The graph that is printed on the screen.
+#	The graph that is printed on the current device.
 plot.graphic <- function(DF, title) {
 	library(ggplot2)
 	p <- ggplot(DF, aes(x=distances, y=means, ymin=qinf, ymax=qsup)) +
