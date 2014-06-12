@@ -400,12 +400,12 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
 	# Check prerequisites
 	
 	# All features file names must be of string type 
-	if (sum(unlist(lapply(features, is.character))) != length(features)) {
+	if (!is.null(features) && sum(unlist(lapply(features, is.character))) != length(features)) {
 		stop("At least one features file name is not a valid name (a character string).")
 	}
 	
 	# All festures files must exist
-	if (sum(unlist(lapply(features, file.exists))) != length(features)) {
+	if (!is.null(features) && sum(unlist(lapply(features, file.exists))) != length(features)) {
 		stop("At least one features file does not exist.")
 	}
 	
@@ -435,6 +435,7 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
 		currentFeature$end_position <- currentFeature$end_position + maxDistance
 		return(currentFeature)
 	}
+	featuresGroups <- list()
 	if (!is.null(features)) {
 		if (cores > 1) {
 			library(parallel)
