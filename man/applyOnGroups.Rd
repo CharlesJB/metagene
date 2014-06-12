@@ -8,10 +8,10 @@
 
 \usage{
   applyOnGroups(
-    groups, 
+    groups,
     cores=1,
     FUN,
-    ...)
+   ...)
 }
 
 \arguments{
@@ -19,7 +19,7 @@
 
   \item{features}{Either a filename of a \code{vector} of filenames.
     Supported features: ensembl_gene_id. 
-    File must contain a header that correspond to the name of the 
+    File must contain a header that correspond to the name of the
     group.}
 
   \item{cores}{Number of cores for parallel processing.
@@ -49,7 +49,7 @@
 \examples{
   # We use the \code{demo.dataStructure.Rda} file available with
   # this package:
-  bamFile <- system.file("extdata/demo.dataStructure.Rda", 
+  bamFile <- system.file("extdata/demo.dataStructure.Rda",
                          package="MetaFeatures")
 
   # We create a simple function that will return the name of the
