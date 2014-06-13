@@ -5,6 +5,10 @@
   Produce a plot with based on a data.frame
 }
 
+\description{
+  This function will produce the final plot for an analysis.
+}
+
 \usage{
   plot.graphic(
     DF,

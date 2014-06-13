@@ -9,17 +9,6 @@
   Sort and index bam files, if necessary. Return the number of
   aligned reads for each bam file.
 }
-#
-# Input:
-#
-# Prerequisites:
-# The number of cores has to be a positive integer.
-# All BAM files must exist.
-#
-# Output:
-#	A data.frame containing the indexed bam filename and number of aligned reads for each bam file.
-#	Column names: bamFiles and alignedCount
-prepareBamFiles <- function(bamFiles, cores = 1) {
 
 \usage{
   prepareBamFiles(

@@ -5,15 +5,20 @@
   Convert the bootstrapped data into a data.frame
 }
 
+\description{
+  This function will convert the results of the bootstrap
+  analysis into a \code{data.frame} that can be used directly
+  with ggplot2 to produce the final plot.
+}
+
 \usage{
   getDataFrame(bootstrapData)
 }
 
 \arguments{
-  \item{bootstapData}{Data produced during the bootstrap analysis}
+  \item{bootstrapData}{Data produced during the bootstrap analysis}
 }
-#	A data.frame with the condensed results from the main data structure
-#		Columns:
+
 \value{
   \code{getDataFrame} a \code{data.frame} with the condensed results
     from the main data structure.

@@ -25,13 +25,6 @@
   ensembl_gene_id for a given specie ("human" or "mouse").
 }
 
-# OUTPUT:
-#	A data.frame with 5 columns:
-#		1: feature -> Ensembl gene id
-#		2: strand -> -1 or 1
-#		3: space -> chromosome
-#		4: start_position -> position of the TSS
-#		5: end_position -> ending position of the last exon of the gene
 \value{
   \code{getGenes} return a \code{data.frame} with five columns:
     1: feature -> Ensembl gene id

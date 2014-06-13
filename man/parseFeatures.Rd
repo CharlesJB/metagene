@@ -66,7 +66,7 @@
 }
 
 \value{
-  \code{plotFeatures} returns a list that contains the data
+  \code{parseFeatures} returns a list that contains the data
   necessary to produce a plot.
 
   The data structure is a list of lists.

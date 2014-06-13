@@ -5,6 +5,12 @@
   Convert the raw counts into reads per million aligned (rpm)
 }
 
+\description{
+  This function will convert raw counts into reads per million
+  aligned (rpm) using the aligned reads counts obtained with the
+  \code{prepareBamFiles} function.
+}
+
 \usage{
   rawCountsToRPM(
     rawCounts,

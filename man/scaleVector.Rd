@@ -5,6 +5,12 @@
   Scale the values of a vector to fit with predetermined size
 }
 
+\description{
+  This function will resize the values of the vector so that
+  they fit in a pre-defined range. The number of elements will
+  changed, but the general distribution will remain the same.
+}
+
 \usage{
   scaleVector(
     values,

@@ -6,6 +6,12 @@
   Apply a function on every groups of the main data structure
 }
 
+\description{
+  This function takes a \code{list} of elements and apply a
+  user-specified function on them. Works like lapply, but can
+  use multiple cores if asked.
+}
+
 \usage{
   applyOnGroups(
     groups,
@@ -17,11 +23,6 @@
 \arguments{
   \item{groups}{The main data structure}
 
-  \item{features}{Either a filename of a \code{vector} of filenames.
-    Supported features: ensembl_gene_id. 
-    File must contain a header that correspond to the name of the
-    group.}
-
   \item{cores}{Number of cores for parallel processing.
     Require parallel package.}
 
@@ -29,16 +30,9 @@
 
   \item{...}{Extract arguments for FUN.}
 }
-
-\details{
-  The function must be aware of the structure of the main data
-  structure. See the \code{value} section of \code{plotFeatures}
-  and \code{plotFeaturesByRegions} manuals.
-}
-
 \value{
-  \code{plotFeatures} silently returns a the main data structure
-    with the data used to produce the plot.
+  The \code{applyOnGroups} return value will vary depending on
+  the function specified by the user.
 }
 
 \author{

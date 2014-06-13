@@ -14,7 +14,7 @@
     group,
     level,
     domain,
-    scaledCores=1)
+    scaleCores=1)
 }
 
 \arguments{

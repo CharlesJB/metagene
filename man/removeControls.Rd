@@ -5,12 +5,19 @@
   Substract controls from a single group
 }
 
+\description{
+  This function will substract controls for every replicates in
+  the same group. If there are multiple controls, their values
+  will be averaged before substracting them from the input.
+  Values cannot be lower than 0.
+}
+
 \usage{
   removeControls(
     group,
     data.rpm,
     design,
-    cores=1)
+    controlCores=1)
 }
 
 \arguments{

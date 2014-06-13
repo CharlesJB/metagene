@@ -5,6 +5,10 @@
   Extract reads from BAM file that overlap with a specified genomic region.
 }
 
+\description{
+  This function uses Rsamtools to extract the reads that overlap
+  a genomic regions.
+}
 
 \usage{
   extractReadsInRegion(

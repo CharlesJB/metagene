@@ -5,10 +5,15 @@
   Bin matrix columns
 }
 
+
+\description{
+  This function will split a matrix into multiple segments.
+}
+
 \usage{
   binMatrix(
     data,
-    size)
+    binSize)
 }
 
 \arguments{

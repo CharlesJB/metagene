@@ -5,6 +5,11 @@
   Convert a list of read in a vector of positions.
 }
 
+\description{
+  This function takes a list of reads obtained with Rsamtools
+  and convert them into a \code{vector} of density.
+}
+
 \usage{
   convertReadsToDensity(
     currentReads,

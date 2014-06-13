@@ -5,6 +5,11 @@
   Parse multiple bamFiles
 }
 
+\description{
+  This function will fetch the aligned reads from multiple bam
+  files that overlap with a list of regions.
+}
+
 \usage{
   parseBamFiles(
     bamFiles,

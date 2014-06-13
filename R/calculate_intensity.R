@@ -353,7 +353,7 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
 		} else {
 			featuresGroups <- lapply(features, extractFeatures)
 		}
-		names(featuresGroups) <- unlist(lapply(features, function(x) as.character(read.table(x, nrow=1)[1,])))
+		names(featuresGroups) <- unlist(lapply(features, function(x) as.character(read.table(x, nrows=1)[1,])))
 	} else {
 		knownGenes$end_position <- knownGenes$start_position
 		knownGenes$start_position <- knownGenes$start_position - maxDistance

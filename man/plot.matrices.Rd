@@ -5,6 +5,12 @@
   Create a graph
 }
 
+\description{
+  This function wraps all the steps necessary to produce the
+  final plot using the results of either \code{parseFeatures}
+  or \code{parseRegions} functions.
+}
+
 \usage{
   plot.matrices(
     matricesGroups,

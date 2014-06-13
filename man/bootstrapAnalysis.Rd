@@ -5,6 +5,11 @@
   Perform the bootstrap analysis
 }
 
+\description{
+  This function wraps the diffentent steps needed to do a
+  bootstrap analysis on a matrix.
+}
+
 \usage{
   bootstrapAnalysis(
     currentMatrix,
@@ -29,7 +34,7 @@
   \item{cores}{Number of cores for parallel processing (require
     parallel package).}
 }
-#	A list with the mean of the bootstraped vector and the quartile of order alpha/2 and (1-alpha/2)
+
 \value{
   \code{bootstrapAnalysis} returns a \code{list} with the mean of the
     bootstraped vector and the quartile of order alpha/2 and

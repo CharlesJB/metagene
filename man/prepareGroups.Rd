@@ -5,6 +5,11 @@
   Distribute the bam filenames in their respective groups.
 }
 
+\description{
+  This function will initialize every groups in the main data
+  structure.
+}
+
 \usage{
   prepareGroups(
     featuresGroupsNames,

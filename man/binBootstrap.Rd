@@ -5,6 +5,12 @@
   Estimate mean and confidence interval of a column using bootstrap.
 }
 
+\description{
+  Since the sample size can be small, the use of a bootstrap
+  function can help to calculate a better approximation of the
+  mean and reduce the confidence intervals.
+}
+
 \usage{
   binBootstrap(
     data,

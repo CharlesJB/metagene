@@ -5,6 +5,11 @@
   Convert a list of IDs into a list of genomic regions
 }
 
+\description{
+  This function will convert a list of IDs into a list of
+  regions using biomaRt.
+}
+
 \usage{
   prepareFeatures(
     features,
@@ -29,9 +34,6 @@
     parallel package).}
 }
 
-# Output:
-#	A list of data.frame. One data.frame by group of features.
-#	The names of each element of the list correspond to the name of the group.
 \value{
   \code{prepareFeatures} returns a \code{list} of \code{data.frames}.
     One \code{data.frame} by group of features. The names of
