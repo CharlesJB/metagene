@@ -98,7 +98,7 @@ test.prepareFeatures_zero_core_number<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
 	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, cores=0), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
-	exp <- "The number of cores has to be a positive integer."
+	exp <- "The number of cores has to be a positive numeric with no decimals."
 	checkIdentical(obs, exp, msg="A zero core number argument did not generate an exception with expected message.")
 }
 
@@ -107,16 +107,16 @@ test.prepareFeatures_negative_core_number<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
 	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, cores=-2), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
-	exp <- "The number of cores has to be a positive integer."
+	exp <- "The number of cores has to be a positive numeric with no decimals."
 	checkIdentical(obs, exp, msg="A negative core number argument did not generate an exception with expected message.")
 }
 
 ## Something other than an integer number should not be accepted as an core number argument 
-test.prepareFeatures_not_integer_core_number<- function() {
+test.prepareFeatures_not_numeric_core_number<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
 	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, cores=2.22), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
-	exp <- "The number of cores has to be a positive integer."
+	exp <- "The number of cores has to be a positive numeric with no decimals."
 	checkIdentical(obs, exp, msg="A decimal core number argument did not generate an exception with expected message.")
 }
 
@@ -124,8 +124,8 @@ test.prepareFeatures_not_integer_core_number<- function() {
 test.prepareFeatures_zero_max_distance<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
-	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, cores=0), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
-	exp <- "The number of cores has to be a positive integer."
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, maxDistance=0), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
+	exp <- "The maximum distance has to be a positive numeric with no decimals."
 	checkIdentical(obs, exp, msg="A zero maximum distance argument did not generate an exception with expected message.")
 }
 
@@ -133,8 +133,8 @@ test.prepareFeatures_zero_max_distance<- function() {
 test.prepareFeatures_negative_max_distance<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
-	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, cores=-2), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
-	exp <- "The maximum dsitance has to be a positive integer."
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, maxDistance=-2), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
+	exp <- "The maximum distance has to be a positive numeric with no decimals."
 	checkIdentical(obs, exp, msg="A negative maximum distance argument did not generate an exception with expected message.")
 }
 
@@ -142,8 +142,8 @@ test.prepareFeatures_negative_max_distance<- function() {
 test.prepareFeatures_not_integer_max_distance<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
-	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, cores=2.33), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
-	exp <- "The maximum dsitance has to be a positive integer."
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, maxDistance=2.33), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
+	exp <- "The maximum distance has to be a positive numeric with no decimals."
 	checkIdentical(obs, exp, msg="A decimal maximum distance argument did not generate an exception with expected message.")
 }
 
@@ -151,8 +151,8 @@ test.prepareFeatures_not_integer_max_distance<- function() {
 test.prepareFeatures_not_integer_max_distance<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
-	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file,  "NotAInteger"), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
-	exp <- "The maximum dsitance has to be a positive integer."
+	obs <- tryCatch(MetaFeatures:::prepareFeatures(temp_file, maxDistance="NotAInteger"), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
+	exp <- "The maximum distance has to be a positive numeric with no decimals."
 	checkIdentical(obs, exp, msg="A generic text used as a maximum distance did not generate an exception with expected message.")
 }
 

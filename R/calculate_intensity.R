@@ -325,13 +325,13 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
 	}
 	
 	# The maximum dsitance has to be a positive integer
-	if(!is.integer(maxDistance) || maxDistance <= 0) {
-		stop("The maximum distance has to be a positive integer.")
+	if(!is.numeric(maxDistance) || maxDistance <= 0 || maxDistance %% 1 != 0) {
+		stop("The maximum distance has to be a positive numeric with no decimals.")
 	}	
 	
 	# The number of cores has to be a positive integer
-	if(!is.integer(cores) || cores <= 0) {
-		stop("The number of cores has to be a positive integer.")
+	if(!is.numeric(cores) || cores <= 0 || cores %% 1 != 0) {
+		stop("The number of cores has to be a positive numeric with no decimals.")
 	}
 	
 	knownGenes <- getGenes(specie)
