@@ -1,0 +1,4 @@
+export(getGenes)
+export(parseFeatures)
+export(parseRegions)
+export(plot.matrices)
