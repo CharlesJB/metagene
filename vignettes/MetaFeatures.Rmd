@@ -96,7 +96,7 @@ regions
 To parse the sequences overlapping a list of features, you must use the parseFeatures function:
 
 ```{r parseFeaturesExample, cache=TRUE}
-groupsFeatures <- parseFeatures(bamFiles=bamFiles, features=features, design=design, specie="mouse", maxDistance=1000, cores=4)
+groupsFeatures <- parseFeatures(bamFiles=bamFiles, features=features, design=design, specie="mouse", maxDistance=1000)
 ```
 
 If no feature files are provided, the package will use every known TSS for the selected specie (use the specie argument, default value: "human")
