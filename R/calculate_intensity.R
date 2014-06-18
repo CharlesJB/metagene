@@ -117,7 +117,6 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
 
 	# 1. Prepare bam files
 	cat("Step 1: Prepare bam files...")
-	#bamFiles <- prepareBamFiles(bamFiles, cores=cores)
 	groups$bamFilesDescription <- prepareBamFiles(bamFiles, cores=cores)
 	cat(" Done!\n")
 
@@ -255,9 +254,8 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
 			# If there is no index file, we sort and index the current bam file
 			# TODO: we need to check if the sorted file was previously produced before
 			#       doing the costly sort operation
-			sortedBamFile <- sub("^([^.]*).*", "\\1", bamFile)
+			sortedBamFile <- basename(bamFile)
 			sortedBamFile <- paste(sortedBamFile, ".sorted", sep="")
-			cat(sortedBamFile)
 			sortBam(bamFile, sortedBamFile)
 			sortedBamFile <- paste(sortedBamFile, ".bam", sep="")
 			indexBam(sortedBamFile)
