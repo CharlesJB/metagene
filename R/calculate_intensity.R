@@ -497,12 +497,13 @@ prepareRegionsPaddings <- function(regionsGroups, side, paddingSize=2000, cores=
 #	Second level:	One entry per bamFile in current features group
 #	Third level:	One entry per feature in current features group
 parseBamFiles <- function(bamFiles, featuresGroups, cores=1) {
-	parseFeatures <- function(features, bamFiles, cores) {
+	parseFeatures <- function(features, currentName, bamFiles, cores) {
+		print(currentName)
 		raw.counts <- lapply(bamFiles, parseBamFile, features=features, cores=cores)
 		names(raw.counts) <- bamFiles
 		return(raw.counts)
 	}
-	raw.data <- lapply(featuresGroups, parseFeatures, bamFiles=bamFiles, cores=cores)
+	raw.data <- lapply(1:length(featuresGroups), function(x) parseFeatures(featuresGroups[[x]], names(featuresGroups)[x], bamFiles=bamFiles, cores=cores))
 	names(raw.data) <- names(featuresGroups)
 	return(raw.data)
 }
