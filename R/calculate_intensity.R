@@ -878,6 +878,7 @@ plot.matrices <- function(matricesGroups, data, binSize=100, alpha=0.05, sampleS
 bootstrapAnalysis <- function(currentMatrix, binSize, alpha, sampleSize, cores=1) {
 	binnedMatrix <- binMatrix(currentMatrix, binSize)
 	if (cores > 1) {
+		library(parallel)
 		bootResults <- mclapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize), mc.cores=cores)
 	} else {
 		bootResults <- lapply(1:ncol(binnedMatrix), function(x) binBootstrap(binnedMatrix[,x], alpha=alpha, sampleSize=sampleSize))
