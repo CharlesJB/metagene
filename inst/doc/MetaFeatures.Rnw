@@ -79,15 +79,15 @@ Since the regions will most likely have different length, MetaFeatures will scal
 There is no \code{maxDistance} argument because the size of the regions are already defined in the bed files. It is possible to add paddings on each side of every regions with the \code{paddingSize} argument. Please note that the padding is added after the main regions are scaled.
 
 \section{Plotting the results}
-During the plotting step, it is possible to specify which groups of features or regions to add into the plot. The results of the \code{parseFeatures} or \code{parseRegions} can be used directly by the \code{plot.matrices} function.
+During the plotting step, it is possible to specify which groups of features or regions to add into the plot. The results of the \code{parseFeatures} or \code{parseRegions} can be used directly by the \code{plotMatrices} function.
 
 Before producing the plot, the MetaFeatures package will do a bootstrap analysis to obtain better estimates of the mean and confidence intervals for each groups. This step can be computationally expensive and the running time will direfctly depend on the \code{binSize} and \code{sampleSize} arguments.
 
 You must use a \code{list} object to represent the groups to use and how to name them.
 
 Usage example:
-\code{DF <- plot.matrices(list(group1=c("file1", "file2"), group2=(c("file3", "file4"), groups)))}
+\code{DF <- plotMatrices(list(group1=c("file1", "file2"), group2=(c("file3", "file4"), groups)))}
 
-The \code{plot.matrices} function returns the \code{data.frame} that was used with ggplot2 to produce the results.
+The \code{plotMatrices} function returns the \code{data.frame} that was used with ggplot2 to produce the results.
 
 \end{document}

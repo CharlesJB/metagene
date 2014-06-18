@@ -16,7 +16,7 @@
 }
 
 \arguments{
-  \item{DF}{The data frame produced by the plot.getDataFrame
+  \item{DF}{The data frame produced by the getDataFrame
     function}
 
   \item{title}{The title of the graph}

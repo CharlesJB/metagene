@@ -7,7 +7,7 @@
 \description{
   This function produces the list object that contains all the
   information necessary to produce a metagene-like plot with the
-  \code{plot.graphic} function.
+  \code{plotGraphic} function.
 }
 
 \usage{
