@@ -39,6 +39,7 @@ parseFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=5
 	groups$param$specie <- specie
 	groups$param$maxDistance <- maxDistance
 	groups$param$cores <- cores
+	groups$range <- c(-1*maxDistance, maxDistance)
 
 	# 1. Prepare bam files
 	cat("Step 1: Prepare bam files...")
@@ -114,6 +115,7 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
 	groups$param$specie <- specie
 	groups$param$paddingSize <- paddingSize
 	groups$param$cores <- cores
+	groups$range <- c(-1,1) # TODO: find something better
 
 	# 1. Prepare bam files
 	cat("Step 1: Prepare bam files...")
@@ -854,10 +856,10 @@ plot.matrices <- function(matricesGroups, data, binSize=100, alpha=0.05, sampleS
 	bootstrapResults <- applyOnGroups(matricesGroups, cores=1, FUN=bootstrap, bootstrapCores=cores)
 
 	# 3. Prepare data.frame
-	DF <- getDataFrame(bootstrapResults)
+	DF <- getDataFrame(bootstrapResults, range=data$range)
 
 	# 4. Create graph
-	plot.graphic(DF, paste(names(matricesGroups)))
+	plot.graphic(DF, paste(names(matricesGroups), collapse=" vs "))
 	return(DF)
 }
 
@@ -943,10 +945,8 @@ binBootstrap <- function(data, alpha, sampleSize, cores=1)
 #		 * means: the means to plot
 #		 * qinf: the lower end of the confidence interval
 #		 * qsup: the higher end of the confidence interval
-getDataFrame <- function(bootstrapData) {
-	#lists <- lapply(groups, function(x) return(x$bootstrap))
-	#grid = seq(-5000,5000,length=length(bootstrapData[[1]]$mean))
-	grid = 1:length(bootstrapData[[1]]$mean)
+getDataFrame <- function(bootstrapData, range) {
+	grid = seq(range[1], range[2],length=length(bootstrapData[[1]]$mean))
 	DF = data.frame (
 		Groups <- factor(rep(names(bootstrapData), each=length(grid))),
 		distances <- rep(grid, length(bootstrapData)),
@@ -967,6 +967,7 @@ getDataFrame <- function(bootstrapData) {
 # Ouput:
 #	The graph that is printed on the current device.
 plot.graphic <- function(DF, title) {
+	# TODO: add x label
 	library(ggplot2)
 	p <- ggplot(DF, aes(x=distances, y=means, ymin=qinf, ymax=qsup)) +
 	geom_ribbon(aes(fill=Groups), alpha=0.3) +

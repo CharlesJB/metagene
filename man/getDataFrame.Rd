@@ -12,11 +12,13 @@
 }
 
 \usage{
-  getDataFrame(bootstrapData)
+  getDataFrame(bootstrapData, range)
 }
 
 \arguments{
   \item{bootstrapData}{Data produced during the bootstrap analysis}
+
+  \item{range}{The start and the end for the x-label}
 }
 
 \value{
