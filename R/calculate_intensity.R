@@ -231,8 +231,6 @@ applyOnGroups <- function(groups, cores=1, FUN, ...) {
 #	A data.frame containing the indexed bam filename and number of aligned reads for each bam file.
 #	Column names: bamFiles and alignedCount
 prepareBamFiles <- function(bamFiles, cores = 1) {
-	library(Rsamtools)
-
 	# Check prerequisites
 	
    	# The number of cores has to be a positive integer
@@ -380,8 +378,6 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
 #		4: start_position -> position of the TSS
 #		5: end_position -> ending position of the last exon of the gene
 getGenes <- function(specie="human") {
-	require(biomaRt)
-	
 	# Check prerequisites
 	
 	# The specie argument has only two valid possibilities
@@ -585,7 +581,6 @@ extractReadsInRegion <- function(bamFile, chr, start, end) {
 		stop("The ending position has to be a positive integer.")
 	}
 	
-	suppressMessages(library(Rsamtools))
 	if (start > end) {
 		tmp <- start
 		start <- end
@@ -844,7 +839,7 @@ scaleVector <- function(values, domain) {
 #	cores:		Number of cores for parallel processing (require parallel package).
 # Ouput:
 #	The data.frame used to produce the graph
-plot.matrices <- function(matricesGroups, data, binSize=100, alpha=0.05, sampleSize=1000, cores=1) {
+plotMatrices <- function(matricesGroups, data, binSize=100, alpha=0.05, sampleSize=1000, cores=1) {
 	# 1. Extract and/or combine relevant matrices
 	for (matrixName in names(matricesGroups)) {
 		conditions <- unlist(names(data$matrix) %in% matricesGroups[[matrixName]])
@@ -860,7 +855,7 @@ plot.matrices <- function(matricesGroups, data, binSize=100, alpha=0.05, sampleS
 	DF <- getDataFrame(bootstrapResults, range=data$range)
 
 	# 4. Create graph
-	plot.graphic(DF, paste(names(matricesGroups), collapse=" vs "))
+	plotGraphic(DF, paste(names(matricesGroups), collapse=" vs "))
 	return(DF)
 }
 
@@ -968,9 +963,8 @@ getDataFrame <- function(bootstrapData, range) {
 #
 # Ouput:
 #	The graph that is printed on the current device.
-plot.graphic <- function(DF, title) {
+plotGraphic <- function(DF, title) {
 	# TODO: add x label
-	library(ggplot2)
 	p <- ggplot(DF, aes(x=distances, y=means, ymin=qinf, ymax=qsup)) +
 	geom_ribbon(aes(fill=Groups), alpha=0.3) +
 	geom_line(aes(color=Groups),size=1,litype=1,bg="transparent")+

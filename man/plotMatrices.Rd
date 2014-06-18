@@ -1,5 +1,5 @@
-\name{plot.matrices}
-\alias{plot.matrices}
+\name{plotMatrices}
+\alias{plotMatrices}
 
 \title{
   Create a graph
@@ -12,7 +12,7 @@
 }
 
 \usage{
-  plot.matrices(
+  plotMatrices(
     matricesGroups,
     data,
     binSize=100,
@@ -42,7 +42,7 @@
 }
 
 \value{
-  \code{plot.matrices} return the \code{data.frame} used to
+  \code{plotMatrices} return the \code{data.frame} used to
     produce the graph.
 }
 

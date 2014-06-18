@@ -1,5 +1,5 @@
-\name{plot.graphic}
-\alias{plot.graphic}
+\name{plotGraphic}
+\alias{plotGraphic}
 
 \title{
   Produce a plot with based on a data.frame
@@ -10,7 +10,7 @@
 }
 
 \usage{
-  plot.graphic(
+  plotGraphic(
     DF,
     title)
 }
@@ -23,7 +23,7 @@
 }
 
 \value{
-  \code{plot.graphic} plots a graph on the current device.
+  \code{plotGraphic} plots a graph on the current device.
 }
 
 \author{

@@ -12,6 +12,6 @@ Maintainer: Charles Joly Beauparlant <charles.joly-beauparlant@crchul.ulaval.ca>
 Description: This package produces Metagene-like plots to compare the behavior of DNA-interacting proteins at selected groups of features. Pre-calculated features (such as transcription start sites of protein coding gene or enhancer) are available. Bam files are used to increase the resolution. Multiple combination of group of features and or group of bam files can be compared in a single analysis. Bootstraping analysis is used to compare the groups and locate regions with statistically different enrichment profiles.
 biocView: ChIP-Seq, Metagene, bootstrap
 License: Artistic-2.0
-Imports: Rsamtools, biomaRt, ggplot2
+Depends: GenomicRanges, IRanges, Rsamtools, biomaRt, ggplot2
 Enhances: parallel
 Suggests: RUnit, BiocGenerics 
