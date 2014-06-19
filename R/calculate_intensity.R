@@ -524,7 +524,7 @@ parseBamFile <- function(bamFile, features, cores=1) {
 		vectorResult <- convertReadsToDensity(currentReads, feature)
 
 		# If on negative strand, invert the current vector
-		if (feature$start > feature$end) {
+		if (feature$start_position > feature$end_position) {
 			vectorResult <- rev(vectorResult)
 		}
 		return(vectorResult)
