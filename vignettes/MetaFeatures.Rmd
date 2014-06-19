@@ -95,7 +95,7 @@ regions
 # Parsing features
 To parse the sequences overlapping a list of features, you must use the parseFeatures function:
 
-```{r parseFeaturesExample, cache=TRUE}
+```{r parseFeaturesExample}
 groupsFeatures <- parseFeatures(bamFiles=bamFiles, features=features, design=design, specie="mouse", maxDistance=1000)
 ```
 
@@ -121,7 +121,7 @@ Before producing the plot, the MetaFeatures package will do a bootstrap analysis
 
 You must use a list object to represent the groups to use and how to name them. For example, if we want to combine all the samples for each list, we could do the following:
 
-```{r plotMatricesExample1, cache=TRUE}
+```{r plotMatricesExample1}
 names(groupsFeatures$matrix)
 groupsToPlot <- list(group1=c("list1_align1", "list1_align2"), group2=c("list2_align1", "list2_align2"))
 DF <- plotMatrices(groupsToPlot, groupsFeatures)
@@ -129,7 +129,7 @@ DF <- plotMatrices(groupsToPlot, groupsFeatures)
 
 If we wanted to compare the behavior of our 2 samples for the first list of genes, we could do the following:
 
-```{r plotMatricesExample2, cache=TRUE}
+```{r plotMatricesExample2}
 groupsToPlot <- list(group1="list1_align1", group2="list1_align2")
 DF <- plotMatrices(groupsToPlot, groupsFeatures)
 ```
