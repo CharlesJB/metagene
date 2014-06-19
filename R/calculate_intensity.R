@@ -747,6 +747,9 @@ removeControls <- function(group, data.rpm, design=NULL, controlCores=1) {
 		group$noCTRL <- lapply(treatment.rpm, substractControl)
 		names(group$noCTRL) <- treatmentNames
 		return(group)
+	} else {
+		current.rpm <- data.rpm[[group$featureName]]
+		group$noCTRL <- current.rpm
 	}
 	return(group)
 }
