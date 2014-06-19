@@ -39,3 +39,8 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  a <- list("a", "b", "c")
+  MetaFeatures:::applyOnGroups(a, cores=1, FUN=print)
+}

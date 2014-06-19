@@ -41,3 +41,7 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  MetaFeatures:::binBootstrap(1:100, alpha=0.05, sampleSize=100)
+}

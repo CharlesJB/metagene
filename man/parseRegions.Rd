@@ -83,3 +83,12 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  # Minimally, we need a bam file name and a list of regions
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaFeatures")
+  listFileName <- system.file("extdata/list1.bed", package="MetaFeatures")
+  \dontrun{
+  groups <- parseRegions(listFileName, bamFileName, specie="mouse")
+  }
+}

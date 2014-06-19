@@ -37,3 +37,15 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  # Get a bam file name
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaFeatures")
+
+  # Load a feature file
+  featuresFileName <- system.file("extdata/list1.txt", package="MetaFeatures")
+  features <- MetaFeatures:::prepareFeatures(featuresFileName, specie="mouse")
+
+  # Parse multiple bam files
+  bam <- MetaFeatures:::parseBamFiles(bamFileName, features)
+}

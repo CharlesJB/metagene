@@ -31,3 +31,7 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  MetaFeatures:::binMatrix(matrix(1:40, nrow=4, ncol=10), 4)
+}

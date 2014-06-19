@@ -87,3 +87,11 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaFeatures")
+  featuresFileName <- system.file("extdata/list1.txt", package="MetaFeatures")
+  \dontrun{
+  groups <- parseFeatures(bamFileName, featuresFileName, specie="mouse")
+  }
+}

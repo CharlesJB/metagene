@@ -42,3 +42,10 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  regionsFileName <- system.file("extdata/list1.bed", package="MetaFeatures")
+  regions <- MetaFeatures:::prepareRegions(regionsFileName)
+  regionsPaddingsLeft <- MetaFeatures:::prepareRegionsPaddings(regions, "left", paddingSize=200)
+  regionsPaddingsRight <- MetaFeatures:::prepareRegionsPaddings(regions, "right", paddingSize=200)
+}

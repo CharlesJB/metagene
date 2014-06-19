@@ -32,3 +32,19 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  # Get a feature
+  bedFileName <- system.file("extdata/list1.bed", package="MetaFeatures")
+  feature <- read.table(bedFileName, header=FALSE, stringsAsFactors=FALSE, nrow=1)
+  colnames(feature) <- c("space", "start_position", "end_position")
+
+  # Get a bam file
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaFeatures") 
+
+  # Extract reads
+  reads <- MetaFeatures:::extractReadsInRegion(bamFileName, feature$space, feature$start_position, feature$end_position)
+
+  # Convert to density
+  MetaFeatures:::convertReadsToDensity(reads, feature)
+}

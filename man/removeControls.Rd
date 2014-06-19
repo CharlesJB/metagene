@@ -42,3 +42,25 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  # Prepare bam files
+  bamFileInput <- system.file("extdata/align1_rep1.bam", package="MetaFeatures")
+  bamFileControl <- system.file("extdata/ctrl.bam", package="MetaFeatures")
+  bamFiles <- c(bamFileInput, bamFileControl)
+  groups <- list()
+  groups$bamFilesDescription <- MetaFeatures:::prepareBamFiles(bamFiles)
+
+  # Parse features and convert to RPM
+  features <- system.file("extdata/list1.txt", package="MetaFeatures")
+  groups$design <- data.frame(Samples=c(bamFileInput, bamFileControl), Exp1=c(1,2))
+  \dontrun{
+  groups$regionsGroups <- MetaFeatures:::prepareFeatures(features=features, specie="mouse", maxDistance=1000)
+  groups$raw <- MetaFeatures:::parseBamFiles(groups$bamFilesDescription$bam, groups$regionsGroups)
+  groups$rpm <- MetaFeatures:::rawCountsToRPM(groups$raw, groups$bamFilesDescription)
+  groups$data <- MetaFeatures:::prepareGroups(names(groups$regionsGroups), bamFiles=groups$bamFilesDescription, design=groups$design)
+
+  # Remove controls
+  groups$data <- MetaFeatures:::applyOnGroups(groups=groups$data, cores=1, FUN=MetaFeatures:::removeControls, data.rpm=groups$rpm, design=groups$design)
+  }
+}

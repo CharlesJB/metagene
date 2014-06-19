@@ -51,3 +51,8 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaFeatures") 
+  bamFileDescription <- MetaFeatures:::prepareBamFiles(bamFileName)
+}

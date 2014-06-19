@@ -35,3 +35,8 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  regionsFileName <- system.file("extdata/list1.bed", package="MetaFeatures")
+  regions <- MetaFeatures:::prepareRegions(regionsFileName)
+}

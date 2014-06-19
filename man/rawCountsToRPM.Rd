@@ -38,3 +38,18 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  # Get the description of the bam files
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaFeatures")
+  bamFileDescription <- MetaFeatures:::prepareBamFiles(bamFileName)
+
+  # Get the raw counts
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaFeatures")
+  featuresFileName <- system.file("extdata/list1.txt", package="MetaFeatures")
+  features <- MetaFeatures:::prepareFeatures(featuresFileName, specie="mouse")
+  bamRawCounts <- MetaFeatures:::parseBamFiles(bamFileName, features)
+
+  # Get the RPM values
+  RPMcounts <- MetaFeatures:::rawCountsToRPM(bamRawCounts, bamFileDescription)
+}

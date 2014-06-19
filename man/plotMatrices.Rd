@@ -50,3 +50,15 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  # Prepare the groups
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaFeatures")
+  listFileName <- system.file("extdata/list1.txt", package="MetaFeatures")
+  \dontrun{
+  groups <- parseFeatures(bamFileName, listFileName, specie="mouse")
+
+  # Do the graph
+  DF <- plotMatrices(list(g1="list1"), groups)
+  }
+}

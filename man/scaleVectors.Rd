@@ -44,7 +44,13 @@
   \code{scaleVectors} returns the same group that was used in
     input with an extra element named scaled.
 }
+
 \author{
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
+}
+
+\examples{
+  group <- list(l1=list(element1=list(1:10, 1:100)))
+  MetaFeatures:::scaleVectors(group, "l1", 100)
 }

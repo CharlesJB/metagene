@@ -43,3 +43,18 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  # Create the lists of vector
+  vector1 <- list(c(1,2,3,4), c(5,6,7,8))
+  vector2 <- list(c(9,10,11,12), c(13,14,15,16))
+
+  # Add them to a list
+  group <- list()
+  group$vectors <- list(vector1, vector2)
+
+  # We will modify the group objet to add an element names
+  # matrix that contains the matrix that correspond to the
+  # vectors binded by row
+  MetaFeatures:::mergeMatrix(group, "vectors")
+}

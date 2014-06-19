@@ -31,3 +31,8 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  values <- 1:10
+  scaledValues <- MetaFeatures:::scaleVector(values, 100)
+}

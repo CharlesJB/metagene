@@ -38,3 +38,9 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  \dontrun{
+  knownGenes <- getGenes("human")
+  }
+}

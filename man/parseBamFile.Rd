@@ -22,7 +22,7 @@
 
   \item{features}{A data.frame with the infos for every features
     to parse
-    Must have the folowing columns: feature, strand, space,
+    Must have the folowing columns: space, start_position, end_position
     start_position and end_position}
   \item{cores}{Number of cores for parallel processing (require parallel package).}
 }
@@ -36,4 +36,19 @@
 \author{
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
+}
+
+\examples{
+  # Get bamFile
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaFeatures") 
+
+  # Get features
+  bedFileName <- system.file("extdata/list1.bed", package="MetaFeatures")
+  features <- read.table(bedFileName, header=FALSE, stringsAsFactors=FALSE, nrow=10)
+  colnames(features) <- c("space", "start_position", "end_position")
+  features$end_position <- features$start_position + 200
+  features$start_position <- features$start_position - 200
+
+  # Parse the bam file
+  bamDensity <- MetaFeatures:::parseBamFile(bamFileName, features)
 }

@@ -45,3 +45,7 @@
   Charles Joly Beauparlant
   <Charles.Joly-Beauparlant@crchul.ulaval.ca>
 }
+
+\examples{
+  MetaFeatures:::bootstrapAnalysis(matrix(1:40, nrow=4, ncol=10), 4, alpha=0.05, sampleSize=100)
+}
