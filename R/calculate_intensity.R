@@ -151,7 +151,7 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
 	}
 	# Get the median length of every regions groups in the current experiment
 	medianLength <- median(unlist(applyOnGroups(groups$data, cores=cores, getLengthsGroup)))
-	groups$data <- applyOnGroups(groups=groups$data, cores=1, FUN=scaleVectors, medianLength=medianLength, level="noCTRL", scaleCores=cores)
+	groups$data <- applyOnGroups(groups=groups$data, cores=1, FUN=scaleVectors, domain=medianLength, level="noCTRL", scaleCores=cores)
 	if (debug == FALSE) {
 		groups$data <- applyOnGroups(groups=groups$data, cores=cores, FUN=function(x) { x$noCTRL <- NULL; return(x) })
 	}
