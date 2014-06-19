@@ -420,7 +420,7 @@ getGenes <- function(specie="human") {
 prepareRegions <- function(regions, cores=1) {
 	# 1. Parse the bed files
 	readBedFile <- function(bedFileName) {
-		currentBed <- read.table(bedFileName, header=FALSE)
+		currentBed <- read.table(bedFileName, header=FALSE, stringsAsFactors=FALSE)
 		# We only need the infos of the first three columns
 		colnames(currentBed)[1:3] <- c("space", "start_position", "end_position")
 		# TODO: should we check is start_position is always smaller than end_position?
