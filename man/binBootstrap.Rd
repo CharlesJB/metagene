@@ -43,5 +43,5 @@
 }
 
 \examples{
-  MetaFeatures:::binBootstrap(1:100, alpha=0.05, sampleSize=100)
+  MetaMineR:::binBootstrap(1:100, alpha=0.05, sampleSize=100)
 }

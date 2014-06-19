@@ -44,8 +44,8 @@
 }
 
 \examples{
-  regionsFileName <- system.file("extdata/list1.bed", package="MetaFeatures")
-  regions <- MetaFeatures:::prepareRegions(regionsFileName)
-  regionsPaddingsLeft <- MetaFeatures:::prepareRegionsPaddings(regions, "left", paddingSize=200)
-  regionsPaddingsRight <- MetaFeatures:::prepareRegionsPaddings(regions, "right", paddingSize=200)
+  regionsFileName <- system.file("extdata/list1.bed", package="MetaMineR")
+  regions <- MetaMineR:::prepareRegions(regionsFileName)
+  regionsPaddingsLeft <- MetaMineR:::prepareRegionsPaddings(regions, "left", paddingSize=200)
+  regionsPaddingsRight <- MetaMineR:::prepareRegionsPaddings(regions, "right", paddingSize=200)
 }

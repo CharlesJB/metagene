@@ -34,5 +34,5 @@
 
 \examples{
   values <- 1:10
-  scaledValues <- MetaFeatures:::scaleVector(values, 100)
+  scaledValues <- MetaMineR:::scaleVector(values, 100)
 }

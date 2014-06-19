@@ -48,6 +48,6 @@
 
 \examples{
   # Load a feature file
-  featuresFileName <- system.file("extdata/list1.txt", package="MetaFeatures")
-  features <- MetaFeatures:::prepareFeatures(featuresFileName, specie="mouse")
+  featuresFileName <- system.file("extdata/list1.txt", package="MetaMineR")
+  features <- MetaMineR:::prepareFeatures(featuresFileName, specie="mouse")
 }

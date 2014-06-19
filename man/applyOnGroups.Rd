@@ -42,5 +42,5 @@
 
 \examples{
   a <- list("a", "b", "c")
-  MetaFeatures:::applyOnGroups(a, cores=1, FUN=print)
+  MetaMineR:::applyOnGroups(a, cores=1, FUN=print)
 }

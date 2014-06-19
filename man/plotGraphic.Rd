@@ -33,5 +33,5 @@
 
 \examples{
   DF <- data.frame(Groups=rep("group1",11), distances=seq(-5,5), means=rep(30, 11), qinf=rep(20, 11), qsup=rep(40, 11))
-  MetaFeatures:::plotGraphic(DF, "Example")
+  MetaMineR:::plotGraphic(DF, "Example")
 }

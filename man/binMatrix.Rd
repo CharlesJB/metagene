@@ -33,5 +33,5 @@
 }
 
 \examples{
-  MetaFeatures:::binMatrix(matrix(1:40, nrow=4, ncol=10), 4)
+  MetaMineR:::binMatrix(matrix(1:40, nrow=4, ncol=10), 4)
 }

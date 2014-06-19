@@ -40,12 +40,12 @@
 
 \examples{
   # Get a bam file name
-  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaFeatures")
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")
 
   # Load a feature file
-  featuresFileName <- system.file("extdata/list1.txt", package="MetaFeatures")
-  features <- MetaFeatures:::prepareFeatures(featuresFileName, specie="mouse")
+  featuresFileName <- system.file("extdata/list1.txt", package="MetaMineR")
+  features <- MetaMineR:::prepareFeatures(featuresFileName, specie="mouse")
 
   # Parse multiple bam files
-  bam <- MetaFeatures:::parseBamFiles(bamFileName, features)
+  bam <- MetaMineR:::parseBamFiles(bamFileName, features)
 }

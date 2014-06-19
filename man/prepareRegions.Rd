@@ -37,6 +37,6 @@
 }
 
 \examples{
-  regionsFileName <- system.file("extdata/list1.bed", package="MetaFeatures")
-  regions <- MetaFeatures:::prepareRegions(regionsFileName)
+  regionsFileName <- system.file("extdata/list1.bed", package="MetaMineR")
+  regions <- MetaMineR:::prepareRegions(regionsFileName)
 }

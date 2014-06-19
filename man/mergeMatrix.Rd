@@ -56,5 +56,5 @@
   # We will modify the group objet to add an element names
   # matrix that contains the matrix that correspond to the
   # vectors binded by row
-  MetaFeatures:::mergeMatrix(group, "vectors")
+  MetaMineR:::mergeMatrix(group, "vectors")
 }

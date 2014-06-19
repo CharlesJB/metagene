@@ -89,8 +89,8 @@
 }
 
 \examples{
-  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaFeatures")
-  featuresFileName <- system.file("extdata/list1.txt", package="MetaFeatures")
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")
+  featuresFileName <- system.file("extdata/list1.txt", package="MetaMineR")
   \dontrun{
   groups <- parseFeatures(bamFileName, featuresFileName, specie="mouse")
   }

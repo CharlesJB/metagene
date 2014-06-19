@@ -41,8 +41,8 @@
 \examples{
   # Get bootstrap results
   bootstrapResults <- list()
-  bootstrapResults$a <- MetaFeatures:::bootstrapAnalysis(matrix(1:40, nrow=4, ncol=10), 4, alpha=0.05, sampleSize=100)
+  bootstrapResults$a <- MetaMineR:::bootstrapAnalysis(matrix(1:40, nrow=4, ncol=10), 4, alpha=0.05, sampleSize=100)
 
   # Get the data.frame
-  DF <- MetaFeatures:::getDataFrame(bootstrapResults, c(-1,1))
+  DF <- MetaMineR:::getDataFrame(bootstrapResults, c(-1,1))
 }

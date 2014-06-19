@@ -40,15 +40,15 @@
 
 \examples{
   # Get bamFile
-  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaFeatures") 
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR") 
 
   # Get features
-  bedFileName <- system.file("extdata/list1.bed", package="MetaFeatures")
+  bedFileName <- system.file("extdata/list1.bed", package="MetaMineR")
   features <- read.table(bedFileName, header=FALSE, stringsAsFactors=FALSE, nrow=10)
   colnames(features) <- c("space", "start_position", "end_position")
   features$end_position <- features$start_position + 200
   features$start_position <- features$start_position - 200
 
   # Parse the bam file
-  bamDensity <- MetaFeatures:::parseBamFile(bamFileName, features)
+  bamDensity <- MetaMineR:::parseBamFile(bamFileName, features)
 }

@@ -45,22 +45,22 @@
 
 \examples{
   # Prepare bam files
-  bamFileInput <- system.file("extdata/align1_rep1.bam", package="MetaFeatures")
-  bamFileControl <- system.file("extdata/ctrl.bam", package="MetaFeatures")
+  bamFileInput <- system.file("extdata/align1_rep1.bam", package="MetaMineR")
+  bamFileControl <- system.file("extdata/ctrl.bam", package="MetaMineR")
   bamFiles <- c(bamFileInput, bamFileControl)
   groups <- list()
-  groups$bamFilesDescription <- MetaFeatures:::prepareBamFiles(bamFiles)
+  groups$bamFilesDescription <- MetaMineR:::prepareBamFiles(bamFiles)
 
   # Parse features and convert to RPM
-  features <- system.file("extdata/list1.txt", package="MetaFeatures")
+  features <- system.file("extdata/list1.txt", package="MetaMineR")
   groups$design <- data.frame(Samples=c(bamFileInput, bamFileControl), Exp1=c(1,2))
   \dontrun{
-  groups$regionsGroups <- MetaFeatures:::prepareFeatures(features=features, specie="mouse", maxDistance=1000)
-  groups$raw <- MetaFeatures:::parseBamFiles(groups$bamFilesDescription$bam, groups$regionsGroups)
-  groups$rpm <- MetaFeatures:::rawCountsToRPM(groups$raw, groups$bamFilesDescription)
-  groups$data <- MetaFeatures:::prepareGroups(names(groups$regionsGroups), bamFiles=groups$bamFilesDescription, design=groups$design)
+  groups$regionsGroups <- MetaMineR:::prepareFeatures(features=features, specie="mouse", maxDistance=1000)
+  groups$raw <- MetaMineR:::parseBamFiles(groups$bamFilesDescription$bam, groups$regionsGroups)
+  groups$rpm <- MetaMineR:::rawCountsToRPM(groups$raw, groups$bamFilesDescription)
+  groups$data <- MetaMineR:::prepareGroups(names(groups$regionsGroups), bamFiles=groups$bamFilesDescription, design=groups$design)
 
   # Remove controls
-  groups$data <- MetaFeatures:::applyOnGroups(groups=groups$data, cores=1, FUN=MetaFeatures:::removeControls, data.rpm=groups$rpm, design=groups$design)
+  groups$data <- MetaMineR:::applyOnGroups(groups=groups$data, cores=1, FUN=MetaMineR:::removeControls, data.rpm=groups$rpm, design=groups$design)
   }
 }
