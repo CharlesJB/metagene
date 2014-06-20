@@ -48,6 +48,6 @@
 
 \examples{
   # Load a feature file
-  featuresFileName <- system.file("extdata/list1.txt", package="MetaMineR")
-  features <- MetaMineR:::prepareFeatures(featuresFileName, specie="mouse")
+  \dontrun{featuresFileName <- system.file("extdata/list1.txt", package="MetaMineR")}
+  \dontrun{features <- MetaMineR:::prepareFeatures(featuresFileName, specie="mouse")}
 }

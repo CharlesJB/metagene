@@ -86,9 +86,7 @@
 
 \examples{
   # Minimally, we need a bam file name and a list of regions
-  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")
-  listFileName <- system.file("extdata/list1.bed", package="MetaMineR")
-  \dontrun{
-  groups <- parseRegions(listFileName, bamFileName, specie="mouse")
-  }
+  \dontrun{bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")}
+  \dontrun{listFileName <- system.file("extdata/list1.bed", package="MetaMineR")}
+  \dontrun{groups <- parseRegions(listFileName, bamFileName, specie="mouse")}
 }

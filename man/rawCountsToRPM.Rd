@@ -41,15 +41,15 @@
 
 \examples{
   # Get the description of the bam files
-  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")
-  bamFileDescription <- MetaMineR:::prepareBamFiles(bamFileName)
+  \dontrun{bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")}
+  \dontrun{bamFileDescription <- MetaMineR:::prepareBamFiles(bamFileName)}
 
   # Get the raw counts
-  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")
-  featuresFileName <- system.file("extdata/list1.txt", package="MetaMineR")
-  features <- MetaMineR:::prepareFeatures(featuresFileName, specie="mouse")
-  bamRawCounts <- MetaMineR:::parseBamFiles(bamFileName, features)
+  \dontrun{bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")}
+  \dontrun{featuresFileName <- system.file("extdata/list1.txt", package="MetaMineR")}
+  \dontrun{features <- MetaMineR:::prepareFeatures(featuresFileName, specie="mouse")}
+  \dontrun{bamRawCounts <- MetaMineR:::parseBamFiles(bamFileName, features)}
 
   # Get the RPM values
-  RPMcounts <- MetaMineR:::rawCountsToRPM(bamRawCounts, bamFileDescription)
+  \dontrun{RPMcounts <- MetaMineR:::rawCountsToRPM(bamRawCounts, bamFileDescription)}
 }

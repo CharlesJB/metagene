@@ -33,6 +33,6 @@
 }
 
 \examples{
-  values <- 1:10
-  scaledValues <- MetaMineR:::scaleVector(values, 100)
+  \dontrun{values <- 1:10}
+  \dontrun{scaledValues <- MetaMineR:::scaleVector(values, 100)}
 }

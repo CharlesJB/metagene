@@ -41,6 +41,6 @@
 }
 
 \examples{
-  a <- list("a", "b", "c")
-  MetaMineR:::applyOnGroups(a, cores=1, FUN=print)
+  \dontrun{a <- list("a", "b", "c")}
+  \dontrun{MetaMineR:::applyOnGroups(a, cores=1, FUN=print)}
 }

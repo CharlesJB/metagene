@@ -53,6 +53,6 @@
 }
 
 \examples{
-  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR") 
-  bamFileDescription <- MetaMineR:::prepareBamFiles(bamFileName)
+  \dontrun{bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR") }
+  \dontrun{bamFileDescription <- MetaMineR:::prepareBamFiles(bamFileName)}
 }

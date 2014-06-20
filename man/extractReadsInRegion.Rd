@@ -39,16 +39,16 @@
 
 \examples{
   # Get a feature
-  bedFileName <- system.file("extdata/list1.bed", package="MetaMineR")
-  feature <- read.table(bedFileName, header=FALSE, stringsAsFactors=FALSE, nrow=1)
-  colnames(feature) <- c("space", "start_position", "end_position")
+  \dontrun{bedFileName <- system.file("extdata/list1.bed", package="MetaMineR")}
+  \dontrun{feature <- read.table(bedFileName, header=FALSE, stringsAsFactors=FALSE, nrow=1)}
+  \dontrun{colnames(feature) <- c("space", "start_position", "end_position")}
 
   # Get a bam file
-  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR") 
+  \dontrun{bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR") }
 
   # Extract reads
-  reads <- MetaMineR:::extractReadsInRegion(bamFileName, feature$space, feature$start_position, feature$end_position)
+  \dontrun{reads <- MetaMineR:::extractReadsInRegion(bamFileName, feature$space, feature$start_position, feature$end_position)}
 
   # Convert to density
-  MetaMineR:::convertReadsToDensity(reads, feature)
+  \dontrun{MetaMineR:::convertReadsToDensity(reads, feature)}
 }

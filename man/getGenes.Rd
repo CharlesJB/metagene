@@ -40,7 +40,5 @@
 }
 
 \examples{
-  \dontrun{
-  knownGenes <- getGenes("human")
-  }
+  \dontrun{knownGenes <- getGenes("human")}
 }

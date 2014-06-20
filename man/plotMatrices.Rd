@@ -53,12 +53,10 @@
 
 \examples{
   # Prepare the groups
-  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")
-  listFileName <- system.file("extdata/list1.txt", package="MetaMineR")
-  \dontrun{
-  groups <- parseFeatures(bamFileName, listFileName, specie="mouse")
+  \dontrun{bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")}
+  \dontrun{listFileName <- system.file("extdata/list1.txt", package="MetaMineR")}
+  \dontrun{groups <- parseFeatures(bamFileName, listFileName, specie="mouse")}
 
   # Do the graph
-  DF <- plotMatrices(list(g1="list1"), groups)
-  }
+  \dontrun{DF <- plotMatrices(list(g1="list1"), groups)}
 }
