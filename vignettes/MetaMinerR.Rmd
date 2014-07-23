@@ -60,10 +60,10 @@ design
 ```
 
 ## Ensembl gene id files
-It is possible to give MetaMineR text file that contains a list of ensembl gene id as input. The files must be formated in the following way:
+It is possible to give MetaMineR text file that contains a list of Ensembl Gene ID(s) as input. The files must be formated in the following way:
 
 * The first line must be the name of the group (called features groups).
-* The other lines must be the ensembl gene ids, one id per line.
+* The other lines must be the Ensembl Gene ID(s), one ID per line.
 
 ```{r featuresFile}
 fileExample <- system.file("extdata/list1.txt", package="MetaMineR")
@@ -71,7 +71,7 @@ featuresFileExample <- read.table(fileExample, header=TRUE, stringsAsFactors=FAL
 head(featuresFileExample)
 ```
 
-The MetaMineR package require a vector of the paths (absolute or relative) for every ensembl gene id files to be included in the analysis:
+The MetaMineR package require a vector of the paths (absolute or relative) for every Ensembl Gene ID(s) files to be included in the analysis:
 
 ```{r featuresArgument}
 fileList1 <- system.file("extdata/list1.txt", package="MetaMineR")
