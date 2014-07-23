@@ -24,7 +24,7 @@ suppressMessages(library(MetaMineR))
 
 # Parsing input files
 
-The main input of the MetaMineR package are alignment files in bam format. It is also possible to include a design file to represent the relations between samples (replicates and controls). The regions to analyse can be either in bed format (for user-specified regions) or in emsembl gene id format (in which case, the analysis will be done around the TSS of the genes).
+The main input of the MetaMineR package are alignment files in bam format. It is also possible to include a design file to represent the relations between samples (replicates and controls). The regions to analyse can be either in bed format (for user-specified regions) or in Ensembl Gene ID(s) format (in which case, the analysis will be done around the TSS of the genes).
 
 ## Alignment files
 There is no hard limit in the number of bam files that can be included in an analysis (but with too many bam files, memory may become an issue). To speed up the analysis, it is best to (but not mandatory) to index bam files before starting the analysis. If no index is found for a file, the MetaMineR package will use Rsamtools to sort and index it.
@@ -59,7 +59,7 @@ design$Samples <- paste(system.file("extdata", package="MetaMineR"), design$Samp
 design
 ```
 
-## Ensembl gene id files
+## Ensembl Gene ID(s) files
 It is possible to give MetaMineR text file that contains a list of Ensembl Gene ID(s) as input. The files must be formated in the following way:
 
 * The first line must be the name of the group (called features groups).
