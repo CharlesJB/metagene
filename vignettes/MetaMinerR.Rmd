@@ -63,8 +63,9 @@ Also note that it is not obligatory to use a design file, you can also create th
 
 For instance, the previous design data.frame could have been create directly in R:
 ```{r alternateDesign}
-design <- data.frame(Samples = c("align1_rep1.bam", "align1_rep2.bam", "align2_rep1.bam", "align2_rep2.bam"),
+design <- data.frame(Samples = c("align1_rep1.bam", "align1_rep2.bam", "align2_rep1.bam", "align2_rep2.bam", "ctrl.bam"),
 		     align1 = c(1,1,0,0,2), align2 = c(0,0,1,1,2))
+design$Samples <- paste0(system.file("extdata", package="MetaMineR"), "/", design$Samples)
 design
 ```
 
