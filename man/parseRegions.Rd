@@ -29,7 +29,7 @@
 
   \item{specie}{human: Homo sapiens (default). mouse: Mus musculus.}
 
-  \item{design}{A \code{matrix} explaining the relationship 
+  \item{design}{A \code{data.frame} explaining the relationship
     between multiple samples. One line per samples. One column
     per group of samples. For example, biological replicates and
     corresponding controls are in the same group.

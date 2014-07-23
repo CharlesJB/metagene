@@ -10,7 +10,7 @@
 #			File must contain a header that correspond to the name of the group
 #	specie:		human: Homo sapiens (default) / mouse: Mus musculus
 #	maxDistance:	The distance around feature to include in the plot.
-#	design:		A matrix explaining the relationship between multiple samples.
+#	design:		A data.frame explaining the relationship between multiple samples.
 #			One line per samples.
 #			One column per group of samples. For example, biological replicates and corresponding controls are in the same group.
 #			1: treatment file(s)
@@ -84,7 +84,7 @@ parseFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=5
 #			The file name (minus the extension) will be used as the name of the region.
 #	bamFiles:	A vector of bamFile to plot. TODO: Should also accept a list of bamfiles where each elements would be grouped together
 #	specie:		human: Homo sapiens (default) / mouse: Mus musculus
-#	design:		A matrix explaining the relationship between multiple samples.
+#	design:		A data.frame explaining the relationship between multiple samples.
 #			One line per samples.
 #			One column per group of samples. For example, biological replicates and corresponding controls are in the same group.
 #			1: treatment file(s)
