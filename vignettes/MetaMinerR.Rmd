@@ -59,7 +59,7 @@ design$Samples <- paste(system.file("extdata", package="MetaMineR"), design$Samp
 design
 ```
 
-Also note that it is not obligatory to use a design file, you can also create the design data.frame using your prefered method (as long as the restriction on the values mentioned previously are respected).
+Also note that it is not obligatory to use a design file, you can also create the design data.frame using your prefered method (as long as the restrictions on the values mentioned previously are respected).
 
 For instance, the previous design data.frame could have been create directly in R:
 ```{r alternateDesign}
@@ -101,6 +101,8 @@ fileBed2 <- system.file("extdata/list2.bed", package="MetaMineR")
 regions <- c(fileBed1, fileBed2)
 regions
 ```
+
+As an alternative to a list of bed files, you can also use GRanges or GRangesList objects.
 
 # Parsing features
 To parse the sequences overlapping a list of features, you must use the parseFeatures function:

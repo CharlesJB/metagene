@@ -60,8 +60,22 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
 
     # 2. Prepare regions
     cat("Step 2: Prepare regions...")
-    #regionsGroups <- prepareRegions(regions, cores=cores)
-    groups$regionsGroups <- prepareRegions(regions, cores=cores)
+    if (class(regions) == "character") {
+        groups$regionsGroups <- prepareRegions(regions, cores=cores)
+    } else if (class(regions) == "GRanges") { # If it's GRanges, it's only 1 range group
+        groups$regionsGroups <- list()
+	groups$regionsGroups[[deparse(substitute(regions))]] <- as.data.frame(regions)
+        colnames(groups$regionsGroups[[1]])[1:3] <- c("space", "start_position", "end_position")
+        groups$regionsGroups[[1]]$space <- as.character(groups$regionsGroups[[1]]$space)
+    } else if (class(regions) == "GRangesList") {
+        groups$regionsGroups <- lapply(regions, as.data.frame)
+        rename <- function(x) {
+            colnames(x)[1:3] <- c("space", "start_position", "end_position")
+            return(x)
+        }
+        groups$regionsGroups <- lapply(groups$regionsGroups, rename)
+        groups$regionsGroups <- lapply(groups$regionsGroups, function(x) {x$space <- as.character(x$space); x})
+    }
     groups$regionsGroups.leftPaddings <- prepareRegionsPaddings(groups$regionsGroups, side="left", paddingSize=paddingSize, cores=cores)
     groups$regionsGroups.rightPaddings <- prepareRegionsPaddings(groups$regionsGroups, side="right", paddingSize=paddingSize, cores=cores)
     cat(" Done!\n")
