@@ -33,5 +33,5 @@
 }
 
 \examples{
-  \dontrun{MetaMineR:::binMatrix(matrix(1:40, nrow=4, ncol=10), 4)}
+  \dontrun{metagene:::binMatrix(matrix(1:40, nrow=4, ncol=10), 4)}
 }

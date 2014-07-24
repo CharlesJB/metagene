@@ -37,6 +37,6 @@
 }
 
 \examples{
-  \dontrun{regionsFileName <- system.file("extdata/list1.bed", package="MetaMineR")}
-  \dontrun{regions <- MetaMineR:::prepareRegions(regionsFileName)}
+  \dontrun{regionsFileName <- system.file("extdata/list1.bed", package="metagene")}
+  \dontrun{regions <- metagene:::prepareRegions(regionsFileName)}
 }

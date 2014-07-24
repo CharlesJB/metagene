@@ -1,2 +1,2 @@
-## Run all tests in the MetaMineR package
-BiocGenerics:::testPackage("MetaMineR")
+## Run all tests in the metagene package
+BiocGenerics:::testPackage("metagene")

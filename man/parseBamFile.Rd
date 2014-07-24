@@ -40,15 +40,15 @@
 
 \examples{
   # Get bamFile
-  \dontrun{bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR") }
+  \dontrun{bamFileName <- system.file("extdata/align1_rep1.bam", package="metagene") }
 
   # Get features
-  \dontrun{bedFileName <- system.file("extdata/list1.bed", package="MetaMineR")}
+  \dontrun{bedFileName <- system.file("extdata/list1.bed", package="metagene")}
   \dontrun{features <- read.table(bedFileName, header=FALSE, stringsAsFactors=FALSE, nrow=10)}
   \dontrun{colnames(features) <- c("space", "start_position", "end_position")}
   \dontrun{features$end_position <- features$start_position + 200}
   \dontrun{features$start_position <- features$start_position - 200}
 
   # Parse the bam file
-  \dontrun{bamDensity <- MetaMineR:::parseBamFile(bamFileName, features)}
+  \dontrun{bamDensity <- metagene:::parseBamFile(bamFileName, features)}
 }

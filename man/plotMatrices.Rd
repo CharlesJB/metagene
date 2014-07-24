@@ -53,8 +53,8 @@
 
 \examples{
   # Prepare the groups
-  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")
-  listFileName <- system.file("extdata/list1.txt", package="MetaMineR")
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="metagene")
+  listFileName <- system.file("extdata/list1.txt", package="metagene")
   groups <- parseFeatures(bamFileName, listFileName, specie="mouse")
 
   # Do the graph

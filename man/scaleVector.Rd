@@ -34,5 +34,5 @@
 
 \examples{
   \dontrun{values <- 1:10}
-  \dontrun{scaledValues <- MetaMineR:::scaleVector(values, 100)}
+  \dontrun{scaledValues <- metagene:::scaleVector(values, 100)}
 }

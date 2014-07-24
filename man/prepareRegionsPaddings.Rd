@@ -44,8 +44,8 @@
 }
 
 \examples{
-  \dontrun{regionsFileName <- system.file("extdata/list1.bed", package="MetaMineR")}
-  \dontrun{regions <- MetaMineR:::prepareRegions(regionsFileName)}
-  \dontrun{regionsPaddingsLeft <- MetaMineR:::prepareRegionsPaddings(regions, "left", paddingSize=200)}
-  \dontrun{regionsPaddingsRight <- MetaMineR:::prepareRegionsPaddings(regions, "right", paddingSize=200)}
+  \dontrun{regionsFileName <- system.file("extdata/list1.bed", package="metagene")}
+  \dontrun{regions <- metagene:::prepareRegions(regionsFileName)}
+  \dontrun{regionsPaddingsLeft <- metagene:::prepareRegionsPaddings(regions, "left", paddingSize=200)}
+  \dontrun{regionsPaddingsRight <- metagene:::prepareRegionsPaddings(regions, "right", paddingSize=200)}
 }

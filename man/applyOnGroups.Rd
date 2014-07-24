@@ -42,5 +42,5 @@
 
 \examples{
   \dontrun{a <- list("a", "b", "c")}
-  \dontrun{MetaMineR:::applyOnGroups(a, cores=1, FUN=print)}
+  \dontrun{metagene:::applyOnGroups(a, cores=1, FUN=print)}
 }

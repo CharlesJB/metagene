@@ -43,5 +43,5 @@
 }
 
 \examples{
-  \dontrun{MetaMineR:::binBootstrap(1:100, alpha=0.05, sampleSize=100)}
+  \dontrun{metagene:::binBootstrap(1:100, alpha=0.05, sampleSize=100)}
 }

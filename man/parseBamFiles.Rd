@@ -40,12 +40,12 @@
 
 \examples{
   # Get a bam file name
-  \dontrun{bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")}
+  \dontrun{bamFileName <- system.file("extdata/align1_rep1.bam", package="metagene")}
 
   # Load a feature file
-  \dontrun{featuresFileName <- system.file("extdata/list1.txt", package="MetaMineR")}
-  \dontrun{features <- MetaMineR:::prepareFeatures(featuresFileName, specie="mouse")}
+  \dontrun{featuresFileName <- system.file("extdata/list1.txt", package="metagene")}
+  \dontrun{features <- metagene:::prepareFeatures(featuresFileName, specie="mouse")}
 
   # Parse multiple bam files
-  \dontrun{bam <- MetaMineR:::parseBamFiles(bamFileName, features)}
+  \dontrun{bam <- metagene:::parseBamFiles(bamFileName, features)}
 }

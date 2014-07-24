@@ -39,16 +39,16 @@
 
 \examples{
   # Get a feature
-  \dontrun{bedFileName <- system.file("extdata/list1.bed", package="MetaMineR")}
+  \dontrun{bedFileName <- system.file("extdata/list1.bed", package="metagene")}
   \dontrun{feature <- read.table(bedFileName, header=FALSE, stringsAsFactors=FALSE, nrow=1)}
   \dontrun{colnames(feature) <- c("space", "start_position", "end_position")}
 
   # Get a bam file
-  \dontrun{bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR") }
+  \dontrun{bamFileName <- system.file("extdata/align1_rep1.bam", package="metagene") }
 
   # Extract reads
-  \dontrun{reads <- MetaMineR:::extractReadsInRegion(bamFileName, feature$space, feature$start_position, feature$end_position)}
+  \dontrun{reads <- metagene:::extractReadsInRegion(bamFileName, feature$space, feature$start_position, feature$end_position)}
 
   # Convert to density
-  \dontrun{MetaMineR:::convertReadsToDensity(reads, feature)}
+  \dontrun{metagene:::convertReadsToDensity(reads, feature)}
 }

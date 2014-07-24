@@ -89,7 +89,7 @@
 }
 
 \examples{
-  bamFileName <- system.file("extdata/align1_rep1.bam", package="MetaMineR")
-  featuresFileName <- system.file("extdata/list1.txt", package="MetaMineR")
+  bamFileName <- system.file("extdata/align1_rep1.bam", package="metagene")
+  featuresFileName <- system.file("extdata/list1.txt", package="metagene")
   groups <- parseFeatures(bamFileName, featuresFileName, specie="mouse")
 }

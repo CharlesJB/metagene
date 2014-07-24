@@ -41,8 +41,8 @@
 \examples{
   # Get bootstrap results
   \dontrun{bootstrapResults <- list()}
-  \dontrun{bootstrapResults$a <- MetaMineR:::bootstrapAnalysis(matrix(1:40, nrow=4, ncol=10), 4, alpha=0.05, sampleSize=100)}
+  \dontrun{bootstrapResults$a <- metagene:::bootstrapAnalysis(matrix(1:40, nrow=4, ncol=10), 4, alpha=0.05, sampleSize=100)}
 
   # Get the data.frame
-  \dontrun{DF <- MetaMineR:::getDataFrame(bootstrapResults, c(-1,1))}
+  \dontrun{DF <- metagene:::getDataFrame(bootstrapResults, c(-1,1))}
 }

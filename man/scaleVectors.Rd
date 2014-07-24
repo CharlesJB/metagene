@@ -52,5 +52,5 @@
 
 \examples{
   \dontrun{group <- list(l1=list(element1=list(1:10, 1:100)))}
-  \dontrun{MetaMineR:::scaleVectors(group, "l1", 100)}
+  \dontrun{metagene:::scaleVectors(group, "l1", 100)}
 }
