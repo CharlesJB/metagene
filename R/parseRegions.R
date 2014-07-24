@@ -5,7 +5,8 @@
 #
 # Input:
 #    regions:        A vector of bed file names corresponding to the regions to
-#                    include in the analysis.
+#                    include in the analysis, a GRanges object or a GRangesList
+#                    object.
 #                    The file name (minus the extension) will be used as the
 #                    name of the region.
 #    bamFiles:       A vector of bamFile to plot. TODO: Should also accept a

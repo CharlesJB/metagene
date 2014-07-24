@@ -23,7 +23,8 @@
 
 \arguments{
   \item{regions}{A \code{vector} of bed file names corresponding
-    to the regions to include in the analysis.}
+    to the regions to include in the analysis, a GRanges object or
+    a GRangesList object.}
 
   \item{bamFiles}{A \code{vector} of bamFile to plot.}
 
