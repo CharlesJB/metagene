@@ -79,12 +79,34 @@ bootstrapAnalysis <- function(currentMatrix, binSize, alpha, sampleSize, cores=1
 #    A matrix with each column representing the mean of binSize nucleotides.
 binMatrix <- function(data,binSize)
 {
-    n <- ((ncol(data)-1)/binSize + 1)
-    a <- sapply(1:n, function(j){(j-1)*binSize+1})
-    newdata <- matrix(0, nrow=nrow(data), ncol=(ncol(data)-1)/binSize)
-    for (j in 1:(n-1)) {
-        newdata[,j] <- sapply(1:nrow(data), function(i){mean(data[i,a[j]:a[j+1]])}) }
-    return(newdata)
+    stopifnot(binSize %% 1 == 0)
+    stopifnot(binSize > 0)
+    # Not sure if best solution. If the binSize is not a multiple of number of
+    # row in data, I silently trim data to make it even
+    if (ncol(data) %% binSize != 0) {
+        remainder <- ncol(data) %% binSize
+        if (remainder == 1) {
+        # If remainder is one, we remove it at the end
+            data <- data[,-ncol(data)]
+        } else if (remainder %% 2 != 0) {
+        # If remainder is odd, we remove 1 more at the end
+            toRemove <- floor(remainder / 2)
+            data <- data[,(toRemove+1):(ncol(data)-toRemove-1)]
+	} else {
+        # If remainder is even, we remove the same quantity on both end
+            toRemove <- remainder / 2
+            data <- data[,(toRemove+1):(ncol(data)-toRemove)]
+        }
+    }
+
+    splitSum <- function(x, bs) {
+        if (bs < length(x)) {
+            return(tapply(x, (seq_along(x)-1) %/% bs, sum))
+        } else {
+            return(x)
+        }
+    }
+    return(unname(t(apply(data, 1, splitSum, binSize))))
 }
 
 # Estimate mean and confidence interval of a column using bootstrap.
