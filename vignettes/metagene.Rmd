@@ -6,30 +6,29 @@
 metagene: A package to produce Metafeature plots
 ========================================================
 
-Charles Joly Beauparlant, Fabien Claude Lamaze, Rawane Samb, Astrid-Louise Deschenes and Arnaud Droit.
+Charles Joly Beauparlant, Fabien Claude Lamaze, Rawane Samb, Astrid Louise Deschenes and Arnaud Droit.
 
 This package and the underlying metagene code are distributed under the Artistic license 2.0. You are free to use and redistribute this software. 
 
-# Introduction
+## Introduction
 
-This package produces Metagene-like plots to compare the behavior of DNA-interacting proteins at selected groups of features. A typical analysis can be done in viscinity of transcription start sites (TSS) of genes or at any regions of interest (such as enhancers). Multiple combination of group of features and/or group of bam files can be compared in a single analysis. Bootstraping analysis is used to compare the groups and locate regions with statistically different enrichment profiles. In order to increase the sensitivity of the analysis, alignment data is used instead of peaks produced with peak callers (i.e.: MACS2 or PICS). The metagene package uses bootstrap to obtain a better estimation of the mean enrichment and the confidence interval for every group of samples.
+This package produces Metagene-like plots to compare the behavior of DNA-interacting proteins at selected groups of features. A typical analysis can be done in viscinity of transcription start sites (TSS) of genes or at any regions of interest (such as enhancers). Multiple combinations of group of features and/or group of bam files can be compared in a single analysis. Bootstraping analysis is used to compare the groups and locate regions with statistically different enrichment profiles. In order to increase the sensitivity of the analysis, alignment data is used instead of peaks produced with peak callers (i.e.: MACS2 or PICS). The metagene package uses bootstrap to obtain a better estimation of the mean enrichment and the confidence interval for every group of samples.
 
 This vignette will introduce all the main features of the metagene package.
 
-# Loading the package
+## Loading metagene package
 
 ```{r libraryLoad}
 suppressMessages(library(metagene))
 ```
+ 
+## Inputs
 
-# Parsing input files
+### Alignment files (BAM files)
 
-The main input of the metagene package are alignment files in bam format. It is also possible to include a design file to represent the relations between samples (replicates and controls). The regions to analyse can be either in bed format (for user-specified regions) or in Ensembl Gene ID(s) format (in which case, the analysis will be done around the TSS of the genes).
+There is no hard limit in the number of BAM files that can be included in an analysis (but with too many BAM files, memory may become an issue). To speed up the analysis, it is best to (but not mandatory) to index BAM files before starting the analysis. If no index is found for a file, the metagene package will use Rsamtools to sort and index it.
 
-## Alignment files
-There is no hard limit in the number of bam files that can be included in an analysis (but with too many bam files, memory may become an issue). To speed up the analysis, it is best to (but not mandatory) to index bam files before starting the analysis. If no index is found for a file, the metagene package will use Rsamtools to sort and index it.
-
-The path (relative or absolute) to the bam files must be in a vector:
+The path (relative or absolute) to the BAM files must be in a vector:
 ```{r bamFiles}
 bamFile1Rep1 <- system.file("extdata/align1_rep1.bam", package="metagene")
 bamFile1Rep2 <- system.file("extdata/align1_rep2.bam", package="metagene")
@@ -42,16 +41,28 @@ bamFiles
 
 For this demo, we have 2 samples (each with 2 replicates) and 1 control.
 
-## Design file
-If you want to include replicates and control into an analysis, you will have to produce a design file to represent the relationship between every samples. A design file must contain the following columns:
+### Design groups
 
-* The list of paths (absolute or relative) to every bam files for the analysis.
-* One column per group of files (replicates and/or controls). The column can take only three valid values: 
+A design group contains a set of BAM files that, when pull togheter, represent a logical analysis. Furthermore, a design group contains the relationship between every BAM files present. Samples (with or without replicates) and controls can be assigned to a same design group. There can be as many groups as necessary. A BAM file can be assigned to more than one group. 
+
+To represent the relationship between every BAM files, design groups must ha the following columns:
+
+* The list of paths to every BAM files related to an analysis.
+* One column per group of files (replicates and/or controls). 
+
+There is two possible way to create design groups, by reading a file or by directly creating a design object in R.
+
+#### Design groups from a file
+
+Design groups can be loaded into the metagene package by using a text file. As the relationship between BAM files as to be specified, the following columns are mandatory :
+
+* First column: The list of paths (absolute or relative) to every BAM files for all the design groups.
+* Following columns: One column per design group (replicates and/or controls). The column can take only three valid values: 
 	+ 0: ignore file
 	+ 1: input
 	+ 2: control
 
-The file must also contain a header. It is recommander to use Samples for the name of the first column, but the value is not checked. The other columns in the design file will be used for naming groups, and must be unique.
+The file must also contain a header. It is recommander to use Samples for the name of the first column, but the value is not checked. The other columns in the design file will be used for naming design groups, and must be unique.
 
 ```{r designFile}
 fileDesign <- system.file("extdata/design.txt", package="metagene")
@@ -60,7 +71,9 @@ design$Samples <- paste(system.file("extdata", package="metagene"), design$Sampl
 design
 ```
 
-Also note that it is not obligatory to use a design file, you can also create the design data.frame using your prefered method (as long as the restrictions on the values mentioned previously are respected).
+#### Design groups from R
+
+It is not obligatory to use a design file, you can create the design data.frame using your prefered method (as long as the restrictions on the values mentioned previously are respected).
 
 For instance, the previous design data.frame could have been create directly in R:
 ```{r alternateDesign}
@@ -70,8 +83,19 @@ design$Samples <- paste0(system.file("extdata", package="metagene"), "/", design
 design
 ```
 
-## Ensembl Gene ID(s) files
-It is possible to provide, to metagene package, a text file that contains a list of Ensembl Gene ID(s) as input. The files must be formated in the following way:
+### Features groups
+
+Features groups represents all genes, TSS or genome regions that form a logical collection for an analysis. Genome regions, which are called later regions groups, are a subclass of features groups and require special treatment in the analysis steps. There is different ways to provide features groups to the metagene package.
+
+####  Every known TSS (default) - Features
+
+When no features groups are provided to the metagene package, it use every known TSS for the selected specie (specified using the specie argument, default value: “human”).
+
+By default, 5000 base pairs aroud each TSS will be used, but this can be changed with the maxDistance argument.
+
+#### Ensembl Gene ID(s) files - Features
+
+It is possible to provide, to metagene package, a text file that contains a list of Ensembl Gene ID(s) as input. The metagene package will use the Gene ID to extact the TSS information. The analysis will be done around the TSS of all genes. The files must be formated in the following way:
 
 * The first line must be the name of the group (called features groups).
 * The other lines must be the Ensembl Gene ID(s), one ID per line.
@@ -93,8 +117,9 @@ features
 
 **Note**: When there are multiple design groups and features groups, the metagene package will produce a group for every possible combinations of the two.
 
-## Bed files
-If you want to compare custom regions, it is possible to use a list of one or more bed files.
+#### BED files - Regions
+
+To compare custom regions, it is possible to use a list of one or more BED files.
 
 ```{r regionsArgument}
 fileBed1 <- system.file("extdata/list1.bed", package="metagene")
@@ -103,9 +128,18 @@ regions <- c(fileBed1, fileBed2)
 regions
 ```
 
-As an alternative to a list of bed files, you can also use GRanges or GRangesList objects.
+#### GRanges or GRangesList objects - Regions
 
-# Parsing features
+As an alternative to a list of bed files, GRanges or GRangesList objects can be used.
+
+## Analysis steps
+
+### Parsing input files
+
+The main input of the metagene package are alignment files in bam format. It is also possible to include a design file to represent the relations between samples (replicates and controls). The regions to analyse can be either in BED format (for user-specified regions) or in Ensembl Gene ID(s) format (in which case, the analysis will be done around the TSS of the genes).
+
+### Parsing features
+
 To parse the sequences overlapping a list of features, you must use the parseFeatures function:
 
 ```{r parseFeaturesExample}
@@ -116,7 +150,8 @@ If no feature files are provided, the package will use every known TSS for the s
 
 By default, 5000 base pairs aroud each TSS will be used, but this can be changed with the maxDistance argument.
 
-# Parsing regions
+### Parsing regions
+
 Parsing regions is very similar to parsing features, except that we must use bed files instead of features files:
 
 ```{r parseRegionsExample, eval=FALSE}
@@ -127,7 +162,8 @@ Since it's possible that the regions will have different length, metagene will s
 
 There is no maxDistance argument because the size of the regions are already defined in the bed files. It is possible to add paddings on each side of every regions with the paddingSize argument. Please note that the padding is added after the main regions are scaled.
 
-# Plotting the results
+### Plotting results
+
 During the plotting step, it is possible to specify which groups of features or regions to add into the plot. The results of the parseFeatures or parseRegions can be used directly by the plotMatrices function.
 
 Before producing the plot, the metagene package will do a bootstrap analysis to obtain better estimates of the mean and confidence intervals for each groups. This step can be computationally expensive and the running time will directly depends on the binSize and sampleSize arguments.
