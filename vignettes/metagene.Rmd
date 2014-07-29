@@ -14,6 +14,8 @@ This package and the underlying metagene code are distributed under the Artistic
 
 This package produces Metagene-like plots to compare the behavior of DNA-interacting proteins at selected groups of features. A typical analysis can be done in viscinity of transcription start sites (TSS) of genes or at any regions of interest (such as enhancers). Multiple combinations of group of features and/or group of bam files can be compared in a single analysis. Bootstraping analysis is used to compare the groups and locate regions with statistically different enrichment profiles. In order to increase the sensitivity of the analysis, alignment data is used instead of peaks produced with peak callers (i.e.: MACS2 or PICS). The metagene package uses bootstrap to obtain a better estimation of the mean enrichment and the confidence interval for every group of samples.
 
+Currently supported species are **human** and **mouse**.
+
 This vignette will introduce all the main features of the metagene package.
 
 ## Loading metagene package
@@ -97,7 +99,7 @@ By default, 5000 base pairs aroud each TSS will be used, but this can be changed
 
 It is possible to provide, to metagene package, a text file that contains a list of Ensembl Gene ID(s) as input. The metagene package will use the Gene ID to extact the TSS information. The analysis will be done around the TSS of all genes. The files must be formated in the following way:
 
-* The first line must be the name of the group (called features groups).
+* The first line must be the name of the group (called features groups). All files must used unique names as they are going to be used as features groups names inside the metagene package.
 * The other lines must be the Ensembl Gene ID(s), one ID per line.
 
 ```{r featuresFile}
@@ -127,6 +129,8 @@ fileBed2 <- system.file("extdata/list2.bed", package="metagene")
 regions <- c(fileBed1, fileBed2)
 regions
 ```
+
+The name of the files (without the extension) will be used as features groups names inside the metagene package.
 
 #### GRanges or GRangesList objects - Regions
 
@@ -168,7 +172,9 @@ During the plotting step, it is possible to specify which groups of features or 
 
 Before producing the plot, the metagene package will do a bootstrap analysis to obtain better estimates of the mean and confidence intervals for each groups. This step can be computationally expensive and the running time will directly depends on the binSize and sampleSize arguments.
 
-You must use a list object to represent the groups to use and how to name them. For example, if we want to combine all the samples for each list, we could do the following:
+When there are multiple design groups and features groups, the metagene package produces a group for every possible combinations of the two. The name of each combination group is a concatenation of the feature group name and the design group name separated by an underscore (_). Those combination groups can be freely intermixed to genere different type of plotting results.
+
+You must use a list object to represent the groups to use and how to name them. For example, if we want to combine all the samples (defined as design names *align1* and *align2*) for each list (defined as features groups *list1* and *list2*), we could do the following:
 
 ```{r plotMatricesExample1}
 names(groupsFeatures$matrix)
@@ -176,7 +182,7 @@ groupsToPlot <- list(group1=c("list1_align1", "list1_align2"), group2=c("list2_a
 DF <- plotMatrices(groupsToPlot, groupsFeatures)
 ```
 
-If we wanted to compare the behavior of our 2 samples for the first list of genes, we could do the following:
+If we wanted to compare the behavior of our 2 samples (defined as design names *align1* and *align2*) for the first list of genes (defined as features group *list1*), we could do the following:
 
 ```{r plotMatricesExample2}
 groupsToPlot <- list(group1="list1_align1", group2="list1_align2")
