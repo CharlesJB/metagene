@@ -34,7 +34,7 @@ The path (relative or absolute) to the BAM files must be in a vector:
 ```{r bamFiles}
 bamFile1Rep1 <- system.file("extdata/align1_rep1.bam", package="metagene")
 bamFile1Rep2 <- system.file("extdata/align1_rep2.bam", package="metagene")
-bamFile2Rep1 <- system.file("extdata/align2_rep2.bam", package="metagene")
+bamFile2Rep1 <- system.file("extdata/align2_rep1.bam", package="metagene")
 bamFile2Rep2 <- system.file("extdata/align2_rep2.bam", package="metagene")
 bamFileCTRL <- system.file("extdata/ctrl.bam", package="metagene")
 bamFiles <- c(bamFile1Rep1, bamFile1Rep2, bamFile2Rep1, bamFile2Rep2, bamFileCTRL)
