@@ -17,11 +17,6 @@ if(FALSE) {
 test.prepareBamFiles_zero_core_number<- function() {
 	obs <- tryCatch(metagene:::prepareBamFiles(c("fileA", "fileB"), 0), error=conditionMessage)
 	exp <- "The number of cores has to be a positive integer."
-	checkIdentical(obs, exp, msg="prepareBamFiles() - A zero core number argument did not generate an exception with expected message.")
-}
-
-## Negative core number should not be accepted as an argument
-test.prepareBamFiles_negative_core_number<- function() {
 	obs <- tryCatch(metagene:::prepareBamFiles(c("fileA", "fileB"), -1), error=conditionMessage)
 	exp <- "The number of cores has to be a positive integer."
 	checkIdentical(obs, exp, msg="prepareBamFiles() - A negative core number argument did not generate an exception with expected message.")
@@ -35,7 +30,7 @@ test.prepareBamFiles_not_integer_core_number<- function() {
 }
 
 ## Something other than an integer number should not be accepted as an core number argument 
-test.prepareBamFiles_not_integer_core_number<- function() {
+test.prepareBamFiles_string_core_number<- function() {
 	obs <- tryCatch(metagene:::prepareBamFiles(c("fileA", "fileB"),  "NotAInteger"), error=conditionMessage)
 	exp <- "The number of cores has to be a positive integer."
 	checkIdentical(obs, exp, msg="prepareBamFiles() - A generic text used as a core number did not generate an exception with expected message.")
@@ -62,7 +57,7 @@ test.prepareBamFiles_not_existing_files<- function() {
 ## An invalid specie should not be accepted as an argument
 test.getGenes_not_valid_specie<- function() {
 	obs <- tryCatch(metagene:::getGenes(specie="tomato"), error=conditionMessage)
-	exp <- "Incorrect parameter for specie name.\nCurrently supported species are \"human\" and \"mouse\"."
+	exp <- "Incorrect parameter for specie name.\nCurrently supported species are: \"mouse\", \"human\"."
 	checkIdentical(obs, exp, msg="getGenes() - An invalid specie argument did not generate an exception with expected message.")
 }
 
@@ -89,7 +84,7 @@ test.prepareFeatures_not_valid_specie<- function() {
 	temp_file<-tempfile()
 	file.create(temp_file)
 	obs <- tryCatch(metagene:::prepareFeatures(temp_file, "tomato"), error=conditionMessage, finally={if (file.exists(temp_file)){file.remove(temp_file)}})
-	exp <- "Incorrect parameter for specie name.\nCurrently supported species are \"human\" and \"mouse\"."
+	exp <- "Incorrect parameter for specie name.\nCurrently supported species are: \"mouse\", \"human\"."
 	checkIdentical(obs, exp, msg="prepareFeatures() - An invalid specie argument did not generate an exception with expected message.")
 }
 

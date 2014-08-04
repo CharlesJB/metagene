@@ -21,7 +21,7 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
     # Check prerequisites
 
     # The number of cores has to be a positive integer
-    if(!is.numeric(cores) || cores <= 0) {
+    if(!is.numeric(cores) || as.integer(cores) != cores || cores <= 0) {
             stop("The number of cores has to be a positive integer.")
     }
 
@@ -101,18 +101,18 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
         stop("At least one features file name is not a valid name (a character string).")
     }
 
-    # All festures files must exist
+    # All features files must exist
     if (!is.null(features) && sum(unlist(lapply(features, file.exists))) != length(features)) {
         stop("At least one features file does not exist.")
     }
 
-    # The specie argument has only two valid possibilities
-    if (! specie %in% c("mouse", "human")){
-        stop("Incorrect parameter for specie name.\nCurrently supported species are \"human\" and \"mouse\".")
+    # The specie argument has to a valid specie
+    if (! specie %in% get_valid_species()){
+        stop(paste("Incorrect parameter for specie name.\nCurrently supported species are: \"", paste(get_valid_species(), collapse="\", \""),  "\".", collapse="", sep=""))
     }
 
     # The maximum dsitance has to be a positive integer
-    if(!is.numeric(maxDistance) || maxDistance <= 0 || maxDistance %% 1 != 0) {
+    if (!is.numeric(maxDistance) || maxDistance <= 0 || maxDistance %% 1 != 0) {
         stop("The maximum distance has to be a positive numeric with no decimals.")
     }
 
@@ -168,9 +168,9 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
 getGenes <- function(specie="human") {
     # Check prerequisites
 
-    # The specie argument has only two valid possibilities
-    if (! specie %in% c("mouse", "human")){
-        stop("Incorrect parameter for specie name.\nCurrently supported species are \"human\" and \"mouse\".")
+    # The specie argument has to a valid specie
+    if (! specie %in% get_valid_species()){
+        stop(paste("Incorrect parameter for specie name.\nCurrently supported species are: \"", paste(get_valid_species(), collapse="\", \""),  "\".", collapse="", sep=""))
     }
 
     # Set the correct specie
@@ -196,3 +196,17 @@ getGenes <- function(specie="human") {
 
     return(sub.ensmart)
 }
+
+
+# Get list of currently supported species
+#
+# Input:
+#   None
+#
+# Output:
+#   List of currently supported species
+get_valid_species<-function() {
+	# Return list of valid species
+	return(c("mouse", "human"))
+}
+

@@ -62,7 +62,8 @@ prepareRegions <- function(regions, cores=1) {
 #    paddingSize:      The length padding we want to add on each side of each
 #                      regions.
 #    cores:            Number of cores for parallel processing (require
-#                      parallel package).
+#                      parallel package). The number of cores has to be a 
+#                      positive integer.
 #
 # Output:
 #    A list of data.frames, each data.frame corresponding to the paddings for
