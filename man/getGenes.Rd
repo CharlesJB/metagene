@@ -7,7 +7,8 @@
 
 \description{
   This function will fetch the positions of all known coding
-  genes for a given specie.
+  genes for a given specie. Currently supported species are: 
+  \dQuote{mouse}, \dQuote{human} (default).
 }
 
 \usage{
@@ -27,11 +28,13 @@
 
 \value{
   \code{getGenes} return a \code{data.frame} with five columns:
-    1: feature -> Ensembl gene id
-    2: strand -> -1 or 1
-    3: space -> chromosome
-    4: start_position -> position of the TSS
-    5: end_position -> ending position of the last exon of the gene
+   \enumerate{
+    \item feature -> Ensembl gene id
+    \item strand -> -1 or 1
+    \item space -> chromosome
+    \item start_position -> position of the TSS
+    \item end_position -> ending position of the last exon of the gene
+  }   
 }
 
 \author{
