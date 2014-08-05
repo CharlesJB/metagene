@@ -193,7 +193,6 @@ extractReadsInRegion <- function(bamFile, chr, start, end) {
         stop("The BAM file does not exist.")
     }
 
-    # TODO : VALIDER SI A FAIRE OU NON
     #The chromosome name must be of character type
     if (!is.character(chr)) {
         stop("The chromosome name is not a valid name (a character string).")
