@@ -19,13 +19,16 @@
 }
 
 \arguments{
-  \item{bamFile}{Path to the bam file.}
+  \item{bamFile}{Path to the BAM file. The BAM file must exist.}
 
-  \item{chr}{Current chromosome.}
+  \item{chr}{Current chromosome. The chromosome name must 
+    be of character type.}
 
-  \item{start}{Starting position of the current region.}
+  \item{start}{Starting position of the current region. 
+    The starting position has to be a positive integer.}
 
-  \item{end}{Ending position of the current region.}
+  \item{end}{Ending position of the current region.
+    The ending position has to be a positive integer.}
 }
 \value{
   \code{extractReadsInRegion} return a \code{data.frame} containing
