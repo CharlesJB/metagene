@@ -17,7 +17,7 @@ Charles Joly Beauparlant, Fabien Claude Lamaze, Rawane Samb, Astrid Louise Desch
 
 This package and the underlying metagene code are distributed under the Artistic license 2.0. You are free to use and redistribute this software. 
 
-For more information on Artistic-2.0 License see [http://opensource.org/licenses/Artistic-2.0](http://opensource.org/licenses/Artistic-2.0)
+For more information on Artistic 2.0 License see [http://opensource.org/licenses/Artistic-2.0](http://opensource.org/licenses/Artistic-2.0)
 
 ## Bugs/Feature requests ##
 
