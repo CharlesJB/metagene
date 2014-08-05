@@ -7,7 +7,8 @@
 \description{
   This function produces the list object that contains all the
   information necessary to produce a metagene-like plot with the
-  \code{plotGraphic} function.
+  \code{plotGraphic} function. Currently supported species are: 
+  \dQuote{mouse}, \dQuote{human} (default).
 }
 
 \usage{
@@ -22,7 +23,8 @@
 }
 
 \arguments{
-  \item{bamFiles}{A \code{vector} of bamFile to plot.}
+  \item{bamFiles}{A \code{vector} of BAM files to plot. All BAM files 
+    must exist.}
 
   \item{features}{Either a filename of a \code{vector} of filenames.
     Supported features: ensembl_gene_id. 
@@ -33,7 +35,8 @@
   \item{specie}{human: Homo sapiens (default). mouse: Mus musculus.}
 
   \item{maxDistance}{The distance around feature to include 
-    in the plot.}
+    in the plot. The maximum distance has to be a positive 
+    integer.}
 
   \item{design}{A \code{data.frame} explaining the relationship
     between multiple samples. One line per samples. One column
@@ -42,7 +45,8 @@
     1: treatment file(s). 2: control file(s).}
 
   \item{cores}{Number of cores for parallel processing.
-    Require parallel package.}
+    Require parallel package. The number of cores has to be a positive 
+    integer.}
 
   \item{debug}{Keep the intermediate files (can use a lot of memory).
     TRUE or FALSE.}
@@ -72,15 +76,20 @@
   The data structure is a list of lists.
 
   The first level contain the following fields:
-    * design: The information from the design file.
-    * param: The values of the argument used with parseFeatures.
-    * bamFilesDescription: A \code{data.frame} with the
-      following columns;
-        * The names of the original bam files, the names of the
-        * sorted bam files and the number of aligned reads.
-    * matrix: A list of matrix that will be used to produce the
+  \itemize{
+    \item design: The information from the design file.
+    \item param: The values of the argument used with parseFeatures.
+    \item bamFilesDescription: A \code{data.frame} with the
+      following columns:
+      \itemize{
+        \item bam: The names of the sorted bam files
+        \item oldBam: The names of the original bam files 
+        \item alignedCount: The number of aligned reads
+        }
+    \item matrix: A list of matrix that will be used to produce the
         plot. One element by combination of features/design
         groups.
+  }
 }
 
 \author{
