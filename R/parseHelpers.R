@@ -374,21 +374,25 @@ removeControls <- function(group, data.rpm, design=NULL, controlCores=1) {
         }
 
         # 4. Substract merged control from every treatment samples
-        substractFeature <- function(treatment, i) {
-            currentFeatureTreatment <- unlist(treatment[i])
-            currentFeatureControl <- unlist(mergedControls[i])
-            newValues <- currentFeatureTreatment - currentFeatureControl
-            newValues[newValues < 0] <- 0
-            return(newValues)
-        }
-        substractControl <- function(currentTreatment) {
-            newTreatment <- applyOnGroups(1:length(currentTreatment), cores=controlCores, FUN=function(x) substractFeature(currentTreatment, x))
-            return(newTreatment)
-        }
-        treatment.rpm <- current.rpm[names(current.rpm) %in% treatmentNames]
-        group$noCTRL <- lapply(treatment.rpm, substractControl)
-        names(group$noCTRL) <- treatmentNames
-        return(group)
+	if (length(controlNames) == 0) {
+            group$noCTRL <- current.rpm[treatmentNames]
+        } else {
+		substractFeature <- function(treatment, i) {
+		    currentFeatureTreatment <- unlist(treatment[i])
+		    currentFeatureControl <- unlist(mergedControls[i])
+		    newValues <- currentFeatureTreatment - currentFeatureControl
+		    newValues[newValues < 0] <- 0
+		    return(newValues)
+		}
+		substractControl <- function(currentTreatment) {
+		    newTreatment <- applyOnGroups(1:length(currentTreatment), cores=controlCores, FUN=function(x) substractFeature(currentTreatment, x))
+		    return(newTreatment)
+		}
+		treatment.rpm <- current.rpm[names(current.rpm) %in% treatmentNames]
+		group$noCTRL <- lapply(treatment.rpm, substractControl)
+		names(group$noCTRL) <- treatmentNames
+		return(group)
+	}
     } else {
         current.rpm <- data.rpm[[group$featureName]]
         group$noCTRL <- current.rpm
