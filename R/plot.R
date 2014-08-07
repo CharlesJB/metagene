@@ -77,36 +77,36 @@ bootstrapAnalysis <- function(currentMatrix, binSize, alpha, sampleSize, cores=1
 #
 # OUPUT:
 #    A matrix with each column representing the mean of binSize nucleotides.
-binMatrix <- function(data,binSize)
+binMatrix <- function(data, binSize)
 {
     stopifnot(binSize %% 1 == 0)
     stopifnot(binSize > 0)
-    # Not sure if best solution. If the binSize is not a multiple of number of
-    # row in data, I silently trim data to make it even
-    if (ncol(data) %% binSize != 0) {
-        remainder <- ncol(data) %% binSize
-        if (remainder == 1) {
-        # If remainder is one, we remove it at the end
-            data <- data[,-ncol(data)]
-        } else if (remainder %% 2 != 0) {
-        # If remainder is odd, we remove 1 more at the end
-            toRemove <- floor(remainder / 2)
-            data <- data[,(toRemove+1):(ncol(data)-toRemove-1)]
-	} else {
-        # If remainder is even, we remove the same quantity on both end
-            toRemove <- remainder / 2
-            data <- data[,(toRemove+1):(ncol(data)-toRemove)]
-        }
+
+    # If the number of bins is too small, we warn the user.
+    binCount <- floor(ncol(data) / binSize)
+    if (binCount < 5) {
+        message <- paste0("Number of bins is very small: ", binCount, "\n")
+        message <- paste0(message, "  You should consider reducing the binSize value.")
+        warning(message)
+    }
+    # If binSize is not a multiple of ncol(data), we remove the bin that have a
+    # different size than the others.
+    remainder <- ncol(data) %% binSize
+    if (remainder != 0) {
+	message <- "binSize is not a multiple of the number of columns in data.\n"
+	message <- paste0(message, "  Columns ", ncol(data) - remainder, "-", ncol(data), " will be removed.")
+        warning(message)
+        data <- data[,1:(ncol(data)-remainder)]
     }
 
-    splitSum <- function(x, bs) {
+    splitMean <- function(x, bs) {
         if (bs < length(x)) {
-            return(tapply(x, (seq_along(x)-1) %/% bs, sum))
+            return(tapply(x, (seq_along(x)-1) %/% bs, mean))
         } else {
             return(x)
         }
     }
-    return(unname(t(apply(data, 1, splitSum, binSize))))
+    return(unname(t(apply(data, 1, splitMean, binSize))))
 }
 
 # Estimate mean and confidence interval of a column using bootstrap.
