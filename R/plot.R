@@ -34,7 +34,7 @@ plotMatrices <- function(matricesGroups, data, binSize=100, alpha=0.05, sampleSi
     DF <- getDataFrame(bootstrapResults, range=data$range)
 
     # 4. Create graph
-    plotGraphic(DF, paste(names(matricesGroups), collapse=" vs "))
+    plotGraphic(DF, paste(names(matricesGroups), collapse=" vs "), binSize)
     return(DF)
 }
 
@@ -170,7 +170,13 @@ getDataFrame <- function(bootstrapData, range) {
 #
 # Ouput:
 #    The graph that is printed on the current device.
-plotGraphic <- function(DF, title) {
+plotGraphic <- function(DF, title, binSize) {
+    # Prepare y label
+    if (binSize > 1) {
+        yLabel <- paste("Mean RPM for each", binSize, "positions")
+    } else {
+        yLabel <- paste("Mean RPM for each position")
+    }
     # TODO: add x label
     p <- ggplot(DF, aes(x=distances, y=means, ymin=qinf, ymax=qsup)) +
     geom_ribbon(aes(fill=Groups), alpha=0.3) +
@@ -181,7 +187,7 @@ plotGraphic <- function(DF, title) {
     theme(panel.background = element_rect())+
     theme_bw()+
     theme(axis.title.x = element_blank())+
-    ylab("Mean of RPM for each 100 bps")+
+    ylab(yLabel)+
     ggtitle(title)
     print(p)
 }
