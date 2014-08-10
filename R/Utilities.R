@@ -121,11 +121,13 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
         stop("The number of cores has to be a positive numeric with no decimals.")
     }
 
-    knownGenes <- getGenes(specie)
+    knownGenes <- as.data.frame(getGenes(specie))
+    colnames(knownGenes) <- c("space", "start_position", "end_position", "width", "strand", "feature")
+    knownGenes$space <- paste("chr", knownGenes$space, sep="")
     extractFeatures <- function(filename) {
-        currentFeatures <- read.table(filename, header = TRUE)
+        currentFeatures <- read.table(filename, stringsAsFactors = TRUE, header = TRUE)
         #currentGroup <- colnames(currentFeatures)[1]
-        currentFeature <- knownGenes[knownGenes$feature %in% as.character(currentFeatures[,]),]
+        currentFeature <- knownGenes[knownGenes$feature %in% currentFeatures[,1],]
         # We want to return regions at +- maxDistance from starting position of current feature
         currentFeature$end_position <- currentFeature$start_position
         currentFeature$start_position <- currentFeature$start_position - maxDistance
@@ -159,17 +161,53 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
 # The specie has to be either "mouse" or "human" (default).
 #
 # Output:
-#    A data.frame with 5 columns:
-#        1: feature -> Ensembl gene id
-#        2: strand -> -1 or 1
-#        3: space -> chromosome
-#        4: start_position -> position of the TSS
-#        5: end_position -> ending position of the last exon of the gene
+#    A GRanges object with a ensembl_gene_id columns
 getGenes <- function(specie="human") {
     # Check prerequisites
 
     # The specie argument has to a valid specie
     if (! specie %in% get_valid_species()){
+        message <- "Incorrect parameter for specie name.\n"
+        message <- paste0(message, "Currently supported species are: \"")
+        message <- paste0(message, paste(get_valid_species(), collapse="\", \""))
+        message <- paste0(message, "\".")
+
+        stop(paste("Incorrect parameter for specie name.\nCurrently supported species are: \"", paste(get_valid_species(), collapse="\", \""),  "\".", collapse="", sep=""))
+    }
+
+    # Set the correct specie
+    if (specie == "human") {
+        load(system.file("extdata/TSS.human", package="metagene"))
+        toReturn <- TSS.human
+    } else {
+        load(system.file("extdata/TSS.mouse", package="metagene"))
+        toReturn <- TSS.mouse
+    }
+
+    # Fetch the data
+    return(toReturn)
+}
+
+# Fetch the annotation of all genes from biomaRt
+#
+# Input:
+#    specie:    human: Homo sapiens (default) / mouse: Mus musculus
+#
+# Prerequisites:
+# The specie has to be either "mouse" or "human" (default).
+#
+# Output:
+#    A GRanges object with a ensembl_gene_id columns
+getGenesBiomart <- function(specie="human") {
+    # Check prerequisites
+
+    # The specie argument has to a valid specie
+    if (! specie %in% get_valid_species()){
+        message <- "Incorrect parameter for specie name.\n"
+        message <- paste0(message, "Currently supported species are: \"")
+        message <- paste0(message, paste(get_valid_species(), collapse="\", \""))
+        message <- paste0(message, "\".")
+
         stop(paste("Incorrect parameter for specie name.\nCurrently supported species are: \"", paste(get_valid_species(), collapse="\", \""),  "\".", collapse="", sep=""))
     }
 
@@ -186,15 +224,9 @@ getGenes <- function(specie="human") {
     attributes <- c("ensembl_gene_id","strand", "chromosome_name","start_position","end_position")
     filters <- c("chromosome_name")
     sub.ensmart <- getBM(attributes=attributes,filters=filters,values=chrom, mart=ensmart)
-    colnames(sub.ensmart) <- c("feature", "strand", "space", "start_position", "end_position")
-    sub.ensmart$space <- paste("chr", sub.ensmart$space, sep="")
+    colnames(sub.ensmart) <- c("ensembl_gene_id", "strand", "seqnames", "start", "end")
 
-    # If a gene is on the negative strand, we want the start position value to be greater than the end position
-    tmp <- sub.ensmart$start_position
-    sub.ensmart[sub.ensmart$strand == -1,]$start_position <- sub.ensmart[sub.ensmart$strand == -1,]$end_position
-    sub.ensmart[sub.ensmart$strand == -1,]$end_position <- tmp[sub.ensmart$strand == -1]
-
-    return(sub.ensmart)
+    return(as(sub.ensmart, "GRanges"))
 }
 
 
@@ -209,4 +241,3 @@ get_valid_species<-function() {
 	# Return list of valid species
 	return(c("mouse", "human"))
 }
-

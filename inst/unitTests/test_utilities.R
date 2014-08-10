@@ -64,15 +64,15 @@ test.getGenes_not_valid_specie<- function() {
 ## Human specie should return a data set with sepcific header
 test.getGenes_human<- function() {
 	data<-metagene:::getGenes("human")
-	checkEquals(names(data), c("feature", "strand", "space", "start_position", "end_position"),  "The returned dataset does not have the expected column names")
-	checkTrue(length(data[, 1]) > 0, "getGenes() - The returned dataset has not observation.")
+	checkTrue(class(data) == "GRanges")
+	checkTrue(length(data$ensembl_gene_id) > 0, "getGenes() - The returned dataset has not observation.")
 }
 
 ## Mouse specie should return a data set with sepcific header
 test.getGenes_mouse<- function() {
 	data<-metagene:::getGenes("mouse")
-	checkEquals(names(data), c("feature", "strand", "space", "start_position", "end_position"),  "The returned dataset does not have the expected column names")
-	checkTrue(length(data[, 1]) > 0, "getGenes() - The returned dataset has not observation.")
+	checkTrue(class(data) == "GRanges")
+	checkTrue(length(data$ensembl_gene_id) > 0, "getGenes() - The returned dataset has not observation.")
 }
 
 ###################################################
