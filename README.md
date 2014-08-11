@@ -11,7 +11,9 @@ Currently supported species are **human** and **mouse**.
 
 ## Authors ##
 
-Charles Joly Beauparlant, Fabien Claude Lamaze, Rawane Samb, Astrid Louise Deschenes and Arnaud Droit.
+[Charles Joly Beauparlant](http://ca.linkedin.com/pub/charles-joly-beauparlant/89/491/3b3 "Charles Joly Beauparlant"), [Fabien Claude Lamaze](http://ca.linkedin.com/in/fabienlamaze/en "Fabien Claude Lamaze"), [Rawane Samb](http://ca.linkedin.com/in/rawanesamb "Rawane Samb"), [Astrid Louise Deschenes](http://ca.linkedin.com/in/astriddeschenes "Astrid Louise Deschenes") and [Arnaud Droit](http://ca.linkedin.com/in/drarnaud "Arnaud Droit").
+
+See [Arnaud Droit Lab](http://bioinformatique.ulaval.ca/home/ "Arnaud Droit Lab") website.
 
 ## License ##
 
@@ -21,4 +23,4 @@ For more information on Artistic 2.0 License see [http://opensource.org/licenses
 
 ## Bugs/Feature requests ##
 
-If you have any bugs or feature requests, [let me know](https://github.com/CharlesJB/metagene/issues). Thanks!
+If you have any bugs or feature requests, [let us know](https://github.com/CharlesJB/metagene/issues). Thanks!
