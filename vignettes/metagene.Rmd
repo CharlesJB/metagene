@@ -91,7 +91,7 @@ Features groups represents all genes, TSS or genome regions that form a logical 
 
 ####  Every known TSS (default) - Features
 
-When no features groups are provided to the metagene package, it use every known TSS for the selected specie (specified using the specie argument, default value: “human”).
+When no features groups are provided to the metagene package, it use every known TSS for the selected specie (specified using the specie argument, default value: "human").
 
 By default, 5000 base pairs aroud each TSS will be used, but this can be changed with the maxDistance argument.
 
