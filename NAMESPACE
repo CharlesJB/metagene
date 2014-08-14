@@ -1,4 +1,4 @@
 export(parseFeatures)
 export(parseRegions)
 export(plotMatrices)
-import(biomaRt, Rsamtools, ggplot2, GenomicRanges, IRanges)
+import(Rsamtools, ggplot2, GenomicRanges, IRanges)
