@@ -12,13 +12,16 @@
 }
 
 \usage{
-  getDataFrame(bootstrapData, range)
+  getDataFrame(bootstrapData, range, binSize)
 }
 
 \arguments{
   \item{bootstrapData}{Data produced during the bootstrap analysis}
 
   \item{range}{The start and the end for the x-label}
+
+  \item{binSize}{The number of nucleotides in each bin for the
+    bootstrap step.}
 }
 
 \value{

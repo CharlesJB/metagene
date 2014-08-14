@@ -31,7 +31,7 @@ plotMatrices <- function(matricesGroups, data, binSize=100, alpha=0.05, sampleSi
     bootstrapResults <- applyOnGroups(matricesGroups, cores=1, FUN=bootstrap, bootstrapCores=cores)
 
     # 3. Prepare data.frame
-    DF <- getDataFrame(bootstrapResults, range=data$range)
+    DF <- getDataFrame(bootstrapResults, range=data$range, binSize=binSize)
 
     # 4. Create graph
     plotGraphic(DF, paste(names(matricesGroups), collapse=" vs "), binSize)
@@ -140,6 +140,8 @@ binBootstrap <- function(data, alpha, sampleSize, cores=1)
 #
 # Input:
 #    bootstapData:    Data produced during the bootstrap analysis
+#    range:           The range of the x-axis
+#    binSize:         The number of nucleotides in each bin.
 #
 # Output:
 #    A data.frame with the condensed results from the main data structure
@@ -149,8 +151,17 @@ binBootstrap <- function(data, alpha, sampleSize, cores=1)
 #         * means: the means to plot
 #         * qinf: the lower end of the confidence interval
 #         * qsup: the higher end of the confidence interval
-getDataFrame <- function(bootstrapData, range) {
-    grid = seq(range[1], range[2],length=length(bootstrapData[[1]]$mean))
+getDataFrame <- function(bootstrapData, range, binSize) {
+   # If we binned the data, we want the grid to be the center of each bins
+    if (binSize == 1) {
+        start <- range[1]
+        end <- range[2]
+    } else {
+        start <- range[1] + (binSize / 2)
+        end <- range[2] - (binSize / 2)
+    }
+    length <- length(bootstrapData[[1]]$mean)
+    grid = seq(start, end, length=length)
     DF = data.frame (
         Groups <- factor(rep(names(bootstrapData), each=length(grid))),
         distances <- rep(grid, length(bootstrapData)),
