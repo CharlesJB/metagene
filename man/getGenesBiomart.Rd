@@ -15,7 +15,7 @@
 }
 
 \usage{
-  getGenes(
+  getGenesBiomart(
     specie="human")
 }
 
