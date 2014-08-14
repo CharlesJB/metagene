@@ -1,0 +1,6 @@
+Samples	align1	align2
+align1_rep1.bam	1	0
+align1_rep2.bam	1	0
+align2_rep1.bam	0	1
+align2_rep2.bam	0	1
+ctrl.bam	2	2
