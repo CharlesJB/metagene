@@ -1,0 +1,153 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{A package to produce Metafeature plots}
+-->
+
+metagene: A package to produce Metafeature plots
+========================================================
+
+Charles Joly Beauparlant, Fabien Claude Lamaze, Rawane Samb, Astrid-Louise Deschenes and Arnaud Droit.
+
+This package and the underlying metagene code are distributed under the Artistic license 2.0. You are free to use and redistribute this software. 
+
+# Introduction
+
+This package produces Metagene-like plots to compare the behavior of DNA-interacting proteins at selected groups of features. A typical analysis can be done in viscinity of transcription start sites (TSS) of genes or at any regions of interest (such as enhancers). Multiple combination of group of features and/or group of bam files can be compared in a single analysis. Bootstraping analysis is used to compare the groups and locate regions with statistically different enrichment profiles. In order to increase the sensitivity of the analysis, alignment data is used instead of peaks produced with peak callers (i.e.: MACS2 or PICS). The metagene package uses bootstrap to obtain a better estimation of the mean enrichment and the confidence interval for every group of samples.
+
+This vignette will introduce all the main features of the metagene package.
+
+# Loading the package
+
+```{r libraryLoad}
+suppressMessages(library(metagene))
+```
+
+# Parsing input files
+
+The main input of the metagene package are alignment files in bam format. It is also possible to include a design file to represent the relations between samples (replicates and controls). The regions to analyse can be either in bed format (for user-specified regions) or in Ensembl Gene ID(s) format (in which case, the analysis will be done around the TSS of the genes).
+
+## Alignment files
+There is no hard limit in the number of bam files that can be included in an analysis (but with too many bam files, memory may become an issue). To speed up the analysis, it is best to (but not mandatory) to index bam files before starting the analysis. If no index is found for a file, the metagene package will use Rsamtools to sort and index it.
+
+The path (relative or absolute) to the bam files must be in a vector:
+```{r bamFiles}
+bamFile1Rep1 <- system.file("extdata/align1_rep1.bam", package="metagene")
+bamFile1Rep2 <- system.file("extdata/align1_rep2.bam", package="metagene")
+bamFile2Rep1 <- system.file("extdata/align2_rep2.bam", package="metagene")
+bamFile2Rep2 <- system.file("extdata/align2_rep2.bam", package="metagene")
+bamFileCTRL <- system.file("extdata/ctrl.bam", package="metagene")
+bamFiles <- c(bamFile1Rep1, bamFile1Rep2, bamFile2Rep1, bamFile2Rep2, bamFileCTRL)
+bamFiles
+```
+
+For this demo, we have 2 samples (each with 2 replicates) and 1 control.
+
+## Design file
+If you want to include replicates and control into an analysis, you will have to produce a design file to represent the relationship between every samples. A design file must contain the following columns:
+* The list of paths (absolute or relative) to every bam files for the analysis.
+* One column per group of files (replicates and/or controls). 
+** 0: ignore file
+** 1: input
+** 2: control
+
+The file must also contain a header. It is recommander to use Samples for the name of the first column, but the value is not checked. The other columns in the design file will be used for naming groups, and must be unique.
+
+```{r designFile}
+fileDesign <- system.file("extdata/design.txt", package="metagene")
+design <- read.table(fileDesign, header=TRUE, stringsAsFactors=FALSE)
+design$Samples <- paste(system.file("extdata", package="metagene"), design$Samples, sep="/")
+design
+```
+
+Also note that it is not obligatory to use a design file, you can also create the design data.frame using your prefered method (as long as the restrictions on the values mentioned previously are respected).
+
+For instance, the previous design data.frame could have been create directly in R:
+```{r alternateDesign}
+design <- data.frame(Samples = c("align1_rep1.bam", "align1_rep2.bam", "align2_rep1.bam", "align2_rep2.bam", "ctrl.bam"),
+		     align1 = c(1,1,0,0,2), align2 = c(0,0,1,1,2))
+design$Samples <- paste0(system.file("extdata", package="metagene"), "/", design$Samples)
+design
+```
+
+## Ensembl Gene ID(s) files
+It is possible to give metagene text file that contains a list of Ensembl Gene ID(s) as input. The files must be formated in the following way:
+
+* The first line must be the name of the group (called features groups).
+* The other lines must be the Ensembl Gene ID(s), one ID per line.
+
+```{r featuresFile}
+fileExample <- system.file("extdata/list1.txt", package="metagene")
+featuresFileExample <- read.table(fileExample, header=TRUE, stringsAsFactors=FALSE)
+head(featuresFileExample)
+```
+
+The metagene package require a vector of the paths (absolute or relative) for every Ensembl Gene ID(s) files to be included in the analysis:
+
+```{r featuresArgument}
+fileList1 <- system.file("extdata/list1.txt", package="metagene")
+fileList2 <- system.file("extdata/list2.txt", package="metagene")
+features <- c(fileList1, fileList2)
+features
+```
+
+**Note**: When there are multiple design groups and features groups, the MetaFeature package will produce a group for every possible combinations of the two.
+
+## Bed files
+If you want to compare custom regions, it is possible to use a list of one or more bed files.
+
+```{r regionsArgument}
+fileBed1 <- system.file("extdata/list1.bed", package="metagene")
+fileBed2 <- system.file("extdata/list2.bed", package="metagene")
+regions <- c(fileBed1, fileBed2)
+regions
+```
+
+As an alternative to a list of bed files, you can also use GRanges or GRangesList objects.
+
+# Parsing features
+To parse the sequences overlapping a list of features, you must use the parseFeatures function:
+
+```{r parseFeaturesExample}
+groupsFeatures <- parseFeatures(bamFiles=bamFiles, features=features, design=design, specie="mouse", maxDistance=1000)
+```
+
+If no feature files are provided, the package will use every known TSS for the selected specie (use the specie argument, default value: "human")
+
+By default, 5000 base pairs aroud each TSS will be used, but this can be changed with the maxDistance argument.
+
+# Parsing regions
+Parsing regions is very similar to parsing features, except that we must use bed files instead of features files:
+
+```{r parseRegionsExample, eval=FALSE}
+groupsRegions <- parseRegions(bamFiles=bamFiles, regions=regions, design=design, specie="mouse", paddingSize=0)
+```
+
+Since it's possible that the regions will have different length, metagene will scale them so they all have the length of the median region. This is necessary for the bootstrapping analysis that uses matrices.
+
+There is no maxDistance argument because the size of the regions are already defined in the bed files. It is possible to add paddings on each side of every regions with the paddingSize argument. Please note that the padding is added after the main regions are scaled.
+
+# Plotting the results
+During the plotting step, it is possible to specify which groups of features or regions to add into the plot. The results of the parseFeatures or parseRegions can be used directly by the plotMatrices function.
+
+Before producing the plot, the metagene package will do a bootstrap analysis to obtain better estimates of the mean and confidence intervals for each groups. This step can be computationally expensive and the running time will directly depends on the binSize and sampleSize arguments.
+
+You must use a list object to represent the groups to use and how to name them. For example, if we want to combine all the samples for each list, we could do the following:
+
+```{r plotMatricesExample1}
+names(groupsFeatures$matrix)
+groupsToPlot <- list(group1=c("list1_align1", "list1_align2"), group2=c("list2_align1", "list2_align2"))
+DF <- plotMatrices(groupsToPlot, groupsFeatures)
+```
+
+If we wanted to compare the behavior of our 2 samples for the first list of genes, we could do the following:
+
+```{r plotMatricesExample2}
+groupsToPlot <- list(group1="list1_align1", group2="list1_align2")
+DF <- plotMatrices(groupsToPlot, groupsFeatures)
+```
+
+The plotMatrices function returns the data.frame that was used with ggplot2 to produce the results.
+
+```{r showDataFrame}
+head(DF)
+```
