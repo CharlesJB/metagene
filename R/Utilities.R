@@ -76,8 +76,6 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
 # Input:
 #    features:       Either a filename of a vector of filenames.
 #                    Supported features: ensembl_gene_id
-#                    File must contain a header that correspond to the name
-#                    of the group
 #    specie:         human: Homo sapiens (default) / mouse: Mus musculus
 #    maxDistance:    The distance around feature to include in the plot.
 #    cores:          Number of cores for parallel processing (require
@@ -125,7 +123,7 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
     colnames(knownGenes) <- c("space", "start_position", "end_position", "width", "strand", "feature")
     knownGenes$space <- paste("chr", knownGenes$space, sep="")
     extractFeatures <- function(filename) {
-        currentFeatures <- read.table(filename, stringsAsFactors = TRUE, header = TRUE)
+        currentFeatures <- read.table(filename, stringsAsFactors = TRUE, header = FALSE)
         #currentGroup <- colnames(currentFeatures)[1]
         currentFeature <- knownGenes[knownGenes$feature %in% currentFeatures[,1],]
         # We want to return regions at +- maxDistance from starting position of current feature
@@ -142,7 +140,10 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
         } else {
             featuresGroups <- lapply(features, extractFeatures)
         }
-        names(featuresGroups) <- unlist(lapply(features, function(x) as.character(read.table(x, nrows=1)[1,])))
+        getBaseName <- function(feature) {
+            return(sub("^([^.]*).*", "\\1", basename(feature)))
+        }
+        names(featuresGroups) <- unlist(applyOnGroups(features, cores=cores, FUN=getBaseName))
     } else {
         knownGenes$end_position <- knownGenes$start_position
         knownGenes$start_position <- knownGenes$start_position - maxDistance

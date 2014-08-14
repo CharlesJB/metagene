@@ -99,12 +99,13 @@ By default, 5000 base pairs aroud each TSS will be used, but this can be changed
 
 It is possible to provide, to metagene package, a text file that contains a list of Ensembl Gene ID(s) as input. The metagene package will use the Gene ID to extact the TSS information. The analysis will be done around the TSS of all genes. The files must be formated in the following way:
 
-* The first line must be the name of the group (called features groups). All files must used unique names as they are going to be used as features groups names inside the metagene package.
-* The other lines must be the Ensembl Gene ID(s), one ID per line.
+* 1 Ensembl Gene ID(s) per line.
+
+The file name (minus the extension) will be used to name the corresponding group (called a features group).
 
 ```{r featuresFile}
 fileExample <- system.file("extdata/list1.txt", package="metagene")
-featuresFileExample <- read.table(fileExample, header=TRUE, stringsAsFactors=FALSE)
+featuresFileExample <- read.table(fileExample, header=FALSE, stringsAsFactors=FALSE)
 head(featuresFileExample)
 ```
 

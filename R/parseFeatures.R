@@ -9,8 +9,6 @@
 #    features:      Either a filename of a vector of filenames.
 #                   Supported features:
 #                       * ensembl_gene_id
-#                   File must contain a header that correspond to the name of
-#                   the group.
 #    specie:        human: Homo sapiens (default) / mouse: Mus musculus
 #    maxDistance:   The distance around feature to include in the plot.
 #    design:        A data.frame explaining the relationship between multiple

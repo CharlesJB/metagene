@@ -28,8 +28,6 @@
 
   \item{features}{Either a filename of a \code{vector} of filenames.
     Supported features: ensembl_gene_id. 
-    File must contain a header that correspond to the name of the 
-    group.
     If value is NULL, all known RefSeq genes will be used.}
 
   \item{specie}{human: Homo sapiens (default). mouse: Mus musculus.}
