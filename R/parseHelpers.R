@@ -21,7 +21,7 @@ applyOnGroups <- function(groups, cores=1, FUN, ...) {
     }
 }
 
-# Parse bed files and convert them in a list of data.frames
+# Parse bed files and convert them in a GRangesList.
 # Input:
 #    regions:    A vector of bed file names corresponding to the regions to
 #                include in the analysis. The file name (minus the extension)
@@ -30,18 +30,11 @@ applyOnGroups <- function(groups, cores=1, FUN, ...) {
 #                package).
 #
 # Output:
-#    A list of data.frame. One data.frame by group of features.
-#    The names of each element of the list correspond to the name of the group.
+#    A GRangesList. One GRanges by group of features.
+#    The names of each GRanges of the list correspond to the name of the group.
 prepareRegions <- function(regions, cores=1) {
     # 1. Parse the bed files
-    readBedFile <- function(bedFileName) {
-        currentBed <- read.table(bedFileName, header=FALSE, stringsAsFactors=FALSE)
-        # We only need the infos of the first three columns
-        colnames(currentBed)[1:3] <- c("space", "start_position", "end_position")
-        # TODO: should we check is start_position is always smaller than end_position?
-        return(currentBed)
-    }
-    toReturn <- applyOnGroups(regions, cores=cores, FUN=readBedFile)
+    toReturn <- applyOnGroups(regions, cores=cores, FUN=import)
 
     # 2. Add the names
     getBaseName <- function(bedFileName) {
@@ -49,54 +42,8 @@ prepareRegions <- function(regions, cores=1) {
     }
     names(toReturn) <- unlist(applyOnGroups(regions, cores=cores, FUN=getBaseName))
 
-    return(toReturn)
-}
-
-# Get the genomic position of the paddings
-#
-# Input:
-#    regionsGroups:    The output of prepareRegions or prepareFeatures
-#                      functions.
-#    side:             The side of the padding to prepare. Either 'left' or
-#                      right'.
-#    paddingSize:      The length padding we want to add on each side of each
-#                      regions.
-#    cores:            Number of cores for parallel processing (require
-#                      parallel package). The number of cores has to be a 
-#                      positive integer.
-#
-# Output:
-#    A list of data.frames, each data.frame corresponding to the paddings for
-#    a group of features.
-prepareRegionsPaddings <- function(regionsGroups, side, paddingSize=2000, cores=1) {
-    # Check prerequisites
-
-    # Side must be either 'left' or 'right'
-    if (! side %in% c("left", "right")) {
-        stop("Side argument must be either 'left' or 'right'.")
-    }
-
-    # The number of cores has to be a positive integer
-    if(!is.numeric(cores) || cores <= 0) {
-        stop("The number of cores has to be a positive integer.")
-    }
-
-    getPaddings <- function(currentRegions) {
-        currentPaddings <- currentRegions
-        if (side == "left") {
-            currentPaddings$start_position <- currentRegions$start_position - paddingSize
-            currentPaddings$end_position <- currentRegions$start_position
-            currentPaddings$start_position[currentPaddings$start_position < 0] <- 0
-        } else {
-            currentPaddings$start_position <- currentRegions$end_position
-            currentPaddings$end_position <- currentRegions$end_position + paddingSize
-        }
-        return(currentPaddings)
-    }
-
-    toReturn <- applyOnGroups(regionsGroups, cores=cores, FUN=getPaddings)
-    names(toReturn) <- names(regionsGroups)
-    return(toReturn)
+    # 3. Convert to GRangesList
+    return(GRangesList(toReturn))
 }
 
 # Parse multiple bamFiles
@@ -117,13 +64,12 @@ prepareRegionsPaddings <- function(regionsGroups, side, paddingSize=2000, cores=
 #        * Second level:    One entry per bamFile in current features group
 #        * Third level:     One entry per feature in current features group
 parseBamFiles <- function(bamFiles, featuresGroups, cores=1) {
-    parseFeatures <- function(features, currentName, bamFiles, cores) {
-        print(currentName)
+    parseFeatures <- function(features, bamFiles, cores) {
         raw.counts <- lapply(bamFiles, parseBamFile, features=features, cores=cores)
         names(raw.counts) <- bamFiles
         return(raw.counts)
     }
-    raw.data <- lapply(1:length(featuresGroups), function(x) parseFeatures(featuresGroups[[x]], names(featuresGroups)[x], bamFiles=bamFiles, cores=cores))
+    raw.data <- lapply(featuresGroups, parseFeatures, bamFiles = bamFiles, cores = cores)
     names(raw.data) <- names(featuresGroups)
     return(raw.data)
 }
@@ -132,9 +78,7 @@ parseBamFiles <- function(bamFiles, featuresGroups, cores=1) {
 #
 # Input:
 #    bamFile:     The name of the bam file to parse. Must be sorted and indexed.
-#    features:    A data.frame with the infos for every features to parse
-#                 Must have the folowing columns: feature, strand, space,
-#                 start_position and end_position
+#    features:    A GRanges corresponding to the regions to parse.
 #    cores:       Number of cores for parallel processing (require parallel
 #                 package).
 #
@@ -143,105 +87,16 @@ parseBamFiles <- function(bamFiles, featuresGroups, cores=1) {
 #    a vector of reads expression.
 parseBamFile <- function(bamFile, features, cores=1) {
     print(paste("Current bam:", bamFile))
-    extractReadsDensity <- function(feature, bamFile) {
-        # Extract raw counts
-        currentReads <- extractReadsInRegion(bamFile, feature$space, feature$start_position, feature$end_position)
-        # TODO: sometimes there are NA, need to find why and replace this current hack
-                currentReads <- currentReads[!is.na(currentReads$pos),]
-        vectorResult <- convertReadsToDensity(currentReads, feature)
-
-        # If on negative strand, invert the current vector
-        if (feature$start_position > feature$end_position) {
-            vectorResult <- rev(vectorResult)
-        }
-        return(vectorResult)
+    param <- ScanBamParam(which = features)
+    currentReads <- readGAlignments(bamFile, param = param)
+    coverages <- coverage(currentReads)
+    toReturn <- lapply(coverages[features], as.numeric)
+    # Reverse the coverage values of features on minus strand
+    if (length(features) > 0) {
+        idx <- as.logical(strand(features) == "-")
+        toReturn[idx] <- lapply(toReturn[idx], rev)
     }
-    return(applyOnGroups(1:nrow(features), cores=cores, FUN=function(x) extractReadsDensity(features[x,], bamFile=bamFile)))
-}
-
-# Extract reads from BAM file that overlap with a specified genomic region.
-#
-# Input:
-#    bamFile:    Path to the bam file.
-#    chr:        Current chromosome.
-#    start:      Starting position of the current region.
-#    end:        Ending position of the current region.
-#
-# Prerequisites:
-# The BAM file must exist.
-# The chromosome name must be in character format.
-# The starting position has to be a positive integer.
-# The ending position has to be a positive integer.
-#
-# Output:
-#    A data.frame containing every reads overlapping the current genomic
-#    region:
-#        * rname
-#        * pos
-#        * qwidth
-extractReadsInRegion <- function(bamFile, chr, start, end) {
-
-    # Check prerequisites
-
-    # The BAM file name must be of string type
-    if (!is.character(bamFile)) {
-        stop("The BAM file name is not a valid name (a character string).")
-    }
-
-    # The BAM file name must exist
-    if (! file.exists(bamFile)) {
-        stop("The BAM file does not exist.")
-    }
-
-    #The chromosome name must be of character type
-    if (!is.character(chr)) {
-        stop("The chromosome name is not a valid name (a character string).")
-    }
-
-    # The starting position has to be a positive integer
-    if(!is.numeric(start) || start <= 0) {
-        stop("The starting position has to be a positive integer.")
-    }
-
-    # The ending position has to be a positive integer
-    if(!is.numeric(end) || end <= 0) {
-        stop("The ending position has to be a positive integer.")
-    }
-
-    if (start > end) {
-        tmp <- start
-        start <- end
-        end <- tmp
-    }
-    df <- data.frame()
-    which <- GRanges(seqnames=Rle(chr), ranges=IRanges(start, end))
-    what <- c("rname", "pos", "qwidth")
-    param <- ScanBamParam(which=which, what=what)
-    bam <- scanBam(as.character(bamFile), param=param)
-    bam <- unname(bam)
-    return(do.call("DataFrame", bam))
-}
-
-# Convert a list of read in a vector of positions.
-#
-# Input:
-#    currentReads:        The list of read to parse.
-#    currentFeature:      The feature to parse.
-#
-# Output:
-#    A vector with the coverage of every positions calculated from the reads
-#    around the max distance from TSS.
-convertReadsToDensity <- function(currentReads, currentFeature) {
-    maxSize <- abs(currentFeature$end_position - currentFeature$start_position)
-    start <- min(currentFeature$start_position, currentFeature$end_position)
-    vectorResult <- numeric(maxSize)
-    if (nrow(currentReads) > 0) {
-        positions <- unlist(mapply(function(x,y) seq(x, x+y), currentReads$pos - currentFeature$start_position, currentReads$qwidth-1))
-        # TODO: add unit test -> first position < 0 used to return FALSE and skip current feature (when it was &&)
-        positions <- positions[positions > 0 & positions <= maxSize]
-        vectorResult <- tabulate(positions, nbins=maxSize)
-    }
-    return(vectorResult)
+    return(toReturn)
 }
 
 # Convert the raw counts into reads per million aligned (rpm)

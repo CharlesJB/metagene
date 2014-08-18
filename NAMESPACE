@@ -1,4 +1,7 @@
 export(parseFeatures)
 export(parseRegions)
 export(plotMatrices)
-import(Rsamtools, ggplot2, GenomicRanges, IRanges)
+import(rtracklayer)
+import(GenomicRanges)
+import(GenomicAlignments)
+import(ggplot2)

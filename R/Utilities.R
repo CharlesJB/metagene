@@ -71,7 +71,7 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
     return(results)
 }
 
-# Convert a list of IDs into a list of genomic regions
+# Convert a list of IDs into a GRangesList.
 #
 # Input:
 #    features:       Either a filename of a vector of filenames.
@@ -88,8 +88,8 @@ prepareBamFiles <- function(bamFiles, cores = 1) {
 # The number of cores has to be a positive integer.
 #
 # Output:
-#    A list of data.frame. One data.frame by group of features.
-#    The names of each element of the list correspond to the name of the group.
+#    A GRangesList. One GRanges by group of features.
+#    The names of each GRanges of the list correspond to the name of the group.
 prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1) {
 
     # Check prerequisites
@@ -119,18 +119,14 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
         stop("The number of cores has to be a positive numeric with no decimals.")
     }
 
-    knownGenes <- as.data.frame(getGenes(specie))
-    colnames(knownGenes) <- c("space", "start_position", "end_position", "width", "strand", "feature")
-    knownGenes$space <- paste("chr", knownGenes$space, sep="")
+    knownGenes <- getGenes(specie)
     extractFeatures <- function(filename) {
         currentFeatures <- read.table(filename, stringsAsFactors = TRUE, header = FALSE)
-        #currentGroup <- colnames(currentFeatures)[1]
-        currentFeature <- knownGenes[knownGenes$feature %in% currentFeatures[,1],]
+        currentFeatures <- knownGenes[mcols(knownGenes)$feature %in% currentFeatures[,1],]
         # We want to return regions at +- maxDistance from starting position of current feature
-        currentFeature$end_position <- currentFeature$start_position
-        currentFeature$start_position <- currentFeature$start_position - maxDistance
-        currentFeature$end_position <- currentFeature$end_position + maxDistance
-        return(currentFeature)
+        start(currentFeatures) <- start(currentFeatures) - maxDistance
+        end(currentFeatures) <- end(currentFeatures) + maxDistance - 1
+        return(currentFeatures)
     }
     featuresGroups <- list()
     if (!is.null(features)) {
@@ -150,7 +146,7 @@ prepareFeatures <- function(features, specie="human", maxDistance=5000, cores=1)
         knownGenes$end_position <- knownGenes$end_position + maxDistance
         featuresGroups$allTSS <- knownGenes
     }
-    return(featuresGroups)
+    return(GRangesList(featuresGroups))
 }
 
 # Fetch the annotation of all genes
@@ -198,8 +194,11 @@ getGenes <- function(specie="human") {
 # The specie has to be either "mouse" or "human" (default).
 #
 # Output:
-#    A GRanges object with a ensembl_gene_id columns
+#    A GRanges object with a feature columns corresponding to
+#    ensembl_gene_id
 getGenesBiomart <- function(specie="human") {
+    library(biomaRt)
+
     # Check prerequisites
 
     # The specie argument has to a valid specie
@@ -225,7 +224,14 @@ getGenesBiomart <- function(specie="human") {
     attributes <- c("ensembl_gene_id","strand", "chromosome_name","start_position","end_position")
     filters <- c("chromosome_name")
     sub.ensmart <- getBM(attributes=attributes,filters=filters,values=chrom, mart=ensmart)
-    colnames(sub.ensmart) <- c("ensembl_gene_id", "strand", "seqnames", "start", "end")
+    colnames(sub.ensmart) <- c("feature", "strand", "seqnames", "start", "end")
+    sub.ensmart$seqnames <- paste0("chr", sub.ensmart$seqnames)
+
+    # Center the range on the TSS
+    positive <- sub.ensmart$strand == 1
+    negative <- sub.ensmart$strand == -1
+    sub.ensmart[positive,]$end <- sub.ensmart[positive,]$start
+    sub.ensmart[negative,]$start <- sub.ensmart[negative,]$end
 
     return(as(sub.ensmart, "GRanges"))
 }

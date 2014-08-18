@@ -65,14 +65,14 @@ test.getGenes_not_valid_specie<- function() {
 test.getGenes_human<- function() {
 	data<-metagene:::getGenes("human")
 	checkTrue(class(data) == "GRanges")
-	checkTrue(length(data$ensembl_gene_id) > 0, "getGenes() - The returned dataset has not observation.")
+	checkTrue(length(data$feature) > 0, "getGenes() - The returned dataset has not observation.")
 }
 
 ## Mouse specie should return a data set with sepcific header
 test.getGenes_mouse<- function() {
 	data<-metagene:::getGenes("mouse")
 	checkTrue(class(data) == "GRanges")
-	checkTrue(length(data$ensembl_gene_id) > 0, "getGenes() - The returned dataset has not observation.")
+	checkTrue(length(data$feature) > 0, "getGenes() - The returned dataset has not observation.")
 }
 
 ###################################################

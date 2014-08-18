@@ -31,7 +31,7 @@
 
 \value{
   \code{getGenesBiomart} return a \code{GRanges} object with a
-  emsembl_gene_id metadata.
+  feature metadata that corresponds to emsembl_gene_id.
 }
 
 \author{

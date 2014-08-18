@@ -28,7 +28,7 @@
 
 \value{
   \code{getGenes} return a \code{GRanges} object with a
-  emsembl_gene_id metadata.
+  feature metadata that correspond to the ensembl_gene_id.
 }
 
 \author{
