@@ -2,12 +2,11 @@
 \alias{prepareRegions}
 
 \title{
-  Parse bed files and convert them in a list of data.frames
+  Parse bed files and convert them in a list of GRangesList.
 }
 
 \description{
-  This function will convert a bed files into a \code{list} of
-  \code{data.frames}.
+  This function will convert a bed files into a \code{GRangesList}.
 }
 
 
@@ -26,8 +25,8 @@
 }
 
 \value{
-  \code{prepareRegions} returns a \code{list} of \code{data.frame}.
-    One \code{data.frame} by group of features. The names of each
+  \code{prepareRegions} returns a \code{GRangesList}.
+    One \code{GRanges} by group of features. The names of each
     element of the list correspond to the name of the group.
 }
 

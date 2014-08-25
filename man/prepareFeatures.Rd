@@ -2,12 +2,12 @@
 \alias{prepareFeatures}
 
 \title{
-  Convert a list of IDs into a list of genomic regions
+  Convert a list of IDs into a GRangesList
 }
 
 \description{
-  This function will convert a list of IDs into a list of
-  regions using biomaRt.
+  This function will convert a list of Ensembl Gene IDs into
+  a list of regions.
 }
 
 \usage{
@@ -21,13 +21,11 @@
 \arguments{
   \item{features}{Either a filename of a vector of filenames.
     Supported features: ensembl_gene_id
-    File must contain a header that correspond to the name of
-    the group.
     If value is NULL: every ensembl_gene_id will be returned.}
 
   \item{specie}{human: Homo sapiens (default) / mouse: Mus musculus}
 
-  \item{maxDistance}{The distance around feature to include in
+  \item{maxDistance}{The distance around features to include in
     the plot.}
 
   \item{cores}{Number of cores for parallel processing (require
@@ -35,9 +33,9 @@
 }
 
 \value{
-  \code{prepareFeatures} returns a \code{list} of \code{data.frames}.
-    One \code{data.frame} by group of features. The names of
-    each element of the list correspond to the name of the
+  \code{prepareFeatures} returns a \code{list} of \code{GRangesList}.
+    One \code{GRanges} by group of features. The names of
+    each GRanges of the list correspond to the name of the
     group.
 }
 

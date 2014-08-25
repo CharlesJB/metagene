@@ -7,7 +7,8 @@
 
 \description{
   This function will fetch the positions of all known coding
-  genes for a given specie.
+  genes for a given specie. Currently supported species are: 
+  \dQuote{mouse}, \dQuote{human} (default).
 }
 
 \usage{
@@ -21,17 +22,13 @@
 }
 
 \details{
-  Using \code{biomaRt} package, this function will fetch all the
-  ensembl_gene_id for a given specie ("human" or "mouse").
+  This function will fetch all the ensembl_gene_id for a given
+  specie ("human" or "mouse").
 }
 
 \value{
-  \code{getGenes} return a \code{data.frame} with five columns:
-    1: feature -> Ensembl gene id
-    2: strand -> -1 or 1
-    3: space -> chromosome
-    4: start_position -> position of the TSS
-    5: end_position -> ending position of the last exon of the gene
+  \code{getGenes} return a \code{GRanges} object with a
+  feature metadata that correspond to the ensembl_gene_id.
 }
 
 \author{

@@ -22,12 +22,14 @@
 }
 
 \arguments{
-  \item{matricesGroups}{A list with every groupsto include in
+  \item{matricesGroups}{A list with every groups to include in
     the graph. A group is one or more combination of
     featureGroup/designGroup. The names must correspond to the
-    names of the matrix object returned from the parse function.}
+    names of the matrix object returned from the parse functions
+    (parseFeatures or parseRegions).}
 
-  \item{data}{The object returned by the parse functions.}
+  \item{data}{The object returned by the parse functions.
+    (parseFeatures or parseRegions).}
 
   \item{binSize}{The number of nucleotides in each bin for the
     bootstrap step.}

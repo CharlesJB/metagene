@@ -31,10 +31,10 @@ plotMatrices <- function(matricesGroups, data, binSize=100, alpha=0.05, sampleSi
     bootstrapResults <- applyOnGroups(matricesGroups, cores=1, FUN=bootstrap, bootstrapCores=cores)
 
     # 3. Prepare data.frame
-    DF <- getDataFrame(bootstrapResults, range=data$range)
+    DF <- getDataFrame(bootstrapResults, range=data$range, binSize=binSize)
 
     # 4. Create graph
-    plotGraphic(DF, paste(names(matricesGroups), collapse=" vs "))
+    plotGraphic(DF, paste(names(matricesGroups), collapse=" vs "), binSize)
     return(DF)
 }
 
@@ -77,36 +77,36 @@ bootstrapAnalysis <- function(currentMatrix, binSize, alpha, sampleSize, cores=1
 #
 # OUPUT:
 #    A matrix with each column representing the mean of binSize nucleotides.
-binMatrix <- function(data,binSize)
+binMatrix <- function(data, binSize)
 {
     stopifnot(binSize %% 1 == 0)
     stopifnot(binSize > 0)
-    # Not sure if best solution. If the binSize is not a multiple of number of
-    # row in data, I silently trim data to make it even
-    if (ncol(data) %% binSize != 0) {
-        remainder <- ncol(data) %% binSize
-        if (remainder == 1) {
-        # If remainder is one, we remove it at the end
-            data <- data[,-ncol(data)]
-        } else if (remainder %% 2 != 0) {
-        # If remainder is odd, we remove 1 more at the end
-            toRemove <- floor(remainder / 2)
-            data <- data[,(toRemove+1):(ncol(data)-toRemove-1)]
-	} else {
-        # If remainder is even, we remove the same quantity on both end
-            toRemove <- remainder / 2
-            data <- data[,(toRemove+1):(ncol(data)-toRemove)]
-        }
+
+    # If the number of bins is too small, we warn the user.
+    binCount <- floor(ncol(data) / binSize)
+    if (binCount < 5) {
+        message <- paste0("Number of bins is very small: ", binCount, "\n")
+        message <- paste0(message, "  You should consider reducing the binSize value.")
+        warning(message)
+    }
+    # If binSize is not a multiple of ncol(data), we remove the bin that have a
+    # different size than the others.
+    remainder <- ncol(data) %% binSize
+    if (remainder != 0) {
+	message <- "binSize is not a multiple of the number of columns in data.\n"
+	message <- paste0(message, "  Columns ", ncol(data) - remainder, "-", ncol(data), " will be removed.")
+        warning(message)
+        data <- data[,1:(ncol(data)-remainder)]
     }
 
-    splitSum <- function(x, bs) {
+    splitMean <- function(x, bs) {
         if (bs < length(x)) {
-            return(tapply(x, (seq_along(x)-1) %/% bs, sum))
+            return(tapply(x, (seq_along(x)-1) %/% bs, mean))
         } else {
             return(x)
         }
     }
-    return(unname(t(apply(data, 1, splitSum, binSize))))
+    return(unname(t(apply(data, 1, splitMean, binSize))))
 }
 
 # Estimate mean and confidence interval of a column using bootstrap.
@@ -140,6 +140,8 @@ binBootstrap <- function(data, alpha, sampleSize, cores=1)
 #
 # Input:
 #    bootstapData:    Data produced during the bootstrap analysis
+#    range:           The range of the x-axis
+#    binSize:         The number of nucleotides in each bin.
 #
 # Output:
 #    A data.frame with the condensed results from the main data structure
@@ -149,8 +151,17 @@ binBootstrap <- function(data, alpha, sampleSize, cores=1)
 #         * means: the means to plot
 #         * qinf: the lower end of the confidence interval
 #         * qsup: the higher end of the confidence interval
-getDataFrame <- function(bootstrapData, range) {
-    grid = seq(range[1], range[2],length=length(bootstrapData[[1]]$mean))
+getDataFrame <- function(bootstrapData, range, binSize) {
+   # If we binned the data, we want the grid to be the center of each bins
+    if (binSize == 1) {
+        start <- range[1]
+        end <- range[2]
+    } else {
+        start <- range[1] + (binSize / 2)
+        end <- range[2] - (binSize / 2)
+    }
+    length <- length(bootstrapData[[1]]$mean)
+    grid = seq(start, end, length=length)
     DF = data.frame (
         Groups <- factor(rep(names(bootstrapData), each=length(grid))),
         distances <- rep(grid, length(bootstrapData)),
@@ -170,7 +181,13 @@ getDataFrame <- function(bootstrapData, range) {
 #
 # Ouput:
 #    The graph that is printed on the current device.
-plotGraphic <- function(DF, title) {
+plotGraphic <- function(DF, title, binSize) {
+    # Prepare y label
+    if (binSize > 1) {
+        yLabel <- paste("Mean RPM for each", binSize, "positions")
+    } else {
+        yLabel <- paste("Mean RPM for each position")
+    }
     # TODO: add x label
     p <- ggplot(DF, aes(x=distances, y=means, ymin=qinf, ymax=qsup)) +
     geom_ribbon(aes(fill=Groups), alpha=0.3) +
@@ -181,7 +198,7 @@ plotGraphic <- function(DF, title) {
     theme(panel.background = element_rect())+
     theme_bw()+
     theme(axis.title.x = element_blank())+
-    ylab("Mean of RPM for each 100 bps")+
+    ylab(yLabel)+
     ggtitle(title)
     print(p)
 }

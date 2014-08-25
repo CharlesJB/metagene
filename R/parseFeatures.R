@@ -9,8 +9,6 @@
 #    features:      Either a filename of a vector of filenames.
 #                   Supported features:
 #                       * ensembl_gene_id
-#                   File must contain a header that correspond to the name of
-#                   the group.
 #    specie:        human: Homo sapiens (default) / mouse: Mus musculus
 #    maxDistance:   The distance around feature to include in the plot.
 #    design:        A data.frame explaining the relationship between multiple
@@ -25,6 +23,13 @@
 #                   package).
 #    debug:         Keep intermediate files (can use a lot of memory).
 #                   TRUE or FALSE.
+#
+#
+# Prerequisites:
+#     The number of cores has to be a positive integer.
+#     The specie has to be either "mouse" or "human" (default).
+#     All BAM files must exist.
+#     The maximum distance has to be a positive integer.
 #
 # Output:
 #    A list of list of list of list.
@@ -45,6 +50,32 @@ parseFeatures <- function(bamFiles, features=NULL, specie="human", maxDistance=5
     }
 
     # 0. Check if params are valid
+   
+    # The number of cores has to be a positive integer
+    if(!is.numeric(cores) || as.integer(cores) != cores || cores <= 0) {
+    	stop("The number of cores has to be a positive integer.")
+    }
+    
+    # The specie argument has to a valid specie
+    if (! specie %in% get_valid_species()){
+    	stop(paste("Incorrect parameter for specie name.\nCurrently supported species are: ", paste(get_valid_species(), sep=", "),  ".", sep=" "))
+    }
+    
+    # All BAM file names must be of string type
+    if (sum(unlist(lapply(bamFiles, is.character))) != length(bamFiles)) {
+    	stop("At least one BAM file name is not a valid name (a character string).")
+    }
+    
+    # All BAM files must exist
+    if (sum(unlist(lapply(bamFiles, file.exists))) != length(bamFiles)) {
+    	stop("At least one BAM file does not exist.")
+    }
+    
+    # The maximum dsitance has to be a positive integer
+    if(!is.numeric(maxDistance) || maxDistance <= 0 || maxDistance %% 1 != 0) {
+    	stop("The maximum distance has to be a positive numeric with no decimals.")
+    }
+     
     groups$param <- list()
     groups$param$specie <- specie
     groups$param$maxDistance <- maxDistance
