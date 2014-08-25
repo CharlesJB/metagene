@@ -12,7 +12,8 @@
 \usage{
   plotGraphic(
     DF,
-    title)
+    title,
+    binSize)
 }
 
 \arguments{
@@ -20,6 +21,9 @@
     function}
 
   \item{title}{The title of the graph}
+
+  \item{binSize}{The number of nucleotides in each bin for the
+    bootstrap step.}
 }
 
 \value{

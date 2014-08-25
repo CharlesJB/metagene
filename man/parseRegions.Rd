@@ -23,10 +23,11 @@
 
 \arguments{
   \item{regions}{A \code{vector} of bed file names corresponding
-    to the regions to include in the analysis, a GRanges object or
-    a GRangesList object.}
+    to the regions to include in the analysis, a \code{GRanges}
+    object or a \code{GRangesList} object.}
 
-  \item{bamFiles}{A \code{vector} of bamFile to plot.}
+  \item{bamFiles}{A \code{vector} of BAM files to plot. All BAM 
+    files must exist.}
 
   \item{specie}{human: Homo sapiens (default). mouse: Mus musculus.}
 
@@ -37,10 +38,12 @@
     1: treatment file(s). 2: control file(s).}
 
   \item{paddingSize}{The length of padding we want to add on
-    each side of each regions.}
+    each side of each regions. The padding size has to be a 
+    positive integer}
 
   \item{cores}{Number of cores for parallel processing.
-    Require parallel package.}
+    Require parallel package. The number of cores has to be a positive 
+    integer.}
 
   \item{debug}{Keep the intermediate files (can use a lot of memory).
     TRUE or FALSE.}
@@ -48,7 +51,7 @@
 
 \details{
   This function will extract the read density from alignments
-  files (bam) in one or multiple list of regions.
+  files (BAM) in one or multiple list of regions.
 
   The values are normalized as read per millions aligned (RPM).
 
@@ -69,15 +72,21 @@
   The data structure is a list of lists.
 
   The first level contain the following fields:
-    * design: The information from the design file.
-    * param: The values of the argument used with parseFeatures.
-    * bamFilesDescription: A \code{data.frame} with the
+  \itemize{
+        \item design: The information from the design file.
+        \item param: The values of the argument used with  
+            \code{parseFeatures}.
+        \item bamFilesDescription: A \code{data.frame} with the
       following columns;
-        * The names of the original bam files, the names of the
-        * sorted bam files and the number of aligned reads.
-    * matrix: A list of matrix that will be used to produce the
-        plot. One element by combination of features/design
-        groups.
+        \itemize{
+            \item The names of the original bam files.
+            \item The names of the sorted bam files
+            \item The number of aligned reads.
+        }
+        \item matrix:  A list of matrix that will be used 
+        to produce the plot. One element by combination of 
+        features/design groups.
+  }
 }
 
 \author{

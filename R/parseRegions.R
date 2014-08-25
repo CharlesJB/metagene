@@ -29,6 +29,12 @@
 #    debug:          Keep intermediate files (can use a lot of memory).
 #                    TRUE or FALSE.
 #
+# Prerequisites:
+#     The number of cores has to be a positive integer.
+#     The specie has to be either "mouse" or "human" (default).
+#     All BAM files must exist.
+#     The padding size has to be zero or a positive integer.
+#
 # Output:
 #    A list of list of list of list.
 #    First level is the name of the group.
@@ -48,6 +54,32 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
     }
 
     # 0. Check if params are valid
+    
+    # The number of cores has to be a positive integer
+    if(!is.numeric(cores) || as.integer(cores) != cores || cores <= 0) {
+        stop("The number of cores has to be a positive integer.")
+    }
+    
+    # The specie argument has to a valid specie
+    if (! specie %in% get_valid_species()){
+        stop(paste("Incorrect parameter for specie name.\nCurrently supported species are: \"", paste(get_valid_species(), collapse="\", \""),  "\".", collapse="", sep=""))
+    }
+    
+    # All BAM file names must be of string type
+    if (sum(unlist(lapply(bamFiles, is.character))) != length(bamFiles)) {
+        stop("At least one BAM file name is not a valid name (a character string).")
+    }
+    
+    # All BAM files must exist
+    if (sum(unlist(lapply(bamFiles, file.exists))) != length(bamFiles)) {
+        stop("At least one BAM file does not exist.")
+    }
+    
+    # The padding size has to be a zero or a positive integer
+    if(!is.numeric(paddingSize) || paddingSize < 0 || paddingSize %% 1 != 0) {
+        stop("The padding size has to be a positive numeric with no decimals.")
+    }
+    
     groups$param <- list()
     groups$param$specie <- specie
     groups$param$paddingSize <- paddingSize
@@ -63,22 +95,13 @@ parseRegions <- function(regions, bamFiles, specie="human", design=NULL, padding
     cat("Step 2: Prepare regions...")
     if (class(regions) == "character") {
         groups$regionsGroups <- prepareRegions(regions, cores=cores)
-    } else if (class(regions) == "GRanges") { # If it's GRanges, it's only 1 range group
-        groups$regionsGroups <- list()
-	groups$regionsGroups[[deparse(substitute(regions))]] <- as.data.frame(regions)
-        colnames(groups$regionsGroups[[1]])[1:3] <- c("space", "start_position", "end_position")
-        groups$regionsGroups[[1]]$space <- as.character(groups$regionsGroups[[1]]$space)
+    } else if (class(regions) == "GRanges") {
+        groups$regionsGroups <- GRangesList(regions)
     } else if (class(regions) == "GRangesList") {
-        groups$regionsGroups <- lapply(regions, as.data.frame)
-        rename <- function(x) {
-            colnames(x)[1:3] <- c("space", "start_position", "end_position")
-            return(x)
-        }
-        groups$regionsGroups <- lapply(groups$regionsGroups, rename)
-        groups$regionsGroups <- lapply(groups$regionsGroups, function(x) {x$space <- as.character(x$space); x})
+        groups$regionsGroups <- regions
     }
-    groups$regionsGroups.leftPaddings <- prepareRegionsPaddings(groups$regionsGroups, side="left", paddingSize=paddingSize, cores=cores)
-    groups$regionsGroups.rightPaddings <- prepareRegionsPaddings(groups$regionsGroups, side="right", paddingSize=paddingSize, cores=cores)
+    groups$regionsGroups.leftPaddings <- flank(groups$regionsGroups, width = paddingSize)
+    groups$regionsGroups.rightPaddings <- flank(groups$regionsGroups, width = paddingSize, start = FALSE)
     cat(" Done!\n")
 
     # 3. Parse bam files
