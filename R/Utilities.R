@@ -1,6 +1,27 @@
 # Created by Charles Joly Beauparlant
 # 2013-11-26
 
+# Extract the coverage (in rpm) of a group of regions.
+#
+# Input:
+#    regions:    The regions to use to subset the bam file.
+#    bam_file:   The file name of a bam file (must be indexed).
+#    count:      The number of aligned reads.
+#
+# Output:
+#    A SimpleRleList object with one Rle per chromosome
+extract_coverage_by_regions <- function(regions, bam_file, count=NULL) {
+    param <- Rsamtools:::ScanBamParam(which=regions)
+    alignment <- GenomicAlignments:::readGAlignments(bam_file, param=param)
+    GenomicRanges:::seqlevels(alignment) <- GenomicRanges:::seqlevels(regions)
+    if (!is.null(count)) {
+        weight <- 1 / (count / 1000000)
+        GenomicAlignments::coverage(alignment, weight=weight)[regions]
+    } else {
+        GenomicAlignments::coverage(alignment)[regions]
+    }
+}
+
 # Sort and index bam files, if necessary. Return the number of aligned reads for
 # each bam file.
 #
