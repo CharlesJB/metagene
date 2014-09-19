@@ -62,6 +62,29 @@ metagene <- R6Class("metagene",
     },
     get_bam_count = function(filename) {
       self$bam_files$alignedCount[self$bam_files$bam == filename]
+    },
+    produce_matrices = function() {
+      # Initialize the matrices list
+      ncol <- median(as.numeric(sapply(self$coverages, function(x)
+          sapply(x, function(y) sapply(y, length)))
+        ))
+      matrices <- list()
+      for (bam_file in self$bam_files$bam) {
+        matrices[[bam_file]] <- list()
+        for (region in names(self$regions)) {
+          nrow = length(self$regions[[region]])
+          current_matrix <- private$parallel_job(
+              data = self$coverages[[bam_file]][[region]],
+              FUN = function(x) metagene:::scaleVector(as.numeric(x), ncol)
+            )
+          current_matrix <- do.call("rbind", current_matrix)
+          colnames(current_matrix) <- as.character(1:ncol)
+          rownames(current_matrix) <- mcols(self$regions[[region]])[["id"]]
+          matrices[[bam_file]][[region]] <- current_matrix
+          #matrices[[bam_file]][[region]] <- matrix(nrow = nrow, ncol = ncol)
+        }
+      }
+      matrices
     }
   ),
   private = list(
@@ -128,6 +151,8 @@ metagene <- R6Class("metagene",
       } else if (class(regions) == "GRangesList") {
         regions <- regions
       }
+      # TODO: Check if there is a id column in the mcols of every ranges.
+      #       If not, add one by merging seqnames, start and end.
       GRangesList(lapply(regions, function(x) {
         # Add padding
         start(x) <- start(x) - self$params$padding_size
