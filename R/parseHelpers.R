@@ -304,27 +304,28 @@ scaleVectors <- function(group, level, domain, scaleCores=1) {
 #
 # Output:
 #    A vector with the scaled data
-scaleVector <- function(values, domain) {
-        to_return <- numeric(domain)
-        if (length(values) < domain) {
-                ratio <- domain / length(values)
-                for (i in seq(1, length(values))) {
-                        current_start <- round((i - 1) * ratio + 1)
-                        current_end <- round(i * ratio)
-                        to_return[current_start:current_end] <- values[i]
-                }
+scaleVector <- function (values, domain)
+{
+    to_return <- numeric(domain)
+    last_end <- 0
+    if (length(values) < domain) {
+        ratio <- domain/length(values)
+        for (i in seq(1, length(values))) {
+            current_end <- round(i * ratio)
+            to_return[(last_end+1):current_end] <- values[i]
+            last_end <- current_end
         }
-        else if (length(values) > domain) {
-                ratio <- length(values) / domain
-                for (i in seq(1, domain)) {
-                        current_start <- round((i - 1) * ratio + 1)
-                        current_end <- round(i * ratio)
-                        to_return[i] <- mean(values[current_start:current_end])
-                }
-
+    }
+    else if (length(values) > domain) {
+        ratio <- length(values)/domain
+        for (i in seq(1, domain)) {
+            current_end <- round(i * ratio)
+            to_return[i] <- mean(values[(last_end+1):current_end])
+            last_end <- current_end
         }
-        else {
-                return(values)
-        }
-        return(to_return)
+    }
+    else {
+        return(values)
+    }
+    return(to_return)
 }
