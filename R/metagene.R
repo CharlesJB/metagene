@@ -66,7 +66,7 @@ metagene <- R6Class("metagene",
     produce_matrices = function() {
       # Initialize the matrices list
       ncol <- median(as.numeric(sapply(self$coverages, function(x)
-          sapply(x, function(y) sapply(y, length)))
+          unlist(sapply(x, function(y) sapply(y, length))))
         ))
       matrices <- list()
       for (bam_file in self$bam_files$bam) {
