@@ -179,7 +179,7 @@ metagene <- R6Class("metagene",
         do.call("c", unname(coverage))
       }
       coverages <- lapply(self$bam_files$bam, function(bam_file) {
-        cat(paste0("    ", bam_file, "...\n"))
+        cat(paste0("    ", basename(bam_file), "...\n"))
         sapply(names(self$regions), function(name) {
           current_regions <- self$regions[[which(names(self$regions) == name)]]
           cat(paste0("      ", name, "...\n"))
