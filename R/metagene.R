@@ -70,7 +70,6 @@ metagene <- R6Class("metagene",
         ))
       matrices <- list()
       for (bam_file in self$bam_files$bam) {
-        matrices[[bam_file]] <- list()
         for (region in names(self$regions)) {
           nrow = length(self$regions[[region]])
           current_matrix <- private$parallel_job(
@@ -80,8 +79,9 @@ metagene <- R6Class("metagene",
           current_matrix <- do.call("rbind", current_matrix)
           colnames(current_matrix) <- as.character(1:ncol)
           rownames(current_matrix) <- mcols(self$regions[[region]])[["id"]]
-          matrices[[bam_file]][[region]] <- current_matrix
-          #matrices[[bam_file]][[region]] <- matrix(nrow = nrow, ncol = ncol)
+          current_name <- file_path_sans_ext(basename(bam_file))
+          current_name <- paste(current_name, region, sep = "_")
+          matrices[[current_name]] <- current_matrix
         }
       }
       matrices
