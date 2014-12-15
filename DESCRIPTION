@@ -18,6 +18,6 @@ biocViews: ChIPSeq, Genetics, MultipleComparison
 License: Artistic-2.0
 BugReports: https://github.com/CharlesJB/metagene/issues
 VignetteBuilder: knitr
-Depends: R6, rtracklayer, GenomicRanges, GenomicAlignments, ggplot2
-Enhances: BiocParallel, biomaRt
+Depends: R6, tools, rtracklayer, GenomicRanges, GenomicAlignments, ggplot2, BiocParallel
+Enhances: biomaRt
 Suggests: RUnit, BiocGenerics, knitr
