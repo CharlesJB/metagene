@@ -46,9 +46,9 @@ test.bam_handler_valid_files_numeric_cores <- function() {
 ## Zero core should not be accepted as an argument
 test.bam_handler_initialize_zero_core_number<- function() {
   obs <- tryCatch(Bam_Handler$new(bam_files = bam_files, cores = 0), error=conditionMessage)
-  exp <- "The number of cores has to be a positive integer."
+  exp <- "cores must be positive numeric or BiocParallelParam instance."
   obs <- tryCatch(Bam_Handler$new(bam_files = bam_files, cores = -1), error=conditionMessage)
-  exp <- "The number of cores has to be a positive integer."
+  exp <- "cores must be positive numeric or BiocParallelParam instance."
   checkIdentical(obs, exp,
     msg = "Bam_Handler initialize - A negative core number argument did not generate an exception with expected message.")
 }
@@ -56,7 +56,7 @@ test.bam_handler_initialize_zero_core_number<- function() {
 ## Something other than an integer number should not be accepted as an core number argument
 test.bam_handler_initialize_not_integer_core_number<- function() {
   obs <- tryCatch(Bam_Handler$new(bam_files = bam_files,  cores = 2.22), error=conditionMessage)
-  exp <- "The number of cores has to be a positive integer."
+  exp <- "cores must be positive numeric or BiocParallelParam instance."
   checkIdentical(obs, exp,
     msg = "Bam_Handler initialize - A decimal core number argument did not generate an exception with expected message.")
 }
@@ -64,7 +64,7 @@ test.bam_handler_initialize_not_integer_core_number<- function() {
 ## Something other than an integer number should not be accepted as an core number argument
 test.bam_handler_initialize_string_core_number<- function() {
   obs <- tryCatch(Bam_Handler$new(bam_files = bam_files,  cores ="NotAInteger"), error=conditionMessage)
-  exp <- "Param cores must be numeric or BiocParallelParam instance."
+  exp <- "cores must be positive numeric or BiocParallelParam instance."
   checkIdentical(obs, exp,
     msg = "Bam_Handler initialize - A generic text used as a core number did not generate an exception with expected message.")
 }

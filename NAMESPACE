@@ -1,4 +1,5 @@
 export(get_demo_bam_files)
+export(Parallel_Job)
 export(Bam_Handler)
 export(parseFeatures)
 export(parseRegions)

@@ -2,7 +2,7 @@
 Bam_Handler <- R6Class("Bam_Handler",
   public = list(
     bam_files = data.frame(),
-    bpparam = SerialParam(),
+    parameters = list(),
     initialize = function(bam_files, cores = SerialParam()) {
       # Check prerequisites 
       # All BAM file names must be of string type
@@ -15,28 +15,9 @@ Bam_Handler <- R6Class("Bam_Handler",
         stop("At least one BAM file does not exist.")
       }
       
-      if (is.numeric(cores)) {
-        # The number of cores has to be a positive integer
-        if(as.integer(cores) != cores || cores <= 0) {
-          stop("The number of cores has to be a positive integer.")
-        }
-        if (cores == 1) {
-          BPPARAM <- SerialParam()
-        } else {
-          BPPARAM <- MulticoreParam(workers = cores)
-        }
-      } else {
-        # Must be one of the BiocParallelParam class
-        if (class(cores) != "SerialParam"
-            & class(cores) != "MulticoreParam"
-            & class(cores) != "SnowParam"
-            & class(cores) != "BatchJobParam"
-            & class(cores) != "DoparParam") {
-          stop("Param cores must be numeric or BiocParallelParam instance.")
-        }
-        BPPARAM <- cores
-      }
-      self$bpparam <- BPPARAM
+      # Initialize the Bam_Handler object
+      private$parallel_job <- metagene:::Parallel_Job$new(cores)
+      self$parameters[["cores"]] <- cores
       self$bam_files <- data.frame(matrix(nrow = length(bam_files)))
       colnames(self$bam_files) <- "old"
       self$bam_files[["old"]] <- bam_files
@@ -58,7 +39,8 @@ Bam_Handler <- R6Class("Bam_Handler",
     }
   ),
   private = list(
-    index_bam_file = function(bam_file) {
+      parallel_job = '',
+      index_bam_file = function(bam_file) {
       if (file.exists(paste(bam_file, ".bai", sep=""))  == FALSE) {
         # If there is no index file, we sort and index the current bam file
         # TODO: we need to check if the sorted file was previously produced
@@ -72,8 +54,18 @@ Bam_Handler <- R6Class("Bam_Handler",
       bam_file
     },
     get_file_count = function(bam_file) {
-        param <- ScanBamParam(flag = scanBamFlag(isUnmappedQuery=FALSE))
-        countBam(bam_file, param=param)$records
+      param <- ScanBamParam(flag = scanBamFlag(isUnmappedQuery=FALSE))
+      # To speed up analysis we split the file by chromosome
+      cores <- private$parallel_job$get_core_count()
+      chr <- scanBamHeader(bam_file)[[bam_file]]$targets
+      chr <- GRanges(seqnames = names(chr), IRanges(1, chr))
+      do.call(sum, private$parallel_job$launch_job(
+                            data = suppressWarnings(split(chr, 1:cores)),
+                            FUN = function(x) {
+                              param = ScanBamParam(which = x);
+                              countBam(bam_file, param = param)$records;
+                            }))
+
     }
   )
 )
