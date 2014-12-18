@@ -10,16 +10,36 @@ if(FALSE) {
 ### }}}
 
 bam_files <- get_demo_bam_files()
+not_indexed_bam_file <- metagene:::get_not_indexed_bam_file()
 
 ###################################################
 ## Test the Bam_Handler$new() function (initialize)
 ###################################################
+
+base_msg <- "Bam_Handler initialize -"
 
 ## Single valid bam file
 test.bam_handler_single_valid_file <- function() {
   bam_handler <- Bam_Handler$new(bam_files[1])
   checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")),
             msg = "Bam_Handler initialize - Valid initialize call with one bam file did not return correct class")
+}
+
+## Invalid bam file - not indexed
+test.bam_handler_not_indexed_single_bam_file <- function() {
+  obs <- tryCatch(Bam_Handler$new(not_indexed_bam_file), error = conditionMessage)
+  exp <- "All bam files must be indexed."
+  msg <- paste(base_msg, "Single not indexed base file did not return the correct error message")
+  checkIdentical(obs, exp, msg)
+}
+
+## Multiple bam files, one not indexed
+test.bam_handler_multiple_bam_file_one_not_indexed <- function() {
+  one_bam_file_not_indexed <- c(bam_files, not_indexed_bam_file)
+  obs <- tryCatch(Bam_Handler$new(one_bam_file_not_indexed), error = conditionMessage)
+  exp <- "All bam files must be indexed."
+  msg <- paste(base_msg, "Single not indexed base file did not return the correct error message")
+  checkIdentical(obs, exp, msg)
 }
 
 ## Multiple valid bam files, no cores

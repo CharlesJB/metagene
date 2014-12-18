@@ -14,7 +14,13 @@ Bam_Handler <- R6Class("Bam_Handler",
       if (sum(sapply(bam_files, file.exists)) != length(bam_files)) {
         stop("At least one BAM file does not exist.")
       }
-      
+
+      # All BAM files must be indexed
+      bam_indexes <- paste0(bam_files, ".bai")
+      if (!all(sapply(bam_indexes, file.exists))) {
+        stop("All bam files must be indexed.")
+      }
+
       # Initialize the Bam_Handler object
       private$parallel_job <- metagene:::Parallel_Job$new(cores)
       self$parameters[["cores"]] <- cores
@@ -36,6 +42,9 @@ Bam_Handler <- R6Class("Bam_Handler",
     },
     get_rpm_coefficient = function(bam_file) {
       return(self$get_aligned_count(bam_file) / 1000000)
+    },
+    index_bam_files = function(bam_files) {
+      sapply(bam_files, private$index_bam_file)
     }
   ),
   private = list(
