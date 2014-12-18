@@ -1,7 +1,6 @@
 # Class used to manage bam files
 Bam_Handler <- R6Class("Bam_Handler",
   public = list(
-    bam_files = data.frame(),
     parameters = list(),
     initialize = function(bam_files, cores = SerialParam()) {
       # Check prerequisites 
@@ -45,6 +44,9 @@ Bam_Handler <- R6Class("Bam_Handler",
     },
     index_bam_files = function(bam_files) {
       sapply(bam_files, private$index_bam_file)
+    },
+    get_bam_files = function() {
+      private$bam_files
     }
   ),
   private = list(
