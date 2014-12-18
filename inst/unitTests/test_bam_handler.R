@@ -10,6 +10,8 @@ if(FALSE) {
 ### }}}
 
 bam_files <- get_demo_bam_files()
+named_bam_files <- bam_files
+names(named_bam_files) <- paste("file", seq(1, length(bam_files)), sep = "_")
 not_indexed_bam_file <- metagene:::get_not_indexed_bam_file()
 
 ###################################################
@@ -47,6 +49,21 @@ test.bam_handler_valid_files_no_cores <- function() {
   bam_handler <- Bam_Handler$new(bam_files = bam_files)
   checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")),
     msg = "Bam_Handler initialize - Valid initialize call with multiple bam files did not return correct class")
+}
+
+## Named bam files
+test.bam_handler_named_bam_files <- function() {
+  bam_handler <- Bam_Handler$new(bam_files = bam_files)
+  obs <- rownames(bam_handler$get_bam_files())
+  exp <- file_path_sans_ext(basename(bam_files))
+  msg <- paste(base_msg, "Valid initialize call with unnamed bam files did not return correct values.")
+  checkIdentical(obs, exp, msg)
+
+  bam_handler <- Bam_Handler$new(bam_files = named_bam_files)
+  obs <- rownames(bam_handler$get_bam_files())
+  exp <- paste("file", seq(1, length(bam_files)), sep = "_")
+  msg <- paste(base_msg, "Valid initialize call with named bam files did not return correct values.")
+  checkIdentical(obs, exp, msg)
 }
 
 ## Valid bam files, numeric cores

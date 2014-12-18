@@ -22,22 +22,21 @@ Bam_Handler <- R6Class("Bam_Handler",
 
       # Initialize the Bam_Handler object
       private$parallel_job <- metagene:::Parallel_Job$new(cores)
-      self$parameters[["cores"]] <- cores
-      self$bam_files <- data.frame(matrix(nrow = length(bam_files)))
-      colnames(self$bam_files) <- "old"
-      self$bam_files[["old"]] <- bam_files
-      self$bam_files[["bam"]] <- sapply(bam_files, private$index_bam_file)
-      self$bam_files[["aligned_count"]] <-
-        sapply(self$bam_files[["bam"]], private$get_file_count)
+      self$parameters[["cores"]] <- private$parallel_job$get_core_count()
+      private$bam_files <- data.frame(bam = bam_files, stringsAsFactors = FALSE)
+      if (is.null(names(bam_files))) {
+        rownames(private$bam_files) <- file_path_sans_ext(basename(bam_files))
+      }
+      private$bam_files[["aligned_count"]] <-
+        sapply(private$bam_files[["bam"]], private$get_file_count)
     },
     get_aligned_count = function(bam_file) {
       # Check prerequisites
       # The bam file must be in the list of bam files used for initialization
-      if (! bam_file %in% self$bam_files[["old"]]) {
-        stop(paste0("Bam file ", bam_file, " not found."))
-      }
-      i <- self$bam_files[["old"]] == bam_file
-      self$bam_files[["aligned_count"]][i]
+      private$check_bam_file(bam_file)
+
+      i <- private$bam_files[["bam"]] == bam_file
+      private$bam_files[["aligned_count"]][i]
     },
     get_rpm_coefficient = function(bam_file) {
       return(self$get_aligned_count(bam_file) / 1000000)
@@ -50,8 +49,14 @@ Bam_Handler <- R6Class("Bam_Handler",
     }
   ),
   private = list(
-      parallel_job = '',
-      index_bam_file = function(bam_file) {
+    bam_files = data.frame(),
+    parallel_job = '',
+    check_bam_file = function(bam_file) {
+      if (! bam_file %in% private$bam_files[["bam"]]) {
+        stop(paste0("Bam file ", bam_file, " not found."))
+      }
+    },
+    index_bam_file = function(bam_file) {
       if (file.exists(paste(bam_file, ".bai", sep=""))  == FALSE) {
         # If there is no index file, we sort and index the current bam file
         # TODO: we need to check if the sorted file was previously produced
