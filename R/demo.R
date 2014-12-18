@@ -5,6 +5,11 @@ get_demo_bam_files <- function() {
     system.file("extdata/align2_rep2.bam", package="metagene"))
 }
 
+get_demo_regions <- function() {
+  c(system.file("extdata/list1.bed", package="metagene"),
+    system.file("extdata/list2.bed", package="metagene"))
+}
+
 get_not_indexed_bam_file <- function() {
   system.file("extdata/not_indexed.bam", package = "metagene")
 }

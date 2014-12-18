@@ -46,6 +46,32 @@ Bam_Handler <- R6Class("Bam_Handler",
     },
     get_bam_files = function() {
       private$bam_files
+    },
+    get_normalized_coverage = function(bam_file, regions) {
+      ## Check prerequisites
+      # The bam file must be in the list of bam files used for initialization
+      private$check_bam_file(bam_file)
+
+      # The regions must be a GRanges object
+      if (class(regions) != "GRanges") {
+        stop("Parameter regions must be a GRanges object.")
+      }
+
+      # The regions must not be empty
+      if (length(regions) == 0) {
+        stop("Parameter regions must not be an empty GRanges object")
+      }
+
+      count <- self$get_aligned_count(bam_file)
+      cores <- self$parameters[["cores"]]
+
+      coverage <- private$parallel_job$launch_job(
+        data = suppressWarnings(split(regions, 1:cores)),
+        FUN = private$extract_coverage_by_regions,
+        bam_file = bam_file, count = count
+      )
+      # Merge all the SimpleRleList into a single one
+      do.call("c", unname(coverage))
     }
   ),
   private = list(
@@ -82,6 +108,17 @@ Bam_Handler <- R6Class("Bam_Handler",
                               countBam(bam_file, param = param)$records;
                             }))
 
+    },
+    extract_coverage_by_regions = function(regions, bam_file, count=NULL) {
+      param <- Rsamtools:::ScanBamParam(which=regions)
+      alignment <- GenomicAlignments:::readGAlignments(bam_file, param=param)
+      seqlevels(alignment) <- seqlevels(regions)
+      if (!is.null(count)) {
+        weight <- 1 / (count / 1000000)
+        GenomicAlignments::coverage(alignment, weight=weight)[regions]
+      } else {
+        GenomicAlignments::coverage(alignment)[regions]
+      }
     }
   )
 )

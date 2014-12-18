@@ -13,6 +13,7 @@ bam_files <- get_demo_bam_files()
 named_bam_files <- bam_files
 names(named_bam_files) <- paste("file", seq(1, length(bam_files)), sep = "_")
 not_indexed_bam_file <- metagene:::get_not_indexed_bam_file()
+regions <- lapply(metagene:::get_demo_regions(), import)
 
 ###################################################
 ## Test the Bam_Handler$new() function (initialize)
@@ -198,4 +199,52 @@ test.bam_handler_get_rpm_coefficient_invalid_bam_file <- function() {
   exp <- "Bam file not_a_valid_bam_file not found."
   checkEquals(obs, exp,
               msg = "Bam_Handler get_aligned_count invalid bam file does not give the expected error message")
+}
+
+###################################################
+## Test the bam_handler$get_normalized_coverage()
+###################################################
+
+base_msg <- "Bam_Handler get_normalized_coverage -"
+
+## Valid use
+test.bam_handler_get_normalized_coverage_valid_use <- function() {
+  bam_handler <- Bam_Handler$new(bam_files = bam_files)
+  region <- regions[[1]][1]
+  bam_file <- bam_files[1]
+  obs <- bam_handler$get_normalized_coverage(bam_file, region)
+  weight <- 1 / (bam_handler$get_aligned_count(bam_file) / 1000000)
+  exp <- coverage(readGAlignments(bam_file, param = ScanBamParam(which = region)), weight = weight)[region]
+  msg <- paste(base_msg, "Valid use do not give the expected results")
+  checkIdentical(obs, exp, msg)
+}
+
+## Invalid bam file
+test.bam_handler_get_normalized_coverage_invalid_bam_file <- function() {
+  region <- regions[1]
+  bam_handler <- Bam_Handler$new(bam_files = bam_files)
+  obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = "not_a_valid_bam_file", regions = region), error = conditionMessage)
+  exp <- "Bam file not_a_valid_bam_file not found."
+  msg <- paste(base_msg, "Invalid bam file did not give the expected error message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Invalid regoins class
+test.bam_handler_get_normalized_coverage_invalid_regions_class <- function() {
+  bam_handler <- Bam_Handler$new(bam_files = bam_files)
+  bam_file <- bam_files[1]
+  obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file, regions = "not_a_valid_region"), error = conditionMessage)
+  exp <- "Parameter regions must be a GRanges object."
+  msg <- paste(base_msg, "Invalid regions class file did not give the expected error message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Invalid regions length
+test.bam_handler_get_normalized_coverage_invalid_regions_length <- function() {
+  bam_handler <- Bam_Handler$new(bam_files = bam_files)
+  bam_file <- bam_files[1]
+  obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file, regions = GRanges()), error = conditionMessage)
+  exp <- "Parameter regions must not be an empty GRanges object"
+  msg <- paste(base_msg, "Invalid regions length did not give the expected error message.")
+  checkIdentical(obs, exp, msg)
 }
