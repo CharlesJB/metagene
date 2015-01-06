@@ -122,12 +122,19 @@ binMatrix <- function(data, binSize)
 # OUPUT:
 #    A list with the mean of the bootstraped vector and the quartile of order
 #    alpha/2 and (1-alpha/2).
-binBootstrap <- function(data, alpha, sampleSize, cores=1)
+binBootstrap <- function(input, ctrl = NULL, alpha = 0.05, sampleSize = 1000, cores=1)
 {
     # TODO: it would probably be more efficient to parallelize here
-    size <- length(data)
-    # TODO: try to sample data directly
-    S <- matrix(replicate(sampleSize, data[sample(1:length(data),size,replace=TRUE)]), nrow=sampleSize)
+    size <- length(input)
+    sample_data <- function(data) {
+      data[sample(1:length(data), size, replace=TRUE)]
+    }
+    S <- matrix(replicate(sampleSize, sample_data(input)), nrow=sampleSize)
+    if (!is.null(ctrl)) {
+      S_ctrl <- matrix(replicate(sampleSize, sample_data(ctrl)), nrow=sampleSize)
+      S <- S - S_ctrl
+      S[S < 0] <- 0 # Should we do this now? Later? Never?
+    }
     # TODO: We should also be able to plot non-bootstrapped mean
     mean <- mean(sapply(1:sampleSize, function(i){mean(S[i,])}))
     qinf <- quantile(sapply(1:sampleSize, function(i){mean(S[i,])}), prob=alpha/2)
