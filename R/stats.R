@@ -102,7 +102,7 @@ Basic_Stat <- R6Class("Basic_Stat",
         c(value = value, qinf = qinf, qsup = qsup)
       }
       # Calculate results
-      position <- seq(range[1], range[2], length.out = nrow(data))
+      position <- seq(range[1], range[2], length.out = ncol(data))
       res <- data.frame(do.call(rbind, private$parallel_job$launch_job(
         data = split(data, rep(1:ncol(data), each = nrow(data))),
         FUN = calculate_statistic)))
@@ -155,7 +155,7 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
       range <- private$parameters[["range"]]
 
       # Calculate results
-      position <- seq(range[1], range[2], length.out = nrow(data))
+      position <- seq(range[1], range[2], length.out = ncol(data))
       res <- data.frame(do.call(rbind, lapply(
         split(data, rep(1:ncol(data), each = nrow(data))),
         private$calculate_statistic)))
@@ -177,10 +177,12 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
 
       res <- quantile(values, c(0.5, alpha/2, 1-(alpha/2)))
       names(res) <- c("value", "qinf", "qsup")
-      value <- average(column_values)
-      qinf <- unname(quantile(column_values, alpha/2))
-      qsup <- unname(quantile(column_values, 1-(alpha/2)))
-      c(value = value, qinf = qinf, qsup = qsup)
+      res
+#       value <- average(column_values)
+#       qinf <- unname(quantile(column_values, alpha/2))
+#       qsup <- unname(quantile(column_values, 1-(alpha/2)))
+#       print(c(value = value, qinf = qinf, qsup = qsup))
+#       c(value = value, qinf = qinf, qsup = qsup)
     },
     generate_draw_values = function(column_values) {
       sample_count <- private$parameters[["sample_count"]]
