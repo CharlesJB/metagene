@@ -106,3 +106,99 @@ test.basic_stat_get_statistics_valid_case <- function() {
   msg <- paste(base_msg, "Statistics do not have the right colnames.")
   checkIdentical(colnames(obs), c("position", "value", "qinf", "qsup"), msg)
 }
+
+###################################################
+## Test the Bootstrap_Stats$new() function (initialize)
+###################################################
+
+base_msg <- "Bootstrap_Stat  (initialize) -"
+
+## Negative sample size
+test.bootstrap_stat_get_statistics_negative_sample_size <- function() {
+  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_size = -1),
+                  error=conditionMessage)
+  exp <- "sample_size must be a positive integer."
+  msg <- paste(base_msg, "A negative sample size did not generate an exception with expected message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Zero sample size
+test.bootstrap_stat_get_statistics_zero_sample_size <- function() {
+  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_size = 0),
+                  error=conditionMessage)
+  exp <- "sample_size must be a positive integer."
+  msg <- paste(base_msg, "A negative sample size did not generate an exception with expected message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Not numeric sample size
+test.bootstrap_stat_get_statistics_non_numeric_sample_size <- function() {
+  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_size = "1"),
+                  error=conditionMessage)
+  exp <- "sample_size must be a positive integer."
+  msg <- paste(base_msg, "A negative sample size did not generate an exception with expected message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Decimal sample size
+test.bootstrap_stat_get_statistics_decimal_sample_size <- function() {
+  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_size = 1.1),
+                  error=conditionMessage)
+  exp <- "sample_size must be a positive integer."
+  msg <- paste(base_msg, "A negative sample size did not generate an exception with expected message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Negative sample count
+test.bootstrap_stat_get_statistics_negative_sample_count <- function() {
+  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_count = -1),
+                  error=conditionMessage)
+  exp <- "sample_count must be a positive integer."
+  msg <- paste(base_msg, "A negative sample count did not generate an exception with expected message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Zero sample count
+test.bootstrap_stat_get_statistics_zero_sample_count <- function() {
+  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_count = 0),
+                  error=conditionMessage)
+  exp <- "sample_count must be a positive integer."
+  msg <- paste(base_msg, "A negative sample count did not generate an exception with expected message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Not numeric sample count
+test.bootstrap_stat_get_statistics_non_numeric_sample_count <- function() {
+  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_count = "1"),
+                  error=conditionMessage)
+  exp <- "sample_count must be a positive integer."
+  msg <- paste(base_msg, "A negative sample count did not generate an exception with expected message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Decimal sample count
+test.bootstrap_stat_get_statistics_decimal_sample_count <- function() {
+  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_count = 1.1),
+                  error=conditionMessage)
+  exp <- "sample_count must be a positive integer."
+  msg <- paste(base_msg, "A negative sample count did not generate an exception with expected message.")
+  checkIdentical(obs, exp, msg)
+}
+
+###################################################
+## Test the Bootstrap_Stats$get_statistics() function
+###################################################
+
+base_msg <- "Bootstrap_Stat get_statistics -"
+
+## Valid case
+test.bootstrap_stat_get_statistics_valid_case <- function() {
+  bootstrap_stat <- Bootstrap_Stat$new(data = valid_data)
+  obs <- bootstrap_stat$get_statistics()
+  msg <- paste(base_msg, "Statistics do not have correct class.")
+  checkEquals(class(obs), "data.frame", msg)
+  msg <- paste(base_msg, "Statistics do not have the correct dimensions.")
+  checkIdentical(as.numeric(dim(obs)), c(20, 4), msg)
+  msg <- paste(base_msg, "Statistics do not have the right colnames.")
+  checkIdentical(colnames(obs), c("position", "value", "qinf", "qsup"), msg)
+}

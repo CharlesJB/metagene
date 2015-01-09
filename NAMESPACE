@@ -1,5 +1,6 @@
 export(get_demo_bam_files)
 export(Basic_Stat)
+export(Bootstrap_Stat)
 export(Parallel_Job)
 export(Bam_Handler)
 export(parseFeatures)
