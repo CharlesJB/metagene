@@ -102,7 +102,7 @@ test.basic_stat_get_statistics_valid_case <- function() {
   msg <- paste(base_msg, "Statistics do not have correct class.")
   checkEquals(class(obs), "data.frame", msg)
   msg <- paste(base_msg, "Statistics do not have the correct dimensions.")
-  checkIdentical(as.numeric(dim(obs)), c(20, 4), msg)
+  checkIdentical(as.numeric(dim(obs)), c(5, 4), msg)
   msg <- paste(base_msg, "Statistics do not have the right colnames.")
   checkIdentical(colnames(obs), c("position", "value", "qinf", "qsup"), msg)
 }
@@ -185,6 +185,15 @@ test.bootstrap_stat_get_statistics_decimal_sample_count <- function() {
   checkIdentical(obs, exp, msg)
 }
 
+## Not boolean debug
+test.bootstrap_stat_initialize_not_boolean_debug <- function() {
+  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, debug = 1),
+                  error=conditionMessage)
+  exp <- "debug must be TRUE or FALSE."
+  msg <- paste(base_msg, "A not boolean debug did not generate an exception with expected message.")
+  checkIdentical(obs, exp, msg)
+}
+
 ###################################################
 ## Test the Bootstrap_Stats$get_statistics() function
 ###################################################
@@ -198,7 +207,43 @@ test.bootstrap_stat_get_statistics_valid_case <- function() {
   msg <- paste(base_msg, "Statistics do not have correct class.")
   checkEquals(class(obs), "data.frame", msg)
   msg <- paste(base_msg, "Statistics do not have the correct dimensions.")
-  checkIdentical(as.numeric(dim(obs)), c(20, 4), msg)
+  checkIdentical(as.numeric(dim(obs)), c(5, 4), msg)
   msg <- paste(base_msg, "Statistics do not have the right colnames.")
   checkIdentical(colnames(obs), c("position", "value", "qinf", "qsup"), msg)
+}
+
+## Valid case - debug
+
+## Valid case
+test.bootstrap_stat_get_statistics_valid_case_debug <- function() {
+  bootstrap_stat <- Bootstrap_Stat$new(data = valid_data, debug = TRUE)
+  obs <- bootstrap_stat$get_statistics()
+  msg <- paste(base_msg, "Debug result do not have correct class.")
+  checkEquals(class(obs), "list", msg)
+  msg <- paste(base_msg, "Debug result do not have the correct length.")
+  checkEquals(length(obs), 3, msg)
+  msg <- paste(base_msg, "Statistics do not have the correct class")
+  checkEquals(class(obs$statistics), "data.frame", msg)
+  msg <- paste(base_msg, "Statistics do not have the correct dimensions.")
+  checkIdentical(as.numeric(dim(obs$statistics)), c(5, 4), msg)
+  msg <- paste(base_msg, "Statistics do not have the right colnames.")
+  checkIdentical(colnames(obs$statistics), c("position", "value", "qinf", "qsup"), msg)
+  msg <- paste(base_msg, "Values list do not have the right class")
+  checkIdentical(class(obs$values), "list", msg)
+  msg <- paste(base_msg, "Values list do not have the right length")
+  checkEquals(length(obs$values), 5, msg)
+  msg <- paste(base_msg, "Values do not have the right class")
+  checkIdentical(unique(sapply(obs$values, class)), "numeric", msg)
+  msg <- paste(base_msg, "Values do not have the right length")
+  checkEquals(unique(sapply(obs$values, length)), 1000, msg)
+  msg <- paste(base_msg, "Replicates list do not have the right class")
+  checkIdentical(class(obs$replicates), "list", msg)
+  msg <- paste(base_msg, "Replicates list do not have the right length")
+  checkEquals(length(obs$replicates), 5, msg)
+  msg <- paste(base_msg, "Replicates do not have the right class")
+  checkIdentical(unique(sapply(obs$replicates, class)), "matrix", msg)
+  msg <- paste(base_msg, "Replicates do not have the right number of rows")
+  checkEquals(unique(sapply(obs$replicates, nrow)), 20, msg)
+  msg <- paste(base_msg, "Replicates do not have the right number of columns")
+  checkEquals(unique(sapply(obs$replicates, ncol)), 1000, msg)
 }

@@ -118,7 +118,8 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
   public = list(
     initialize = function(data, alpha = 0.05, average = "mean",
                           range = c(-1, 1), cores = SerialParam(),
-                          sample_count = 1000, sample_size = NA) {
+                          sample_count = 1000, sample_size = NA,
+                          debug = FALSE) {
 
       # Check parameters validity
       super$check_param(data = data, alpha = alpha, average = average,
@@ -135,6 +136,9 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
           stop("sample_size must be a positive integer.")
         }
       }
+      if (!is.logical(debug)) {
+        stop("debug must be TRUE or FALSE.")
+      }
 
       # Save parameters
       private$parameters[["sample_count"]] <- sample_count
@@ -142,13 +146,25 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
         sample_size <- nrow(data)
       }
       private$parameters[["sample_size"]] <- sample_size
+      private$parameters[["debug"]] <- debug
 
       # Initialize and calculate statistic
       super$initialize(data = data, alpha = alpha, average = average,
                        range = range, cores = cores)
+    },
+    get_statistics = function() {
+      if (private$parameters[["debug"]]) {
+        list(statistics = private$statistics,
+             values = private$values,
+             replicates = private$replicates)
+      } else {
+        private$statistics
+      }
     }
   ),
   private = list(
+    replicates = list(),
+    values = list(),
     calculate_statistics = function() {
       # Fetch relevant params
       data <- private$data
@@ -174,6 +190,11 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
       # Calculate result
       replicates <- private$generate_draw_values(column_values)
       values <- private$calculate_replicate_values(replicates)
+      if (private$parameters[["debug"]]) {
+        i <- length(private$replicates) + 1
+        private$replicates[[i]] <- replicates
+        private$values[[i]] <- values
+      }
 
       res <- quantile(values, c(0.5, alpha/2, 1-(alpha/2)))
       names(res) <- c("value", "qinf", "qsup")
