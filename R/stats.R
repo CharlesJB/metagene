@@ -178,11 +178,6 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
       res <- quantile(values, c(0.5, alpha/2, 1-(alpha/2)))
       names(res) <- c("value", "qinf", "qsup")
       res
-#       value <- average(column_values)
-#       qinf <- unname(quantile(column_values, alpha/2))
-#       qsup <- unname(quantile(column_values, 1-(alpha/2)))
-#       print(c(value = value, qinf = qinf, qsup = qsup))
-#       c(value = value, qinf = qinf, qsup = qsup)
     },
     generate_draw_values = function(column_values) {
       sample_count <- private$parameters[["sample_count"]]
