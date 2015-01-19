@@ -196,9 +196,9 @@ plotGraphic <- function(DF, title, binSize) {
         yLabel <- paste("Mean RPM for each position")
     }
     # TODO: add x label
-    p <- ggplot(DF, aes(x=distances, y=means, ymin=qinf, ymax=qsup)) +
-    geom_ribbon(aes(fill=Groups), alpha=0.3) +
-    geom_line(aes(color=Groups),size=1,litype=1,bg="transparent")+
+    p <- ggplot(DF, aes(x=position, y=value, ymin=qinf, ymax=qsup)) +
+    geom_ribbon(aes(fill=group), alpha=0.3) +
+    geom_line(aes(color=group),size=1,litype=1,bg="transparent")+
     theme(panel.grid.major = element_line())+
     theme(panel.grid.minor = element_line())+
     theme(panel.background = element_blank())+

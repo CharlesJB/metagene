@@ -2,150 +2,127 @@ metagene <- R6Class("metagene",
   public = list(
     # Public members
     params = list(),
-    bam_files = data.frame(),
     regions = GRangesList(),
     coverages = list(),
-    views = NULL,
     matrices = list(),
+    design = data.frame(),
     
     # Methods
-    initialize = function(regions, bam_files, padding_size = 2000, BPPARAM = NULL,
-                          verbose = FALSE) {
+    initialize = function(regions, bam_files, padding_size = 0,
+                          cores = SerialParam(), verbose = FALSE) {
       # Check params...
       
       # Save params
-      self$params$padding_size <- padding_size
-      self$params$verbose <- verbose
-      self$params$bpparam <- BPPARAM
+      private$parallel_job <- Parallel_Job$new(cores)
+      self$params[["padding_size"]] <- padding_size
+      self$params[["verbose"]] <- verbose
+      self$params[["bam_files"]] <- bam_files
       
       # Prepare bam files
-      cat("Prepare bam files...\n")
-      self$bam_files <- private$prepare_bam_files(bam_files)
+      private$print_verbose("Prepare bam files...")
+      private$bam_handler <- Bam_Handler$new(bam_files, cores = cores)
       
       # Prepare regions
-      cat("Prepare regions...\n")
+      private$print_verbose("Prepare regions...")
       self$regions <- private$prepare_regions(regions)
       
       # Parse bam files
-      cat("Parse bam files...\n")
-      cat("  coverages...\n")
+      private$print_verbose("Parse bam files...\n")
+      private$print_verbose("  coverages...\n")
       self$coverages <- private$produce_coverages()
-      
-      # Get matrix
-      #self$matrices <- private$produce_matrices() # We should do this in plot
-    },
-    print = function(...) {
-      print_values <- function(max, values) {
-        max_value <- min(max, length(values))
-        for (i in 1:max_value) {
-          cat(paste0("   ", values[i], "\n"))
-        }
-        if (length(values) - max_value > 1) {
-          cat("     ...\n")
-        }
-        if (length(values) - max_value > 0 ) {
-          cat(paste0("   ", values[length(values)], "\n"))
-        }
-      }
-      cat("metagene object:\n")
-      bam_files_count <- nrow(self$bam_files)
-      regions_count <- length(self$regions)
-      cat("\n")
-      cat(paste0(bam_files_count*regions_count, " groups:"))
-      cat("\n")
-      cat(paste0(" ", bam_files_count, " bam files:\n"))
-      print_values(8, self$bam_files$bam)
-      cat("\n")
-      cat(paste0(" ", regions_count, " regions:\n"))
-      print_values(8, names(self$regions))
-      cat("\n")
     },
     get_bam_count = function(filename) {
-      self$bam_files$alignedCount[self$bam_files$bam == filename]
+      private$bam_handler$get_aligned_count(filename)
     },
-    produce_matrices = function() {
-      # Initialize the matrices list
-      ncol <- median(as.numeric(sapply(self$coverages, function(x)
-          unlist(sapply(x, function(y) sapply(y, length))))
-        ))
-      matrices <- list()
-      for (bam_file in self$bam_files$bam) {
-        for (region in names(self$regions)) {
-          nrow = length(self$regions[[region]])
-          current_matrix <- private$parallel_job(
-              data = self$coverages[[bam_file]][[region]],
-              FUN = function(x) metagene:::scaleVector(as.numeric(x), ncol)
-            )
-          current_matrix <- do.call("rbind", current_matrix)
-          colnames(current_matrix) <- as.character(1:ncol)
-          rownames(current_matrix) <- mcols(self$regions[[region]])[["id"]]
-          current_name <- file_path_sans_ext(basename(bam_file))
-          current_name <- paste(current_name, region, sep = "_")
-          matrices[[current_name]] <- current_matrix
+    plot = function(design = NULL, regions_group = NULL, bin_size = 100,
+                    alpha = 0.05, sample_count = 1000) {
+      self$design <- private$prepare_design(design)
+
+      # 1. Get the correctly formatted matrices
+      self$matrices <- private$produce_matrices(regions_group, bin_size)
+
+      # 2. Calculate means and confidence intervals
+      sample_size = as.integer(min(sapply(self$matrices, sapply, sapply, nrow)))
+      DF <- data.frame(group = character(), position = numeric(),
+                       value = numeric(), qinf = numeric(), qsup = numeric())
+      for (region in names(self$matrices)) {
+        for (bam_file in names(self$matrices[[region]])) {
+          group_name <- paste(bam_file, region, sep = "_")
+          print(group_name)
+          group_matrix <- self$matrices[[region]][[bam_file]][["input"]]
+          bootstrap_stat <- Bootstrap_Stat$new(data = group_matrix,
+                                               sample_size = sample_size)
+          current_DF <- bootstrap_stat$get_statistics()
+          current_DF <- cbind(rep(group_name, nrow(current_DF)), current_DF)
+          colnames(current_DF)[1] <- "group"
+          DF <- rbind(DF, current_DF)
         }
       }
-      matrices
+      # 3. Produce the graph
+#       DF <- metagene:::getDataFrame(bootstrap_result, range=c(-1,1), binSize=1)
+       private$plot_graphic(DF, paste(unique(DF[["group"]]), collapse=" vs "), binSize = 1)
+       return(DF)
     }
   ),
   private = list(
-    parallel_job = function(data, FUN, ...) {
-      if (!is.null(self$params$bpparam)) {
-        library(BiocParallel)
-        BiocParallel:::bplapply(data, FUN, BPPARAM=self$params$bpparam, ...)
-      } else {
-        lapply(data, FUN, ...)
+    bam_handler = "",
+    parallel_job = "",
+    print_verbose = function(to_print) {
+      if (self$params[["verbose"]]) {
+        cat(paste0(to_print, "\n"))
       }
     },
-    prepare_bam_files = function(bamFiles) {
-      # Check prerequisites
-      
-      # All BAM file names must be of string type
-      if (sum(unlist(lapply(bamFiles, is.character))) != length(bamFiles)) {
-        stop("At least one BAM file name is not a valid name (a character string).")
-      }
-      
-      # All BAM files must exist
-      if (sum(unlist(lapply(bamFiles, file.exists))) != length(bamFiles)) {
-        stop("At least one BAM file does not exist.")
-      }
-      
-      # This function will only index a file if there is no index file
-      indexBamFiles <- function(bamFile) {
-        if (file.exists(paste(bamFile, ".bai", sep=""))  == FALSE) {
-          # If there is no index file, we sort and index the current bam file
-          # TODO: we need to check if the sorted file was previously produced before
-          #       doing the costly sort operation
-          sortedBamFile <- basename(bamFile)
-          sortedBamFile <- paste(sortedBamFile, ".sorted", sep="")
-          sortBam(bamFile, sortedBamFile)
-          sortedBamFile <- paste(sortedBamFile, ".bam", sep="")
-          indexBam(sortedBamFile)
-          bamFile <- sortedBamFile
-          cat(bamFile)
+    prepare_design = function(design = NULL) {
+      if (is.null(design)) {
+        bam_files <- self$params[["bam_files"]]
+        design <- data.frame(bam_files = bam_files)
+        for (bam_file in names(self$coverages)) {
+            colname <- file_path_sans_ext(basename(bam_file))
+            design[[colname]] <- rep(0, length(bam_files))
+            i <- bam_files == bam_file
+            design[[colname]][i] <- 1
         }
-        return(bamFile)
       }
-      results <- as.data.frame(unlist(lapply(bamFiles, indexBamFiles)))
-      colnames(results) <- "bam"
-      results$oldBam <- bamFiles
-      results$bam <- as.character(results$bam)
-      results$oldBam <- as.character(results$oldBam)
-      
-      # This function will calculate the number of aligned read in each bam file
-      countAlignedReads <- function(bamFile) {
-        return(countBam(bamFile, param=ScanBamParam(flag = scanBamFlag(isUnmappedQuery=FALSE)))$records)
+      design
+    },
+    produce_matrices = function(regions_group, bin_size) {
+      matrices <- list()
+      if (is.null(regions_group)) {
+        regions_group <- names(self$regions)
       }
-     
-      #results$alignedCount <- unlist(lapply(bamFiles, countAlignedReads))
-      results$alignedCount <- unlist(private$parallel_job(
-        data = bamFiles, FUN = countAlignedReads))
+      for (region in regions_group) {
+        matrices[[region]] <- list()
+         for (design in colnames(self$design)[-1]) {
+           matrices[[region]][[design]] <- list()
 
-      return(results)
+           i <- self$design[[design]] == 1
+           bam_files <- self$design[["bam_files"]][i]
+           matrices[[region]][[design]][["input"]] <-
+             private$get_matrix(region, bam_files, bin_size)
+
+           i <- self$design[[design]] == 2
+           bam_files <- self$design[["bam_files"]][i]
+           matrices[[region]][[design]][["ctrl"]] <-
+             private$get_matrix(region, bam_files, bin_size)
+         }
+      }
+      matrices
+    },
+    get_matrix = function(region, bam_files, bin_size) {
+      if (length(bam_files) == 0) {
+        return(NULL)
+      }
+      res <- do.call(rbind, lapply(bam_files, function(bam_file)
+        t(sapply(self$coverages[[bam_file]][[region]], as.numeric))
+      ))
+      private$bin_matrix(res, bin_size)
     },
     prepare_regions = function(regions) {
       if (class(regions) == "character") {
-        regions <-
-          metagene:::prepareRegions(regions)
+        names <- sapply(regions, function(x) file_path_sans_ext(basename(x)))
+        regions <- private$parallel_job$launch_job(data = regions,
+                                                   FUN = import)
+        names(regions) <- names
       } else if (class(regions) == "GRanges") {
         regions <- GRangesList(regions = regions)
       } else if (class(regions) == "GRangesList") {
@@ -163,31 +140,80 @@ metagene <- R6Class("metagene",
       }))
     },
     produce_coverages = function() {
-      coverages <- list()
-      get_coverage <- function(regions,bam_file) {
-        stopifnot(class(regions) == "GRanges")
-        # Get a list of SimpleRleList, one element per chromosome
-        
-        count <- self$get_bam_count(bam_file)
-        coverage <- private$parallel_job(
-          # TODO: We should split by worker count instead of chr
-          data = GenomicRanges::split(regions, seqnames(regions)),
-          FUN = metagene:::extract_coverage_by_regions,
-          bam_file = bam_file, count = count
-        )
-        # Merge all the SimpleRleList into a single one
-        do.call("c", unname(coverage))
-      }
-      coverages <- lapply(self$bam_files$bam, function(bam_file) {
-        cat(paste0("    ", basename(bam_file), "...\n"))
-        sapply(names(self$regions), function(name) {
-          current_regions <- self$regions[[which(names(self$regions) == name)]]
-          cat(paste0("      ", name, "...\n"))
-          get_coverage(current_regions, bam_file)
-        })
+      res <- lapply(self$params[["bam_files"]], function(bam_file) {
+        lapply(self$regions, function(regions) {
+          private$bam_handler$get_normalized_coverage(bam_file, regions)
+          })
       })
-      names(coverages) <- self$bam_files$bam
-      coverages
+      names(res) <- self$params[["bam_files"]]
+      res
+    },
+    # Bin matrix columns
+    #
+    # Input:
+    #    data:       The matrix to bin.
+    #    bin_size:    The number of nucleotides in each bin.
+    #
+    # OUPUT:
+    #    A matrix with each column representing the mean of bin_size nucleotides.
+    bin_matrix = function(data, bin_size) {
+      stopifnot(bin_size %% 1 == 0)
+      stopifnot(bin_size > 0)
+      
+      # If the number of bins is too small, we warn the user.
+      bin_count <- floor(ncol(data) / bin_size)
+      if (bin_count < 5) {
+        message <- paste0("Number of bins is very small: ", bin_count, "\n")
+        message <- paste0(message, "  You should consider reducing the bin_size value.")
+        warning(message)
+      }
+      # If bin_size is not a multiple of ncol(data), we remove the bin that have a
+      # different size than the others.
+      remainder <- ncol(data) %% bin_size
+      if (remainder != 0) {
+        message <- "bin_size is not a multiple of the number of columns in data.\n"
+        message <- paste0(message, "  Columns ", ncol(data) - remainder, "-", ncol(data), " will be removed.")
+        warning(message)
+        data <- data[,1:(ncol(data)-remainder)]
+      }
+      
+      splitMean <- function(x, bs) {
+        if (bs < length(x)) {
+          return(tapply(x, (seq_along(x)-1) %/% bs, mean))
+        } else {
+          return(x)
+        }
+      }
+      return(unname(t(apply(data, 1, splitMean, bin_size))))
+    },
+    # Produce a plot with based on a data.frame
+    #
+    # Input:
+    #    DF:       The data frame produced by the plot.getDataFrame function
+    #    title:    The title of the graph
+    #
+    # Ouput:
+    #    The graph that is printed on the current device.
+    plot_graphic = function(DF, title, binSize) {
+      # Prepare y label
+      if (binSize > 1) {
+        yLabel <- paste("Mean RPM for each", binSize, "positions")
+      } else {
+        yLabel <- paste("Mean RPM for each position")
+      }
+      # TODO: add x label
+      p <- ggplot(DF, aes(x=position, y=value, ymin=qinf, ymax=qsup)) +
+        geom_ribbon(aes(fill=group), alpha=0.3) +
+        geom_line(aes(color=group),size=1,litype=1,bg="transparent")+
+        theme(panel.grid.major = element_line())+
+        theme(panel.grid.minor = element_line())+
+        theme(panel.background = element_blank())+
+        theme(panel.background = element_rect())+
+        theme_bw(base_size = 20)+
+        theme(axis.title.x = element_blank())+
+        ylab(yLabel)+
+        ggtitle(title)
+      print(p)
     }
   )
 ) 
