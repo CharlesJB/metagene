@@ -131,7 +131,7 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
       }
       if (!is.na(sample_size)) {
         if (!is.numeric(sample_size)
-            || as.integer(sample_size) != sample_count
+            || as.integer(sample_size) != sample_size
             || sample_size < 1) {
           stop("sample_size must be a positive integer.")
         }
