@@ -1,3 +1,4 @@
+export(metagene)
 export(get_demo_bam_files)
 export(Basic_Stat)
 export(Bootstrap_Stat)
