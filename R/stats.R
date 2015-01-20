@@ -19,7 +19,7 @@ Stat <- R6Class("Stat",
       private$parameters[["cores"]] <- cores
       private$parameters[["range"]] <- range
       
-      private$parallel_job <- metagene:::Parallel_Job$new(cores)
+      private$parallel_job <- Parallel_Job$new(cores)
       private$data <- data
       
       # Calculate the statistics

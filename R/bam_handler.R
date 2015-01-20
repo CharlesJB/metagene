@@ -21,7 +21,7 @@ Bam_Handler <- R6Class("Bam_Handler",
       }
 
       # Initialize the Bam_Handler object
-      private$parallel_job <- metagene:::Parallel_Job$new(cores)
+      private$parallel_job <- Parallel_Job$new(cores)
       self$parameters[["cores"]] <- private$parallel_job$get_core_count()
       private$bam_files <- data.frame(bam = bam_files, stringsAsFactors = FALSE)
       if (is.null(names(bam_files))) {
