@@ -19,7 +19,7 @@ base_msg <- "Basic_Stat initialize -"
 
 ## Invalid data class
 test.basic_stat_initialize_invalid_data_class <- function() {
-  obs <- tryCatch(Basic_Stat$new(data = c(1,2)), error=conditionMessage)
+  obs <- tryCatch(metagene:::Basic_Stat$new(data = c(1,2)), error=conditionMessage)
   exp <- "data must be a matrix with at least one value"
   msg <- paste(base_msg, "An invalid data class did not generate an exception with expected message." )
   checkIdentical(obs, exp, msg)
@@ -27,7 +27,7 @@ test.basic_stat_initialize_invalid_data_class <- function() {
 
 ## Invalid data dimensions
 test.basic_stat_initialize_invalid_data_dimension <- function() {
-  obs <- tryCatch(Basic_Stat$new(data = matrix()), error=conditionMessage)
+  obs <- tryCatch(metagene:::Basic_Stat$new(data = matrix()), error=conditionMessage)
   exp <- "data must be a matrix with at least one value"
   msg <- paste(base_msg, "Invalid data dimensions did not generate an exception with expected message." )
   checkIdentical(obs, exp, msg)
@@ -35,7 +35,7 @@ test.basic_stat_initialize_invalid_data_dimension <- function() {
 
 ## Invalid alpha class
 test.basic_stat_initialize_invalid_data_dimension <- function() {
-  obs <- tryCatch(Basic_Stat$new(data = matrix()), error=conditionMessage)
+  obs <- tryCatch(metagene:::Basic_Stat$new(data = matrix()), error=conditionMessage)
   exp <- "data must be a matrix with at least one value"
   msg <- paste(base_msg, "Invalid data dimensions did not generate an exception with expected message." )
   checkIdentical(obs, exp, msg)
@@ -43,7 +43,7 @@ test.basic_stat_initialize_invalid_data_dimension <- function() {
 
 ## Invalid average value
 test.basic_stat_initialize_invalid_average_value <- function() {
-  obs <- tryCatch(Basic_Stat$new(data = valid_data, average = "abc"), error=conditionMessage)
+  obs <- tryCatch(metagene:::Basic_Stat$new(data = valid_data, average = "abc"), error=conditionMessage)
   exp <- "average parameter must be either 'mean' or 'median'"
   msg <- paste(base_msg, "Invalid average value did not generate an exception with expected message." )
   checkIdentical(obs, exp, msg)
@@ -51,7 +51,7 @@ test.basic_stat_initialize_invalid_average_value <- function() {
 
 ## Invalid range class
 test.basic_stat_initialize_invalid_range_class <- function() {
-  obs <- tryCatch(Basic_Stat$new(data = valid_data, range = "abc"), error=conditionMessage)
+  obs <- tryCatch(metagene:::Basic_Stat$new(data = valid_data, range = "abc"), error=conditionMessage)
   exp <- "range parameter must be a numeric of length 2"
   msg <- paste(base_msg, "Invalid range class did not generate an exception with expected message." )
   checkIdentical(obs, exp, msg)
@@ -59,7 +59,7 @@ test.basic_stat_initialize_invalid_range_class <- function() {
 
 ## Invalid range length
 test.basic_stat_initialize_invalid_range_length <- function() {
-  obs <- tryCatch(Basic_Stat$new(data = valid_data, range = 1), error=conditionMessage)
+  obs <- tryCatch(metagene:::Basic_Stat$new(data = valid_data, range = 1), error=conditionMessage)
   exp <- "range parameter must be a numeric of length 2"
   msg <- paste(base_msg, "Invalid range class did not generate an exception with expected message." )
   checkIdentical(obs, exp, msg)
@@ -67,7 +67,7 @@ test.basic_stat_initialize_invalid_range_length <- function() {
 
 ## Invalid cores numeric values - zero
 test.basic_stat_initialize_zero_core_number <- function() {
-  obs <- tryCatch(Basic_Stat$new(data = valid_data, cores = 0), error=conditionMessage)
+  obs <- tryCatch(metagene:::Basic_Stat$new(data = valid_data, cores = 0), error=conditionMessage)
   exp <- "cores must be positive numeric or BiocParallelParam instance."
   msg <- paste(base_msg, "A zero core number argument did not generate an exception with expected message.")
   checkIdentical(obs, exp, msg)
@@ -75,7 +75,7 @@ test.basic_stat_initialize_zero_core_number <- function() {
 
 ## Invalid cores numeric values - negative value
 test.basic_stat_initialize_negative_core_number <- function() {
-  obs <- tryCatch(Basic_Stat$new(data = valid_data, cores = -1), error=conditionMessage)
+  obs <- tryCatch(metagene:::Basic_Stat$new(data = valid_data, cores = -1), error=conditionMessage)
   exp <- "cores must be positive numeric or BiocParallelParam instance."
   msg <- paste(base_msg, "A negative core number argument did not generate an exception with expected message.")
   checkIdentical(obs, exp, msg)
@@ -83,7 +83,7 @@ test.basic_stat_initialize_negative_core_number <- function() {
 
 ## Invalid cores non-numeric values - string
 test.basic_stat_initialize_string_core_number <- function() {
-  obs <- tryCatch(Basic_Stat$new(data = valid_data, cores = "1"), error=conditionMessage)
+  obs <- tryCatch(metagene:::Basic_Stat$new(data = valid_data, cores = "1"), error=conditionMessage)
   exp <- "cores must be positive numeric or BiocParallelParam instance."
   msg <- paste(base_msg, "A string core number argument did not generate an exception with expected message.")
   checkIdentical(obs, exp, msg)
@@ -97,7 +97,7 @@ base_msg <- "Basic_Stat get_statistics -"
 
 ## Valid case
 test.basic_stat_get_statistics_valid_case <- function() {
-  basic_stat <- Basic_Stat$new(data = valid_data)
+  basic_stat <- metagene:::Basic_Stat$new(data = valid_data)
   obs <- basic_stat$get_statistics()
   msg <- paste(base_msg, "Statistics do not have correct class.")
   checkEquals(class(obs), "data.frame", msg)
@@ -115,7 +115,7 @@ base_msg <- "Bootstrap_Stat  (initialize) -"
 
 ## Negative sample size
 test.bootstrap_stat_get_statistics_negative_sample_size <- function() {
-  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_size = -1),
+  obs <- tryCatch(metagene:::Bootstrap_Stat$new(data = valid_data, sample_size = -1),
                   error=conditionMessage)
   exp <- "sample_size must be a positive integer."
   msg <- paste(base_msg, "A negative sample size did not generate an exception with expected message.")
@@ -124,7 +124,7 @@ test.bootstrap_stat_get_statistics_negative_sample_size <- function() {
 
 ## Zero sample size
 test.bootstrap_stat_get_statistics_zero_sample_size <- function() {
-  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_size = 0),
+  obs <- tryCatch(metagene:::Bootstrap_Stat$new(data = valid_data, sample_size = 0),
                   error=conditionMessage)
   exp <- "sample_size must be a positive integer."
   msg <- paste(base_msg, "A negative sample size did not generate an exception with expected message.")
@@ -133,7 +133,7 @@ test.bootstrap_stat_get_statistics_zero_sample_size <- function() {
 
 ## Not numeric sample size
 test.bootstrap_stat_get_statistics_non_numeric_sample_size <- function() {
-  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_size = "1"),
+  obs <- tryCatch(metagene:::Bootstrap_Stat$new(data = valid_data, sample_size = "1"),
                   error=conditionMessage)
   exp <- "sample_size must be a positive integer."
   msg <- paste(base_msg, "A negative sample size did not generate an exception with expected message.")
@@ -142,7 +142,7 @@ test.bootstrap_stat_get_statistics_non_numeric_sample_size <- function() {
 
 ## Decimal sample size
 test.bootstrap_stat_get_statistics_decimal_sample_size <- function() {
-  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_size = 1.1),
+  obs <- tryCatch(metagene:::Bootstrap_Stat$new(data = valid_data, sample_size = 1.1),
                   error=conditionMessage)
   exp <- "sample_size must be a positive integer."
   msg <- paste(base_msg, "A negative sample size did not generate an exception with expected message.")
@@ -151,7 +151,7 @@ test.bootstrap_stat_get_statistics_decimal_sample_size <- function() {
 
 ## Negative sample count
 test.bootstrap_stat_get_statistics_negative_sample_count <- function() {
-  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_count = -1),
+  obs <- tryCatch(metagene:::Bootstrap_Stat$new(data = valid_data, sample_count = -1),
                   error=conditionMessage)
   exp <- "sample_count must be a positive integer."
   msg <- paste(base_msg, "A negative sample count did not generate an exception with expected message.")
@@ -160,7 +160,7 @@ test.bootstrap_stat_get_statistics_negative_sample_count <- function() {
 
 ## Zero sample count
 test.bootstrap_stat_get_statistics_zero_sample_count <- function() {
-  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_count = 0),
+  obs <- tryCatch(metagene:::Bootstrap_Stat$new(data = valid_data, sample_count = 0),
                   error=conditionMessage)
   exp <- "sample_count must be a positive integer."
   msg <- paste(base_msg, "A negative sample count did not generate an exception with expected message.")
@@ -169,7 +169,7 @@ test.bootstrap_stat_get_statistics_zero_sample_count <- function() {
 
 ## Not numeric sample count
 test.bootstrap_stat_get_statistics_non_numeric_sample_count <- function() {
-  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_count = "1"),
+  obs <- tryCatch(metagene:::Bootstrap_Stat$new(data = valid_data, sample_count = "1"),
                   error=conditionMessage)
   exp <- "sample_count must be a positive integer."
   msg <- paste(base_msg, "A negative sample count did not generate an exception with expected message.")
@@ -178,7 +178,7 @@ test.bootstrap_stat_get_statistics_non_numeric_sample_count <- function() {
 
 ## Decimal sample count
 test.bootstrap_stat_get_statistics_decimal_sample_count <- function() {
-  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, sample_count = 1.1),
+  obs <- tryCatch(metagene:::Bootstrap_Stat$new(data = valid_data, sample_count = 1.1),
                   error=conditionMessage)
   exp <- "sample_count must be a positive integer."
   msg <- paste(base_msg, "A negative sample count did not generate an exception with expected message.")
@@ -187,7 +187,7 @@ test.bootstrap_stat_get_statistics_decimal_sample_count <- function() {
 
 ## Not boolean debug
 test.bootstrap_stat_initialize_not_boolean_debug <- function() {
-  obs <- tryCatch(Bootstrap_Stat$new(data = valid_data, debug = 1),
+  obs <- tryCatch(metagene:::Bootstrap_Stat$new(data = valid_data, debug = 1),
                   error=conditionMessage)
   exp <- "debug must be TRUE or FALSE."
   msg <- paste(base_msg, "A not boolean debug did not generate an exception with expected message.")
@@ -202,7 +202,7 @@ base_msg <- "Bootstrap_Stat get_statistics -"
 
 ## Valid case
 test.bootstrap_stat_get_statistics_valid_case <- function() {
-  bootstrap_stat <- Bootstrap_Stat$new(data = valid_data)
+  bootstrap_stat <- metagene:::Bootstrap_Stat$new(data = valid_data)
   obs <- bootstrap_stat$get_statistics()
   msg <- paste(base_msg, "Statistics do not have correct class.")
   checkEquals(class(obs), "data.frame", msg)
@@ -216,7 +216,7 @@ test.bootstrap_stat_get_statistics_valid_case <- function() {
 
 ## Valid case
 test.bootstrap_stat_get_statistics_valid_case_debug <- function() {
-  bootstrap_stat <- Bootstrap_Stat$new(data = valid_data, debug = TRUE)
+  bootstrap_stat <- metagene:::Bootstrap_Stat$new(data = valid_data, debug = TRUE)
   obs <- bootstrap_stat$get_statistics()
   msg <- paste(base_msg, "Debug result do not have correct class.")
   checkEquals(class(obs), "list", msg)
