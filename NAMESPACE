@@ -1,7 +1,5 @@
 export(metagene)
 export(get_demo_bam_files)
-export(parseFeatures)
-export(parseRegions)
 export(plotMatrices)
 import(rtracklayer)
 import(GenomicRanges)
