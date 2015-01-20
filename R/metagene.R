@@ -89,7 +89,7 @@ metagene <- R6Class("metagene",
       
       # Prepare bam files
       private$print_verbose("Prepare bam files...")
-      private$bam_handler <- Bam_Handler$new(bam_files, cores = cores)
+      private$bam_handler <- metagene::Bam_Handler$new(bam_files, cores = cores)
       
       # Prepare regions
       private$print_verbose("Prepare regions...")
