@@ -6,7 +6,7 @@
 \title{A class to manage metagene analysis.}
 \format{A metagene experiment manager}
 \usage{
-\code{mg <- metagene$new(regions, bam_files)}
+metagene
 }
 \description{
 This class will allow to load, convert and normalize alignments and regions
@@ -16,7 +16,7 @@ metagene plots on the data (or a subset of the data).
 \section{Constructor}{
 
 \describe{
-  \item{}{\code{metagene$new(regions, bam_files, padding_size = 0,
+  \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
                              cores = SerialParam(), verbose = FALSE)}}
   \item{regions}{Either a \code{list} of bed filenames, a \code{GRanges}
                  object or a \code{GRangesList} object.}

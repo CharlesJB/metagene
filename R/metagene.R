@@ -4,11 +4,9 @@
 #' files/data. Once the data is ready, the user can then chose to produce
 #' metagene plots on the data (or a subset of the data).
 #'
-#' @usage \code{mg <- metagene$new(regions, bam_files)}
-#'
 #' @section Constructor:
 #' \describe{
-#'   \item{}{\code{metagene$new(regions, bam_files, padding_size = 0,
+#'   \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
 #'                              cores = SerialParam(), verbose = FALSE)}}
 #'   \item{regions}{Either a \code{list} of bed filenames, a \code{GRanges}
 #'                  object or a \code{GRangesList} object.}
