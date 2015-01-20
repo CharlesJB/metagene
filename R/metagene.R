@@ -24,6 +24,10 @@
 #'  \code{metagene$new} returns a \code{metagene} object that contains the
 #'  coverages for every bam files in the regions from the \code{regions} param.
 #'
+#' @return
+#' \code{metagene$new} returns a \code{metagene} object which contains the
+#' normalized coverage values for every regions and for every BAM files.
+#'
 #' @section Methods:
 #' \describe{
 #'   \item{}{\code{df <- mg$plot(design = NULL, regions_group = NULL,

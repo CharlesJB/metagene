@@ -8,6 +8,10 @@
 \usage{
 metagene
 }
+\value{
+\code{metagene$new} returns a \code{metagene} object which contains the
+normalized coverage values for every regions and for every BAM files.
+}
 \description{
 This class will allow to load, convert and normalize alignments and regions
 files/data. Once the data is ready, the user can then chose to produce
