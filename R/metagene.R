@@ -63,6 +63,12 @@
 #'   \item{region}{The name of the region to export.}
 #'   \item{file}{The name of the ouput file.}
 #' }
+#' \describe{
+#'   \item{}{\code{mg$heatmap(region, bam_file, bin_size}}
+#'   \item{region}{The name of the region to export.}
+#'   \item{bam_file}{The name of the bam file to export.}
+#'   \item{bin_size}{The size of the bin to produce before creating heatmap.}
+#' }
 #'
 #' @examples
 #'  regions <- get_demo_regions()
@@ -150,6 +156,13 @@ metagene <- R6Class("metagene",
       coverage <- GenomicAlignments::coverage(alignments, weight=weight)
       rtracklayer::export(coverage, file, "BED")
       invisible(coverage)
+    },
+    heatmap = function(region, bam_file, bin_size = 10) {
+      region <- tools::file_path_sans_ext(basename(region))
+      data <- private$get_matrix(region, bam_file, bin_size)
+      heatmap.2(log2(data+1), dendrogram = "none", trace = "none",
+                labCol = NA, labRow = NA, margins = c(2,2),
+                xlab = "position", ylab = "log2(coverages)")
     }
   ),
   private = list(
