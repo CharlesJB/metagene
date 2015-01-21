@@ -57,6 +57,12 @@
 #'   \item{sample_count}{The number of draw to do during bootstrap analysis.
 #'                       Default: 1000.}
 #' }
+#' \describe{
+#'   \item{}{\code{mg$export(bam_file, region, file}}
+#'   \item{bam_file}{The name of the bam file to export.}
+#'   \item{region}{The name of the region to export.}
+#'   \item{file}{The name of the ouput file.}
+#' }
 #'
 #' @examples
 #'  regions <- get_demo_regions()
@@ -133,6 +139,17 @@ metagene <- R6Class("metagene",
 #       DF <- metagene:::getDataFrame(bootstrap_result, range=c(-1,1), binSize=1)
        private$plot_graphic(DF, paste(unique(DF[["group"]]), collapse=" vs "), binSize = 1)
        return(DF)
+    },
+    export = function(bam_file, region, file) {
+      region <- tools::file_path_sans_ext(basename(region))
+      region <- self$regions[[region]]
+      param <- Rsamtools::ScanBamParam(which = region)
+      alignments <- GenomicAlignments::readGAlignments(bam_file, param = param)
+      weight <- 1 - private$bam_handler$get_rpm_coefficient(bam_file)
+      seqlevels(alignments) <- seqlevels(region)
+      coverage <- GenomicAlignments::coverage(alignments, weight=weight)
+      rtracklayer::export(coverage, file, "BED")
+      invisible(coverage)
     }
   ),
   private = list(
