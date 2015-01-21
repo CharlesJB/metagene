@@ -19,5 +19,6 @@ License: Artistic-2.0
 BugReports: https://github.com/CharlesJB/metagene/issues
 VignetteBuilder: knitr
 Depends: R6, tools, rtracklayer, GenomicRanges, GenomicAlignments, ggplot2, BiocParallel
+Imports: gplots
 Enhances: biomaRt
 Suggests: RUnit, BiocGenerics, knitr
