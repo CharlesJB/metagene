@@ -3,11 +3,11 @@
 
 Stat <- R6Class("Stat",
   public = list(
-    initialize = function(data, alpha = 0.05, average = "mean",
+    initialize = function(data, ctrl = NULL, alpha = 0.05, average = "mean",
                           range = c(-1, 1), cores = SerialParam()) {
 
-      private$check_param(data = data, alpha = alpha, average = average,
-                          range = range)
+      private$check_param(data = data, ctrl = ctrl, alpha = alpha,
+                          average = average, range = range)
 
       # Save parameters
       if (average == "mean") {
@@ -21,6 +21,9 @@ Stat <- R6Class("Stat",
       
       private$parallel_job <- Parallel_Job$new(cores)
       private$data <- data
+      if (!is.null(ctrl)) {
+        private$ctrl <- ctrl
+      }
       
       # Calculate the statistics
       private$statistics <- private$calculate_statistics()
@@ -37,11 +40,20 @@ Stat <- R6Class("Stat",
                             qsup = numeric()),
     parameters = list(),
     data = matrix(),
+    ctrl = NULL,
     parallel_job = '',
-    check_param = function(data, alpha, average, range, cores) {
+    check_param = function(data, ctrl, alpha, average, range, cores) {
       # Check parameters validity
       if (!is.matrix(data) || sum(!is.na(data) == 0)) {
         stop("data must be a matrix with at least one value")
+      }
+      if (!is.null(ctrl)) {
+        if (!is.matrix(ctrl) || sum(!is.na(ctrl) == 0)) {
+          stop("ctrl must be a matrix with at least one value")
+        }
+        if (!identical(dim(data), dim(ctrl))) {
+          stop("data and ctrl must be of identical dimensions")
+        }
       }
       if (!is.numeric(alpha) || alpha < 0 || alpha > 1) {
         stop("alpha parameter must be a numeric between 0 and 1")
@@ -116,14 +128,14 @@ Basic_Stat <- R6Class("Basic_Stat",
 Bootstrap_Stat <- R6Class("Bootstrap_Stat",
   inherit = Stat,
   public = list(
-    initialize = function(data, alpha = 0.05, average = "mean",
+    initialize = function(data, ctrl = NULL, alpha = 0.05, average = "mean",
                           range = c(-1, 1), cores = SerialParam(),
                           sample_count = 1000, sample_size = NA,
                           debug = FALSE) {
 
       # Check parameters validity
-      super$check_param(data = data, alpha = alpha, average = average,
-                        range = range)
+      super$check_param(data = data, ctrl = ctrl, alpha = alpha,
+                        average = average, range = range)
       if (!is.numeric(sample_count)
           || as.integer(sample_count) != sample_count
           || sample_count < 1) {
@@ -149,8 +161,8 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
       private$parameters[["debug"]] <- debug
 
       # Initialize and calculate statistic
-      super$initialize(data = data, alpha = alpha, average = average,
-                       range = range, cores = cores)
+      super$initialize(data = data, ctrl = ctrl, alpha = alpha,
+                       average = average, range = range, cores = cores)
     },
     get_statistics = function() {
       if (private$parameters[["debug"]]) {
@@ -168,20 +180,33 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
     calculate_statistics = function() {
       # Fetch relevant params
       data <- private$data
+      ctrl <- private$ctrl
       range <- private$parameters[["range"]]
 
       # Calculate results
       position <- seq(range[1], range[2], length.out = ncol(data))
-      res <- data.frame(do.call(rbind, lapply(
-        split(data, rep(1:ncol(data), each = nrow(data))),
-        private$calculate_statistic)))
+      if (!is.null(ctrl)) {
+        res <- data.frame(do.call(rbind, mapply(
+          private$calculate_statistic,
+          split(data, rep(1:ncol(data), each = nrow(data))),
+          split(ctrl, rep(1:ncol(ctrl), each = nrow(ctrl))),
+          SIMPLIFY = FALSE)))
+      } else {
+        res <- data.frame(do.call(rbind, lapply(
+          split(data, rep(1:ncol(data), each = nrow(data))),
+          private$calculate_statistic)))
+      }
       cbind(position, res, row.names = NULL)
     },
     # Calculate the statistic for a single column
-    calculate_statistic = function(column_values) {
+    calculate_statistic = function(column_values, ctrl_values = NULL) {
       # Check param
       stopifnot(is.numeric(column_values))
       stopifnot(length(column_values) > 0)
+      if (!is.null(ctrl_values)) {
+        stopifnot(is.numeric(ctrl_values))
+        stopifnot(length(ctrl_values) > 0)
+      }
 
       # Fetch relevant parameters
       alpha <- private$parameters[["alpha"]]
@@ -189,6 +214,11 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
 
       # Calculate result
       replicates <- private$generate_draw_values(column_values)
+      if (!is.null(ctrl_values)) {
+        ctrl <- private$generate_draw_values(ctrl_values)
+        replicates <- replicates - ctrl
+        replicates[replicates < 0] <- 0
+      }
       values <- private$calculate_replicate_values(replicates)
       if (private$parameters[["debug"]]) {
         i <- length(private$replicates) + 1
