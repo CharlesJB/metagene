@@ -132,8 +132,9 @@ metagene <- R6Class("metagene",
         for (bam_file in names(self$matrices[[region]])) {
           group_name <- paste(bam_file, region, sep = "_")
           print(group_name)
-          group_matrix <- self$matrices[[region]][[bam_file]][["input"]]
-          bootstrap_stat <- Bootstrap_Stat$new(data = group_matrix,
+          data <- self$matrices[[region]][[bam_file]][["input"]]
+          ctrl <- self$matrices[[region]][[bam_file]][["ctrl"]]
+          bootstrap_stat <- Bootstrap_Stat$new(data = data, ctrl = ctrl,
                                                sample_size = sample_size)
           current_DF <- bootstrap_stat$get_statistics()
           current_DF <- cbind(rep(group_name, nrow(current_DF)), current_DF)
@@ -197,12 +198,12 @@ metagene <- R6Class("metagene",
            matrices[[region]][[design]] <- list()
 
            i <- self$design[[design]] == 1
-           bam_files <- self$design[["bam_files"]][i]
+           bam_files <- self$design[,1][i]
            matrices[[region]][[design]][["input"]] <-
              private$get_matrix(region, bam_files, bin_size)
 
            i <- self$design[[design]] == 2
-           bam_files <- self$design[["bam_files"]][i]
+           bam_files <- self$design[,1][i]
            matrices[[region]][[design]][["ctrl"]] <-
              private$get_matrix(region, bam_files, bin_size)
          }
