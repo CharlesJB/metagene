@@ -234,7 +234,7 @@ metagene <- R6Class("metagene",
       GRangesList(lapply(regions, function(x) {
         # Add padding
         start(x) <- start(x) - self$params$padding_size
-	start(x)[start(x) < 0] <- 0
+	start(x)[start(x) < 0] <- 1
         end(x) <- end(x) + self$params$padding_size
         # Clean seqlevels
         seqlevels(x) <- unique(as.character(seqnames(x)))
