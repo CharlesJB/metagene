@@ -35,8 +35,8 @@ Depends:
     ggplot2,
     BiocParallel
 Imports:
-    gplots
-Enhances: biomaRt
+    gplots,
+    biomaRt
 Suggests:
     RUnit,
     BiocGenerics,
