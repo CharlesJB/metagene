@@ -181,8 +181,16 @@ metagene <- R6Class("metagene",
         if (!is.logical(verbose)) {
             stop("verbose must be a logicial value (TRUE or FALSE)")
         }
-        if (!is.numeric(padding_size) || (padding_size < 0)) {
+        if (!(is.numeric(padding_size) || is.integer(padding_size)) || 
+            padding_size < 0 || as.integer(padding_size) != padding_size) {
             stop("padding_size must be a non-negative integer")
+        }
+        isBiocParallel = is(cores, "BiocParallelParam")
+        isInteger = ((is.numeric(cores) || is.integer(cores)) && 
+                         padding_size > 0 &&  as.integer(cores) == cores)
+        if (!isBiocParallel && !isInteger) {
+            stop(paste0("cores must be a positive numeric or ", 
+                        "BiocParallelParam instance"))
         }
     },
     print_verbose = function(to_print) {
