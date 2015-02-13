@@ -18,10 +18,11 @@ getGenes <- function(specie="human") {
     if (! specie %in% get_valid_species()){
         message <- "Incorrect parameter for specie name.\n"
         message <- paste0(message, "Currently supported species are: \"")
-        message <- paste0(message, paste(get_valid_species(), collapse="\", \""))
+        message <- paste0(message, paste(get_valid_species(), 
+                                        collapse="\", \""))
         message <- paste0(message, "\".")
 
-        stop(paste("Incorrect parameter for specie name.\nCurrently supported species are: \"", paste(get_valid_species(), collapse="\", \""),  "\".", collapse="", sep=""))
+        stop(message)
     }
 
     # Set the correct specie
@@ -57,10 +58,11 @@ getGenesBiomart <- function(specie="human") {
     if (! specie %in% get_valid_species()){
         message <- "Incorrect parameter for specie name.\n"
         message <- paste0(message, "Currently supported species are: \"")
-        message <- paste0(message, paste(get_valid_species(), collapse="\", \""))
+        message <- paste0(message, paste(get_valid_species(), 
+                                            collapse="\", \""))
         message <- paste0(message, "\".")
 
-        stop(paste("Incorrect parameter for specie name.\nCurrently supported species are: \"", paste(get_valid_species(), collapse="\", \""),  "\".", collapse="", sep=""))
+        stop(message)
     }
 
     # Set the correct specie
@@ -73,9 +75,11 @@ getGenesBiomart <- function(specie="human") {
     }
 
     # Fetch the data
-    attributes <- c("ensembl_gene_id","strand", "chromosome_name","start_position","end_position")
+    attributes <- c("ensembl_gene_id", "strand", "chromosome_name", 
+                    "start_position", "end_position")
     filters <- c("chromosome_name")
-    sub.ensmart <- getBM(attributes=attributes,filters=filters,values=chrom, mart=ensmart)
+    sub.ensmart <- getBM(attributes=attributes, filters=filters,
+                            values=chrom, mart=ensmart)
     colnames(sub.ensmart) <- c("feature", "strand", "seqnames", "start", "end")
     sub.ensmart$seqnames <- paste0("chr", sub.ensmart$seqnames)
 

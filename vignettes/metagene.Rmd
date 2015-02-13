@@ -6,13 +6,25 @@
 metagene: A package to produce Metafeature plots
 ========================================================
 
-Charles Joly Beauparlant, Fabien Claude Lamaze, Rawane Samb, Astrid Louise Deschenes and Arnaud Droit.
+Charles Joly Beauparlant, Fabien Claude Lamaze, Rawane Samb, 
+Astrid Louise Deschenes and Arnaud Droit.
 
-This package and the underlying metagene code are distributed under the Artistic license 2.0. You are free to use and redistribute this software. 
+This package and the underlying metagene code are distributed under 
+the Artistic license 2.0. You are free to use and redistribute this software. 
 
 ## Introduction
 
-This package produces Metagene-like plots to compare the behavior of DNA-interacting proteins at selected groups of features. A typical analysis can be done in viscinity of transcription start sites (TSS) of genes or at any regions of interest (such as enhancers). Multiple combinations of group of features and/or group of bam files can be compared in a single analysis. Bootstraping analysis is used to compare the groups and locate regions with statistically different enrichment profiles. In order to increase the sensitivity of the analysis, alignment data is used instead of peaks produced with peak callers (i.e.: MACS2 or PICS). The metagene package uses bootstrap to obtain a better estimation of the mean enrichment and the confidence interval for every group of samples.
+This package produces Metagene-like plots to compare the behavior of 
+DNA-interacting proteins at selected groups of features. A typical analysis 
+can be done in viscinity of transcription start sites (TSS) of genes or at any 
+regions of interest (such as enhancers). Multiple combinations of group of 
+features and/or group of bam files can be compared in a single analysis. 
+Bootstraping analysis is used to compare the groups and locate regions with 
+statistically different enrichment profiles. In order to increase the 
+sensitivity of the analysis, alignment data is used instead of peaks produced 
+with peak callers (i.e.: MACS2 or PICS). The metagene package uses bootstrap 
+to obtain a better estimation of the mean enrichment and the confidence 
+interval for every group of samples.
 
 This vignette will introduce all the main features of the metagene package.
 
@@ -26,7 +38,10 @@ suppressMessages(library(metagene))
 
 ### Alignment files (BAM files)
 
-There is no hard limit in the number of BAM files that can be included in an analysis (but with too many BAM files, memory may become an issue). BAM files must be indexed. For instance, if you use a file names `file.bam`, a file named `file.bam.bai` must be present in the same directory.
+There is no hard limit in the number of BAM files that can be included in an 
+analysis (but with too many BAM files, memory may become an issue). BAM files 
+must be indexed. For instance, if you use a file names `file.bam`, a file 
+named `file.bam.bai` must be present in the same directory.
 
 The path (relative or absolute) to the BAM files must be in a vector:
 ```{r bamFiles}
@@ -40,7 +55,8 @@ For this demo, we have 2 samples (each with 2 replicates).
 
 #### BED files
 
-To compare custom regions of interest, it is possible to use a list of one or more BED files.
+To compare custom regions of interest, it is possible to use a list of one or 
+more BED files.
 
 ```{r regionsArgument}
 regions <- get_demo_regions()
@@ -51,47 +67,66 @@ The name of the files (without the extension) will be used to name each groups.
 
 #### GRanges or GRangesList objects - Regions
 
-As an alternative to a list of bed files, GRanges or GRangesList objects can be used.
+As an alternative to a list of bed files, GRanges or GRangesList objects can 
+be used.
 
 ### Design groups (facultative)
 
-A design group contains a set of BAM files that, when pull together, represent a logical analysis. Furthermore, a design group contains the relationship between every BAM files present. Samples (with or without replicates) and controls can be assigned to a same design group. There can be as many groups as necessary. A BAM file can be assigned to more than one group. 
+A design group contains a set of BAM files that, when pull together, represent 
+a logical analysis. Furthermore, a design group contains the relationship 
+between every BAM files present. Samples (with or without replicates) and 
+controls can be assigned to a same design group. There can be as many groups 
+as necessary. A BAM file can be assigned to more than one group. 
 
-To represent the relationship between every BAM files, design groups must have the following columns:
+To represent the relationship between every BAM files, design groups must have 
+the following columns:
 
 * The list of paths to every BAM files related to an analysis.
 * One column per group of files (replicates and/or controls). 
 
-There is two possible way to create design groups, by reading a file or by directly creating a design object in R.
+There is two possible way to create design groups, by reading a file or by 
+directly creating a design object in R.
 
 #### Design groups from a file
 
-Design groups can be loaded into the metagene package by using a text file. As the relationship between BAM files as to be specified, the following columns are mandatory:
+Design groups can be loaded into the metagene package by using a text file. As 
+the relationship between BAM files as to be specified, the following columns 
+are mandatory:
 
-* First column: The list of paths (absolute or relative) to every BAM files for all the design groups.
-* Following columns: One column per design group (replicates and/or controls). The column can take only three values: 
+* First column: The list of paths (absolute or relative) to every BAM files 
+for all the design groups.
+* Following columns: One column per design group (replicates and/or controls). 
+The column can take only three values: 
 	+ 0: ignore file
 	+ 1: input
 	+ 2: control
 
-The file must also contain a header. It is recommanded to use Samples for the name of the first column, but the value is not checked. The other columns in the design file will be used for naming design groups, and must be unique.
+The file must also contain a header. It is recommanded to use Samples for the 
+name of the first column, but the value is not checked. The other columns in 
+the design file will be used for naming design groups, and must be unique.
 
 ```{r designFile}
 fileDesign <- system.file("extdata/design.txt", package="metagene")
 design <- read.table(fileDesign, header=TRUE, stringsAsFactors=FALSE)
-design$Samples <- paste(system.file("extdata", package="metagene"), design$Samples, sep="/")
+design$Samples <- paste(system.file("extdata", package="metagene"), 
+                        design$Samples, sep="/")
 design
 ```
 
 #### Design groups from R
 
-It is not obligatory to use a design file, you can create the design data.frame using your prefered method (as long as the restrictions on the values mentioned previously are respected).
+It is not obligatory to use a design file, you can create the design 
+`data.frame` using your prefered method (as long as the restrictions on the 
+values mentioned previously are respected).
 
-For instance, the previous design data.frame could have been create directly in R:
+For instance, the previous design data.frame could have been create directly 
+in R:
 ```{r alternateDesign}
-design <- data.frame(Samples = c("align1_rep1.bam", "align1_rep2.bam", "align2_rep1.bam", "align2_rep2.bam", "ctrl.bam"),
-		     align1 = c(1,1,0,0,2), align2 = c(0,0,1,1,2))
-design$Samples <- paste0(system.file("extdata", package="metagene"), "/", design$Samples)
+design <- data.frame(Samples = c("align1_rep1.bam", "align1_rep2.bam", 
+                            "align2_rep1.bam", "align2_rep2.bam", "ctrl.bam"),
+		                    align1 = c(1,1,0,0,2), align2 = c(0,0,1,1,2))
+design$Samples <- paste0(system.file("extdata", package="metagene"), "/", 
+                            design$Samples)
 design
 ```
 
@@ -105,27 +140,36 @@ A typical metagene analysis will consist steps:
 * Statistical analysis.
 * Generation of the metagene plot.
 
-To facilitate the analysis, all those steps managed by a metagene object. A typical analysis will require 2 steps:
+To facilitate the analysis, all those steps managed by a metagene object. A 
+typical analysis will require 2 steps:
 
-* Initialization of the metagene object: during this step, the metagene object will produce normalized coverages for every regions specified and for every bam files.
-* Generation of the plot: during this step, the metagene object will perform the statistical analysis necessary to obtain a robust estimate of the mean and its confidence interval for every group of regions and will show the results in a metagene plot.
+* Initialization of the metagene object: during this step, the metagene object 
+will produce normalized coverages for every regions specified and for every 
+bam files.
+* Generation of the plot: during this step, the metagene object will perform 
+the statistical analysis necessary to obtain a robust estimate of the mean 
+and its confidence interval for every group of regions and will show the 
+results in a metagene plot.
 
 ### Generating coverages
 
-To extract coverages, the user must initialize the metagene object. The minimal requirements for this step is a list of bam files and a list of regions:
+To extract coverages, the user must initialize the metagene object. The minimal
+requirements for this step is a list of bam files and a list of regions:
 ```{r initializeMetageneObj}
 mg <- metagene$new(regions, bam_files)
 ```
 
 ### Plotting results
 
-The statistical analysis and the production of the metagene plot are done in a single step with the function `plot` of the metagene object.
+The statistical analysis and the production of the metagene plot are done 
+in a single step with the function `plot` of the metagene object.
 
 ```{r producePlotEx1}
 df <- mg$plot()
 ```
 
-The plot function returns the data.frame that was used by ggplot2 to produce the results.
+The plot function returns the data.frame that was used by ggplot2 to produce 
+the results.
 
 ```{r showDataFrame}
 head(df)
