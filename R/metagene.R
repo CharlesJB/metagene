@@ -14,11 +14,13 @@
 #'                    i.e.: if a file is named file.bam, there must be a file
 #'                    named file.bam.bai in the same directory.}
 #'   \item{padding_size}{The regions will be extended on each side by the value
-#'                       of this parameter. Default = 0.}
+#'                       of this parameter. The padding_size must be a 
+#'                       non-negative integer. Default = 0.}
 #'   \item{cores}{The number of cores available to parallelize the analysis.
 #'                Either a positive integer or a \code{BiocParallelParam}.
 #'                Default: SerialParam().}
-#'   \item{verbose}{Print progression of the analysis. Default: FALSE.}
+#'   \item{verbose}{Print progression of the analysis. A logical constant. 
+#'                  Default: \code{FALSE}.}
 #' }
 #'
 #'  \code{metagene$new} returns a \code{metagene} object that contains the
@@ -94,7 +96,9 @@ metagene <- R6Class("metagene",
     initialize = function(regions, bam_files, padding_size = 0,
                           cores = SerialParam(), verbose = FALSE) {
       # Check params...
-      
+      private$check_param(regions = regions, bam_files = bam_files, 
+                          padding_size = padding_size,
+                          cores = cores, verbose = verbose)
       # Save params
       private$parallel_job <- Parallel_Job$new(cores)
       self$params[["padding_size"]] <- padding_size
@@ -143,9 +147,11 @@ metagene <- R6Class("metagene",
         }
       }
       # 3. Produce the graph
-#       DF <- metagene:::getDataFrame(bootstrap_result, range=c(-1,1), binSize=1)
-       private$plot_graphic(DF, paste(unique(DF[["group"]]), collapse=" vs "), binSize = 1)
-       return(DF)
+      #    DF <- metagene:::getDataFrame(bootstrap_result, 
+      #                                     range=c(-1,1), binSize=1)
+      private$plot_graphic(DF, paste(unique(DF[["group"]]), collapse=" vs "), 
+                            binSize = 1)
+      return(DF)
     },
     export = function(bam_file, region, file) {
       region <- tools::file_path_sans_ext(basename(region))
@@ -169,6 +175,16 @@ metagene <- R6Class("metagene",
   private = list(
     bam_handler = "",
     parallel_job = "",
+    check_param = function(regions, bam_files, padding_size,
+                           cores, verbose) {
+        # Check parameters validity
+        if (!is.logical(verbose)) {
+            stop("verbose must be a logicial value (TRUE or FALSE)")
+        }
+        if (!is.numeric(padding_size) || (padding_size < 0)) {
+            stop("padding_size must be a non-negative integer")
+        }
+    },
     print_verbose = function(to_print) {
       if (self$params[["verbose"]]) {
         cat(paste0(to_print, "\n"))
@@ -223,7 +239,7 @@ metagene <- R6Class("metagene",
       if (class(regions) == "character") {
         names <- sapply(regions, function(x) file_path_sans_ext(basename(x)))
         regions <- private$parallel_job$launch_job(data = regions,
-                                                   FUN = import)
+                                                        FUN = import)
         names(regions) <- names
       } else if (class(regions) == "GRanges") {
         regions <- GRangesList(regions = regions)
@@ -254,11 +270,12 @@ metagene <- R6Class("metagene",
     # Bin matrix columns
     #
     # Input:
-    #    data:       The matrix to bin.
+    #    data:        The matrix to bin.
     #    bin_size:    The number of nucleotides in each bin.
     #
     # OUPUT:
-    #    A matrix with each column representing the mean of bin_size nucleotides.
+    #    A matrix with each column representing the mean of 
+    #    bin_size nucleotides.
     bin_matrix = function(data, bin_size) {
       stopifnot(bin_size %% 1 == 0)
       stopifnot(bin_size > 0)
@@ -267,15 +284,18 @@ metagene <- R6Class("metagene",
       bin_count <- floor(ncol(data) / bin_size)
       if (bin_count < 5) {
         message <- paste0("Number of bins is very small: ", bin_count, "\n")
-        message <- paste0(message, "  You should consider reducing the bin_size value.")
+        message <- paste0(message, "  You should consider reducing the ", 
+                        "bin_size value.")
         warning(message)
       }
-      # If bin_size is not a multiple of ncol(data), we remove the bin that have a
-      # different size than the others.
+      # If bin_size is not a multiple of ncol(data), we remove the bin that 
+      # have a different size than the others.
       remainder <- ncol(data) %% bin_size
       if (remainder != 0) {
-        message <- "bin_size is not a multiple of the number of columns in data.\n"
-        message <- paste0(message, "  Columns ", ncol(data) - remainder, "-", ncol(data), " will be removed.")
+        message <- paste0("bin_size is not a multiple of the number of ", 
+                        "columns in data.\n")
+        message <- paste0(message, "  Columns ", ncol(data) - remainder, "-", 
+                        ncol(data), " will be removed.")
         warning(message)
         data <- data[,1:(ncol(data)-remainder)]
       }
