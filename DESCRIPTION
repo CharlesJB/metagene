@@ -27,7 +27,7 @@ License: Artistic-2.0
 BugReports: https://github.com/CharlesJB/metagene/issues
 VignetteBuilder: knitr
 Depends:
-    R6,
+    R6 (>= 2.0),
     tools,
     rtracklayer,
     GenomicRanges,
