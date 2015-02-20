@@ -32,10 +32,10 @@ Depends:
     rtracklayer,
     GenomicRanges,
     GenomicAlignments,
+    gplots,
     ggplot2,
     BiocParallel
 Imports:
-    gplots,
     biomaRt
 Suggests:
     RUnit,

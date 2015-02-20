@@ -8,17 +8,17 @@
 #' \describe{
 #'   \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
 #'                              cores = SerialParam(), verbose = FALSE)}}
-#'   \item{regions}{Either a \code{list} of bed filenames, a \code{GRanges}
+#'   \item{regions}{Either a \code{vector} of BED filenames, a \code{GRanges}
 #'                  object or a \code{GRangesList} object.}
-#'   \item{bam_files}{A list of bam filenames. The bam files must be indexed.
-#'                    i.e.: if a file is named file.bam, there must be a file
-#'                    named file.bam.bai in the same directory.}
+#'   \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be 
+#'                    indexed. i.e.: if a file is named file.bam, there must be 
+#'                    a file named file.bam.bai in the same directory.}
 #'   \item{padding_size}{The regions will be extended on each side by the value
 #'                       of this parameter. The padding_size must be a 
 #'                       non-negative integer. Default = 0.}
 #'   \item{cores}{The number of cores available to parallelize the analysis.
 #'                Either a positive integer or a \code{BiocParallelParam}.
-#'                Default: SerialParam().}
+#'                Default: \code{SerialParam()}.}
 #'   \item{verbose}{Print progression of the analysis. A logical constant. 
 #'                  Default: \code{FALSE}.}
 #' }
@@ -191,6 +191,26 @@ metagene <- R6Class("metagene",
         if (!isBiocParallel && !isInteger) {
             stop(paste0("cores must be a positive numeric or ", 
                         "BiocParallelParam instance"))
+        }
+        if (!is.vector(bam_files, "character")) {
+            stop("bam_files must be a vector of BAM filenames.")
+        }
+        if (sum(sapply(bam_files, file.exists)) != length(bam_files)) {
+            stop("At least one BAM file does not exist.")
+        }
+        bam_indexes <- paste0(bam_files, ".bai")
+        if (!all(sapply(bam_indexes, file.exists))) {
+            stop("All BAM files must be indexed.")
+        }
+        if (!is(regions, "GRangesList") && !is.vector(regions) 
+            && !is(regions, "GRanges")) {
+            stop(paste0("regions must be either a vector of BED filenames, a ",
+                "GRanges object or a GrangesList object"))
+        }
+        if (is.list(regions) && (sum(unlist(lapply(bamFiles, is.character))) 
+            != length(bamFiles) || sum(unlist(lapply(bamFiles, file.exists))) 
+            != length(bamFiles))) {
+            stop("regions must be a list of existing BED files")
         }
     },
     print_verbose = function(to_print) {

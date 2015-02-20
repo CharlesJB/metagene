@@ -56,3 +56,13 @@ test.metagene_initialize_invalid_padding_value <- function() {
     checkIdentical(obs, exp, msg)
 }
 
+## Numerical padding_size value
+test.metagene_initialize_invalid_padding_value <- function() {
+    obs <- tryCatch(metagene:::metagene$new(padding_size=1.2), 
+                    error=conditionMessage)
+    exp <- "padding_size must be a non-negative integer"
+    msg <- paste0(base_msg, "An non-integer padding_size value did not ", 
+                  "generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+}
+
