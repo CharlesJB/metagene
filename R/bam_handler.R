@@ -5,7 +5,7 @@ Bam_Handler <- R6Class("Bam_Handler",
     initialize = function(bam_files, cores = SerialParam()) {
       # Check prerequisites 
       # All BAM file names must be of string type
-      if (sum(sapply(bam_files, is.character)) != length(bam_files)) {
+      if (!all(sapply(bam_files, is.character))) {
         stop("At least one BAM file name is not a character string.")
       }
 
