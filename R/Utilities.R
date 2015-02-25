@@ -27,9 +27,11 @@ getGenes <- function(specie="human") {
 
     # Set the correct specie
     if (specie == "human") {
+        TSS.human <- NULL
         load(system.file("extdata/TSS.human", package="metagene"))
         toReturn <- TSS.human
     } else {
+        TSS.mouse <- NULL
         load(system.file("extdata/TSS.mouse", package="metagene"))
         toReturn <- TSS.mouse
     }
