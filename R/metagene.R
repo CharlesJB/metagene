@@ -193,23 +193,22 @@ metagene <- R6Class("metagene",
                         "BiocParallelParam instance"))
         }
         if (!is.vector(bam_files, "character")) {
-            stop("bam_files must be a vector of BAM filenames.")
+            stop("bam_files must be a vector of BAM filenames")
         }
-        if (sum(sapply(bam_files, file.exists)) != length(bam_files)) {
-            stop("At least one BAM file does not exist.")
+        if (!all(sapply(bam_files, file.exists))) {
+            stop("At least one BAM file does not exist")
         }
-        bam_indexes <- paste0(bam_files, ".bai")
-        if (!all(sapply(bam_indexes, file.exists))) {
-            stop("All BAM files must be indexed.")
+        if (!all(sapply(paste0(bam_files, ".bai"), file.exists))) {
+            stop("All BAM files must be indexed")
         }
         if (!is(regions, "GRangesList") && !is.vector(regions) 
             && !is(regions, "GRanges")) {
             stop(paste0("regions must be either a vector of BED filenames, a ",
                 "GRanges object or a GrangesList object"))
         }
-        if (is.list(regions) && (sum(unlist(lapply(bamFiles, is.character))) 
-            != length(bamFiles) || sum(unlist(lapply(bamFiles, file.exists))) 
-            != length(bamFiles))) {
+        # Validation specific to regions as a vector
+        if (is.vector(regions) && (!is.character(regions) || 
+            !all(sapply(regions, file.exists)))) {
             stop("regions must be a list of existing BED files")
         }
     },
