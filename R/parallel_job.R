@@ -1,4 +1,4 @@
-# Class used to manage parallell jobs
+# Class used to manage parallel jobs
 Parallel_Job <- R6Class("Parallel_Job",
   public = list(
     parameters = list(),
@@ -34,11 +34,7 @@ Parallel_Job <- R6Class("Parallel_Job",
         }
       } else {
         # Must be one of the BiocParallelParam class
-        if (class(cores) != "SerialParam"
-            & class(cores) != "MulticoreParam"
-            & class(cores) != "SnowParam"
-            & class(cores) != "BatchJobParam"
-            & class(cores) != "DoparParam") {
+        if (!is(cores, "BiocParallelParam")) {
           stop("cores must be positive numeric or BiocParallelParam instance.")
         }
         BPPARAM <- cores

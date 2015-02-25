@@ -50,8 +50,6 @@ getGenes <- function(specie="human") {
 #    A GRanges object with a feature columns corresponding to
 #    ensembl_gene_id
 getGenesBiomart <- function(specie="human") {
-    library(biomaRt)
-
     # Check prerequisites
 
     # The specie argument has to a valid specie
@@ -59,9 +57,7 @@ getGenesBiomart <- function(specie="human") {
         message <- "Incorrect parameter for specie name.\n"
         message <- paste0(message, "Currently supported species are: \"")
         message <- paste0(message, paste(get_valid_species(), 
-                                            collapse="\", \""))
-        message <- paste0(message, "\".")
-
+                                            collapse="\", \""), "\".")
         stop(message)
     }
 
