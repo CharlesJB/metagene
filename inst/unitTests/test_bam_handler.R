@@ -19,37 +19,43 @@ regions <- lapply(metagene:::get_demo_regions(), import)
 ## Test the Bam_Handler$new() function (initialize)
 ###################################################
 
-base_msg <- "Bam_Handler initialize -"
+base_msg <- "Bam_Handler initialize - "
 
 ## Single valid bam file
 test.bam_handler_single_valid_file <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files[1])
-  checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")),
-            msg = "Bam_Handler initialize - Valid initialize call with one bam file did not return correct class")
+  msg <- paste0(base_msg,  
+        "Valid initialize call with one bam file did not return correct class")
+  checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")), msg = msg)
 }
 
 ## Invalid bam file - not indexed
 test.bam_handler_not_indexed_single_bam_file <- function() {
-  obs <- tryCatch(metagene:::Bam_Handler$new(not_indexed_bam_file), error = conditionMessage)
+  obs <- tryCatch(metagene:::Bam_Handler$new(not_indexed_bam_file), 
+                    error = conditionMessage)
   exp <- "All bam files must be indexed."
-  msg <- paste(base_msg, "Single not indexed base file did not return the correct error message")
+  msg <- paste0(base_msg, 
+        "Single not indexed base file did not return the correct error message")
   checkIdentical(obs, exp, msg)
 }
 
 ## Multiple bam files, one not indexed
 test.bam_handler_multiple_bam_file_one_not_indexed <- function() {
   one_bam_file_not_indexed <- c(bam_files, not_indexed_bam_file)
-  obs <- tryCatch(metagene:::Bam_Handler$new(one_bam_file_not_indexed), error = conditionMessage)
+  obs <- tryCatch(metagene:::Bam_Handler$new(one_bam_file_not_indexed), 
+                    error = conditionMessage)
   exp <- "All bam files must be indexed."
-  msg <- paste(base_msg, "Single not indexed base file did not return the correct error message")
+  msg <- paste0(base_msg, 
+        "Single not indexed base file did not return the correct error message")
   checkIdentical(obs, exp, msg)
 }
 
 ## Multiple valid bam files, no cores
 test.bam_handler_valid_files_no_cores <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
-  checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")),
-    msg = "Bam_Handler initialize - Valid initialize call with multiple bam files did not return correct class")
+  msg <- paste0(base_msg, "Valid initialize call with multiple bam files ", 
+                    "did not return correct class")
+  checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")), msg = msg)
 }
 
 ## Named bam files
@@ -57,13 +63,15 @@ test.bam_handler_named_bam_files <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
   obs <- rownames(bam_handler$get_bam_files())
   exp <- file_path_sans_ext(basename(bam_files))
-  msg <- paste(base_msg, "Valid initialize call with unnamed bam files did not return correct values.")
+  msg <- paste(base_msg, "Valid initialize call with unnamed bam files ",
+                    "did not return correct values.")
   checkIdentical(obs, exp, msg)
 
   bam_handler <- metagene:::Bam_Handler$new(bam_files = named_bam_files)
   obs <- rownames(bam_handler$get_bam_files())
   exp <- paste("file", seq(1, length(bam_files)), sep = "_")
-  msg <- paste(base_msg, "Valid initialize call with named bam files did not return correct values.")
+  msg <- paste(base_msg, "Valid initialize call with named bam files did ",
+                    "not return correct values.")
   checkIdentical(obs, exp, msg)
 }
 
@@ -139,8 +147,9 @@ test.bam_handler_get_aligned_count_valid_case <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
   obs <- lapply(bam_files, bam_handler$get_aligned_count)
   names(obs) <- bam_files
-  checkTrue(all(mapply("==", obs, exp)),     
-    msg = "Bam_Handler get_aligned_count valid case does not give the expected aligned count")
+  msg <- paste0(base_msg, "Bam_Handler get_aligned_count valid case does ", 
+                "not give the expected aligned count")
+  checkTrue(all(mapply("==", obs, exp)), msg = msg)
 }
 
 ## Valid use case, multicore
@@ -151,17 +160,20 @@ test.bam_handler_get_aligned_count_valid_case_multicore <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files, cores = 2)
   obs <- lapply(bam_files, bam_handler$get_aligned_count)
   names(obs) <- bam_files
-  checkTrue(all(mapply("==", obs, exp)),
-    msg = "Bam_Handler get_aligned_count valid case does not give the expected aligned count")
+  msg <- paste0(base_msg, "Bam_Handler get_aligned_count valid case does ", 
+                "not give the expected aligned count")
+  checkTrue(all(mapply("==", obs, exp)), msg = msg)
 }
 
 ## Invalid bam file
 test.bam_handler_get_aligned_count_invalid_bam_file <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
-  obs <- tryCatch(bam_handler$get_aligned_count(bam_file = "not_a_valid_bam_file"), error=conditionMessage)
+  obs <- tryCatch(bam_handler$get_aligned_count(bam_file = 
+                            "not_a_valid_bam_file"), error=conditionMessage)
   exp <- "Bam file not_a_valid_bam_file not found."
-  checkEquals(obs, exp,
-    msg = "Bam_Handler get_aligned_count invalid bam file does not give the expected error message")
+  msg <- paste0(base_msg, "Bam_Handler get_aligned_count invalid bam file ", 
+                "does not give the expected error message")
+  checkEquals(obs, exp, msg = msg)
 }
 
 ###################################################
