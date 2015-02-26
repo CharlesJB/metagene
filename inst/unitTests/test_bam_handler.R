@@ -33,7 +33,7 @@ test.bam_handler_single_valid_file <- function() {
 test.bam_handler_not_indexed_single_bam_file <- function() {
   obs <- tryCatch(metagene:::Bam_Handler$new(not_indexed_bam_file), 
                     error = conditionMessage)
-  exp <- "All bam files must be indexed."
+  exp <- "All BAM files must be indexed"
   msg <- paste0(base_msg, 
         "Single not indexed base file did not return the correct error message")
   checkIdentical(obs, exp, msg)
@@ -44,7 +44,7 @@ test.bam_handler_multiple_bam_file_one_not_indexed <- function() {
   one_bam_file_not_indexed <- c(bam_files, not_indexed_bam_file)
   obs <- tryCatch(metagene:::Bam_Handler$new(one_bam_file_not_indexed), 
                     error = conditionMessage)
-  exp <- "All bam files must be indexed."
+  exp <- "All BAM files must be indexed"
   msg <- paste0(base_msg, 
         "Single not indexed base file did not return the correct error message")
   checkIdentical(obs, exp, msg)
@@ -58,15 +58,18 @@ test.bam_handler_valid_files_no_cores <- function() {
   checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")), msg = msg)
 }
 
-## Named bam files
-test.bam_handler_named_bam_files <- function() {
+## Unamed bam files
+test.bam_handler_unamed_bam_files <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
   obs <- rownames(bam_handler$get_bam_files())
   exp <- file_path_sans_ext(basename(bam_files))
   msg <- paste(base_msg, "Valid initialize call with unnamed bam files ",
                     "did not return correct values.")
   checkIdentical(obs, exp, msg)
+}
 
+## Named bam files
+test.bam_handler_named_bam_files <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = named_bam_files)
   obs <- rownames(bam_handler$get_bam_files())
   exp <- paste("file", seq(1, length(bam_files)), sep = "_")
@@ -78,57 +81,80 @@ test.bam_handler_named_bam_files <- function() {
 ## Valid bam files, numeric cores
 test.bam_handler_valid_files_numeric_cores <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files, cores = 2)
-  checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")),
-            msg = "Bam_Handler initialize - Valid initialize call with multiple bam files and numeric cores did not return correct class")
+  msg <- paste0(base_msg, " Valid initialize call with multiple bam files and ", 
+               "numeric cores did not return correct class")
+  checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")), msg = msg)
 }
 
 ## Valid bam files, bpparam cores
 test.bam_handler_valid_files_bpparam_cores <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files, cores = MulticoreParam(workers = 2))
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files, 
+                                    cores = MulticoreParam(workers = 2))
   checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")),
-            msg = "Bam_Handler initialize - Valid initialize call with multiple bam files and bpparam cores did not return correct class")
+            msg = paste0(base_msg, "Valid initialize call with multiple bam ",
+                "files and bpparam cores did not return correct class"))
 }
 
 ## Zero core should not be accepted as an argument
 test.bam_handler_initialize_zero_core_number<- function() {
-  obs <- tryCatch(metagene:::Bam_Handler$new(bam_files = bam_files, cores = 0), error=conditionMessage)
-  exp <- "cores must be positive numeric or BiocParallelParam instance."
-  obs <- tryCatch(metagene:::Bam_Handler$new(bam_files = bam_files, cores = -1), error=conditionMessage)
-  exp <- "cores must be positive numeric or BiocParallelParam instance."
-  checkIdentical(obs, exp,
-    msg = "Bam_Handler initialize - A negative core number argument did not generate an exception with expected message.")
+  obs <- tryCatch(metagene:::Bam_Handler$new(bam_files = bam_files, cores = 0), 
+                  error=conditionMessage)
+  exp <- "cores must be a positive numeric or BiocParallelParam instance"
+  msg <- paste0(base_msg, "A negative core number argument did not ",
+                "generate an exception with expected message.")
+  checkIdentical(obs, exp, msg)
 }
 
-## Something other than an integer number should not be accepted as an core number argument
+## Negative integer core should not be accepted as an argument
+test.bam_handler_initialize_negative_core_number<- function() {
+    obs <- tryCatch(metagene:::Bam_Handler$new(bam_files = bam_files, 
+                    cores = -1), error=conditionMessage)
+    exp <- "cores must be a positive numeric or BiocParallelParam instance"
+    msg <- paste0(base_msg, " A negative core number argument did ",
+                  "not generate an exception with expected message.")
+    checkIdentical(obs, exp, msg)
+}
+
+## Something other than an integer number should not be accepted 
+## as an core number argument
 test.bam_handler_initialize_not_integer_core_number<- function() {
-  obs <- tryCatch(metagene:::Bam_Handler$new(bam_files = bam_files,  cores = 2.22), error=conditionMessage)
-  exp <- "cores must be positive numeric or BiocParallelParam instance."
-  checkIdentical(obs, exp,
-    msg = "Bam_Handler initialize - A decimal core number argument did not generate an exception with expected message.")
+  obs <- tryCatch(metagene:::Bam_Handler$new(bam_files = bam_files,  
+            cores = 2.22), error=conditionMessage)
+  exp <- "cores must be a positive numeric or BiocParallelParam instance"
+  msg <- paste0(base_msg,  "A decimal core number argument did not generate ",
+                "an exception with expected message.")
+  checkIdentical(obs, exp, msg)
 }
 
-## Something other than an integer number should not be accepted as an core number argument
+## Something other than an integer number should not be accepted as 
+## an core number argument
 test.bam_handler_initialize_string_core_number<- function() {
-  obs <- tryCatch(metagene:::Bam_Handler$new(bam_files = bam_files,  cores ="NotAInteger"), error=conditionMessage)
-  exp <- "cores must be positive numeric or BiocParallelParam instance."
-  checkIdentical(obs, exp,
-    msg = "Bam_Handler initialize - A generic text used as a core number did not generate an exception with expected message.")
+  obs <- tryCatch(metagene:::Bam_Handler$new(bam_files = bam_files,  
+            cores ="NotAInteger"), error=conditionMessage)
+  exp <- "cores must be a positive numeric or BiocParallelParam instance"
+  msg <- paste0(base_msg, "A generic text used as a core number did not ", 
+            "generate an exception with expected message." )
+  checkIdentical(obs, exp, msg)
 }
 
-## All bam files must be in string format
+## All BAM files must be in string format
 test.bam_handler_initialize_file_name_not_in_string_format<- function() {
-  obs <- tryCatch(metagene:::Bam_Handler$new(bam_files = c(1,2)), error = conditionMessage)
-  exp <- "At least one BAM file name is not a character string."
-  checkEquals(obs, exp,
-    msg = "Bam_Handler initialize - Integers used as files argument did not generate an exception with expected message.")
+  obs <- tryCatch(metagene:::Bam_Handler$new(bam_files = c(1,2)), 
+            error = conditionMessage)
+  exp <- "bam_files must be a vector of BAM filenames"
+  msg <- paste0(base_msg, "Integers used as files argument did not generate ", 
+            "an exception with expected message.")
+  checkEquals(obs, exp, msg)
 }
 
 ## All bam files must exist
-test.bam_handler_initialize_not_existing_files<- function() {
-  obs <- tryCatch(metagene:::Bam_Handler$new(bam_files = c("NotExistingFile", "NotExistingFile2")), error = conditionMessage)
-  exp <- "At least one BAM file does not exist."
-  checkEquals(obs, exp,
-    msg = "Bam_Handler initialize - Not existing BAM file used as argument did not generate an exception with expected message.")
+test.bam_handler_initialize_with_not_existing_files<- function() {
+  obs <- tryCatch(metagene:::Bam_Handler$new(bam_files = 
+    c("NotExistingFile", "NotExistingFile2")), error = conditionMessage)
+  exp <- "At least one BAM file does not exist"
+  msg <- paste0(base_msg, "Not existing BAM file used as ", 
+         "argument did not generate an exception with expected message.")
+  checkEquals(obs, exp, msg)
 }
 
 ###################################################
