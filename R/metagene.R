@@ -187,7 +187,7 @@ metagene <- R6Class("metagene",
         }
         isBiocParallel = is(cores, "BiocParallelParam")
         isInteger = ((is.numeric(cores) || is.integer(cores)) && 
-                         padding_size > 0 &&  as.integer(cores) == cores)
+                         cores > 0 &&  as.integer(cores) == cores)
         if (!isBiocParallel && !isInteger) {
             stop(paste0("cores must be a positive numeric or ", 
                         "BiocParallelParam instance"))
