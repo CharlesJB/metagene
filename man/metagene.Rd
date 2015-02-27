@@ -21,17 +21,17 @@ metagene plots on the data (or a subset of the data).
 \describe{
   \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
                              cores = SerialParam(), verbose = FALSE)}}
-  \item{regions}{Either a \code{list} of bed filenames, a \code{GRanges}
+  \item{regions}{Either a \code{vector} of BED filenames, a \code{GRanges}
                  object or a \code{GRangesList} object.}
-  \item{bam_files}{A list of bam filenames. The bam files must be indexed.
-                   i.e.: if a file is named file.bam, there must be a file
-                   named file.bam.bai in the same directory.}
+  \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
+                   indexed. i.e.: if a file is named file.bam, there must be
+                   a file named file.bam.bai in the same directory.}
   \item{padding_size}{The regions will be extended on each side by the value
                       of this parameter. The padding_size must be a
                       non-negative integer. Default = 0.}
   \item{cores}{The number of cores available to parallelize the analysis.
                Either a positive integer or a \code{BiocParallelParam}.
-               Default: SerialParam().}
+               Default: \code{SerialParam()}.}
   \item{verbose}{Print progression of the analysis. A logical constant.
                  Default: \code{FALSE}.}
 }
@@ -46,18 +46,22 @@ metagene plots on the data (or a subset of the data).
   \item{}{\code{df <- mg$plot(design = NULL, regions_group = NULL,
               bin_size = 100, alpha = 0.05, sample_count = 1000)}}
   \item{design}{A \code{data.frame} that describe to experiment to plot. The
-                first column must be the filenames. The other columns (at
-                least one is required) represent how the files should be
-                grouped. All the files in the same group will be combined
-                before doing the statistical analysis. For each column,
-                there will be one line with its ribon in the metagene plot.
+                first column must be the existing BAM filenames. The other
+                columns (at least one is required) represent how the files
+                should be grouped. All those colums should be in numeric
+                format. All the files in the same group will be
+                combined before doing the statistical analysis. For each
+                column, there will be one line with its ribon in
+                the metagene plot. At least one file should be selected (not
+                zero).
                 Default = NULL.
 
                 0: Do not use file.
                 1: File is input.
                 2: File is control.}
-  \item{region_group}{A list of region names to include in the analysis. If
-                     \code{NULL}, all the regions used when creating the
+  \item{region_group}{A \code{list} or a \code{vector} of region names to
+                     include in the analysis. If \code{NULL}, all the
+                     regions used when creating the
                      \code{metagene} object will be used.
                      Default: \code{NULL}}
   \item{bin_size}{The size of bin to use before calculating the statistics.

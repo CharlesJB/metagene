@@ -12,6 +12,7 @@ if(FALSE) {
 bam_files <- get_demo_bam_files()
 named_bam_files <- bam_files
 not_indexed_bam_file <- metagene:::get_not_indexed_bam_file()
+regions <- metagene:::get_demo_regions()
 
 ###################################################
 ## Test the metagene$new() function (initialize)
@@ -150,3 +151,103 @@ test.metagene_initialize_invalid_array_region_value <- function() {
             "did not generate an exception with expected message." )
     checkIdentical(obs, exp, msg)
 } 
+
+
+###################################################
+## Test the metagene$plot() function 
+###################################################
+
+base_msg <- "metagene plot - "
+
+mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+
+# Not valid design object
+test.metagene_plot_invalid_design <- function() {
+    obs <- tryCatch(mg$plot(design=c(1,2)), 
+                    error=conditionMessage)
+    exp <- "design must be a data.frame object"
+    msg <- paste0(base_msg, "A vector design object ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+} 
+
+# Design data.frame with not enough columns
+test.metagene_plot_invalid_design_data_frame <- function() {
+    obs <- tryCatch(mg$plot(design=data.frame(a=c("ZOMBIE_ONE", "ZOMBIE_TWO"))), 
+                    error=conditionMessage)
+    exp <- "design must have at least 2 columns"
+    msg <- paste0(base_msg, "A design data.frame with only one column ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+} 
+
+# Design data.frame with invalid first column
+test.metagene_plot_invalid_design_first_column <- function() {
+    obs <- tryCatch(mg$plot(design=data.frame(a=c(1,3), 
+                zombies=c("ZOMBIE_ONE", "ZOMBIE_TWO"))), 
+                error=conditionMessage)
+    exp <- "The first column of design must be BAM filenames"
+    msg <- paste0(base_msg, "A design data.frame with numbers in first column ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+} 
+
+# Design data.frame with invalid second column
+test.metagene_plot_invalid_design_second_column <- function() {
+    designTemp<-data.frame(a=named_bam_files, 
+                           zombies=rep("ZOMBIE_ONE", length(named_bam_files)))
+    obs <- tryCatch(mg$plot(design=designTemp), error=conditionMessage)
+    exp <- paste0("All design column, except the first one, must be in ", 
+                    "numeric format")
+    msg <- paste0(base_msg, "A design data.frame with characters in second column ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+} 
+
+# Design data.frame with invalid second column
+test.metagene_plot_invalid_design_not_defined_file <- function() {
+    designNew<-data.frame(a=c(named_bam_files, "I am not a file"), 
+                          b=rep(1, length(named_bam_files) + 1))
+    obs <- tryCatch(mg$plot(design=designNew), 
+                        error=conditionMessage)
+    exp <- "At least one BAM file does not exist"
+    msg <- paste0(base_msg, "A design data.frame with not existing file in ", 
+            "first column did not generate an exception with expected message.")
+    checkIdentical(obs, exp, msg)
+} 
+
+# Design using zero file
+test.metagene_plot_design_using_no_file <- function() {
+    designNew<-data.frame(a=named_bam_files, 
+                          b=rep(0, length(named_bam_files)))
+    obs <- tryCatch(mg$plot(design=designNew), 
+                    error=conditionMessage)
+    exp <- "At least one BAM file must be used in the design"
+    msg <- paste0(base_msg, "A design data.frame which does not use BAM file ", 
+                  "did not generate an exception with expected message.")
+    checkIdentical(obs, exp, msg)
+} 
+
+# Invalid regions_group object
+test.metagene_plot_invalid_region_group <- function() {
+    obs <- tryCatch(mg$plot(regions_group=array(NA, dim = c(2,2,2))), 
+                    error=conditionMessage)
+    exp <- "regions_group should be a list or a vector"
+    msg <- paste0(base_msg, "A invalid regions_group object ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+} 
+
+# Invalid regions_group object
+test.metagene_plot_region <- function() {
+    obs <- tryCatch(mg$plot(regions_group=c(regions, "Hello Word!")), 
+                    error=conditionMessage)
+    exp <- paste0("All elements in regions_group should be regions ",
+                  "defined during the creation of metagene object")
+    msg <- paste0(base_msg, "A invalid regions_group object ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+} 
+
+
+
