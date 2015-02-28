@@ -64,13 +64,13 @@
 #'                       Default: 1000.}
 #' }
 #' \describe{
-#'   \item{}{\code{mg$export(bam_file, region, file}}
+#'   \item{}{\code{mg$export(bam_file, region, file)}}
 #'   \item{bam_file}{The name of the bam file to export.}
 #'   \item{region}{The name of the region to export.}
 #'   \item{file}{The name of the ouput file.}
 #' }
 #' \describe{
-#'   \item{}{\code{mg$heatmap(region, bam_file, bin_size}}
+#'   \item{}{\code{mg$heatmap(region, bam_file, bin_size)}}
 #'   \item{region}{The name of the region to export.}
 #'   \item{bam_file}{The name of the bam file to export.}
 #'   \item{bin_size}{The size of the bin to produce before creating heatmap.}
