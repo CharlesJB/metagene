@@ -5,6 +5,7 @@
 if(FALSE) {
   library( "RUnit" )
   library( "metagene" )
+  library( "rtracklayer" )
 }
 
 ### }}}
@@ -13,7 +14,7 @@ bam_files <- get_demo_bam_files()
 named_bam_files <- bam_files
 names(named_bam_files) <- paste("file", seq(1, length(bam_files)), sep = "_")
 not_indexed_bam_file <- metagene:::get_not_indexed_bam_file()
-regions <- lapply(metagene:::get_demo_regions(), import)
+regions <- lapply(metagene:::get_demo_regions(), rtracklayer::import)
 
 ###################################################
 ## Test the Bam_Handler$new() function (initialize)

@@ -216,7 +216,7 @@ test.metagene_plot_invalid_design_not_defined_file <- function() {
     checkIdentical(obs, exp, msg)
 } 
 
-# Design using zero file
+# Design using zero file (0 in all rows of the design object)
 test.metagene_plot_design_using_no_file <- function() {
     designNew<-data.frame(a=named_bam_files, 
                           b=rep(0, length(named_bam_files)))

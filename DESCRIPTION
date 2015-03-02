@@ -29,13 +29,13 @@ VignetteBuilder: knitr
 Depends:
     R6 (>= 2.0),
     tools,
-    rtracklayer,
     GenomicRanges,
     GenomicAlignments,
     gplots,
     ggplot2,
     BiocParallel
 Imports:
+    rtracklayer,
     biomaRt
 Suggests:
     RUnit,
