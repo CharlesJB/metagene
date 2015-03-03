@@ -31,11 +31,11 @@ Depends:
     tools,
     GenomicRanges,
     GenomicAlignments,
-    gplots,
     ggplot2,
     BiocParallel
 Imports:
     rtracklayer,
+    gplots,
     biomaRt
 Suggests:
     RUnit,

@@ -213,7 +213,7 @@ metagene <- R6Class("metagene",
     heatmap = function(region, bam_file, bin_size = 10) {
         region <- tools::file_path_sans_ext(basename(region))
         data <- private$get_matrix(region, bam_file, bin_size)
-        heatmap.2(log2(data+1), dendrogram = "none", trace = "none",
+        gplots::heatmap.2(log2(data+1), dendrogram = "none", trace = "none",
                 labCol = NA, labRow = NA, margins = c(2,2),
                 xlab = "position", ylab = "log2(coverages)")
     }
