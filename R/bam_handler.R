@@ -44,8 +44,8 @@
 #'   \item{regions}{A not empty \code{GRanges} object.}
 #' }
 #' @examples
-#'  \dontrun{
-#'  count <- get_aligned_count(bam_file)}
+#'  bh <- metagene:::Bam_Handler$new(bam_files=get_demo_bam_files())
+#'  bh$get_aligned_count(metagene:::get_demo_bam_files()[1])
 #'
 #' @importFrom R6 R6Class
 #' @export

@@ -98,6 +98,6 @@ getGenesBiomart <- function(specie="human") {
 # Output:
 #   List of currently supported species
 get_valid_species<-function() {
-	# Return list of valid species
-	return(c("mouse", "human"))
+    # Return list of valid species
+    return(c("mouse", "human"))
 }
