@@ -140,6 +140,12 @@ Bam_Handler <- R6Class("Bam_Handler",
     bam_files = data.frame(),
     parallel_job = '',
     check_bam_file = function(bam_file) {
+        if (!is.character(bam_file)) {
+            stop("bam_file class should be character")
+        }
+        if (length(bam_file) != 1) {
+            stop("bam_file should contain exactly 1 bam filename")
+        }
         if (! bam_file %in% private$bam_files[["bam"]]) {
             stop(paste0("Bam file ", bam_file, " not found."))
         }
