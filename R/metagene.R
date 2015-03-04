@@ -24,7 +24,7 @@
 #' }
 #'
 #'  \code{metagene$new} returns a \code{metagene} object that contains the
-#'  coverages for every bam files in the regions from the \code{regions} param.
+#'  coverages for every BAM files in the regions from the \code{regions} param.
 #'
 #' @return
 #' \code{metagene$new} returns a \code{metagene} object which contains the
@@ -42,8 +42,10 @@
 #'                 combined before doing the statistical analysis. For each 
 #'                 column, there will be one line with its ribon in 
 #'                 the metagene plot. At least one file should be selected (not
-#'                 zero).
-#'                 Default = NULL.
+#'                 zero). If \code{NULL}, all BAM files passed as argument 
+#'                 during \code{metagene} object creation will be used to 
+#'                 create a default design. 
+#'                 Default = \code{NULL}.
 #'
 #'                 0: Do not use file.
 #'                 1: File is input.
@@ -55,7 +57,8 @@
 #'                      Default: \code{NULL}}
 #'   \item{bin_size}{The size of bin to use before calculating the statistics.
 #'                   larger \code{bin_size} will reduce the calculation time
-#'                   and produce smoother curves. Default = 100.}
+#'                   and produce smoother curves. It must be a positive 
+#'                   integer. Default = 100.}
 #'   \item{alpha}{The condifence interval (CI) to represent with a ribbon. Must
 #'                be a value between 0 and 1. With a value of 0.05, the ribbon
 #'                will represent 95% of the estimated values of the means.
@@ -73,7 +76,8 @@
 #'   \item{}{\code{mg$heatmap(region, bam_file, bin_size)}}
 #'   \item{region}{The name of the region to export.}
 #'   \item{bam_file}{The name of the bam file to export.}
-#'   \item{bin_size}{The size of the bin to produce before creating heatmap.}
+#'   \item{bin_size}{The size of the bin to produce before creating heatmap. It
+#'                      must be a positive integer. Default: 10.}
 #' }
 #'
 #' @examples
@@ -211,6 +215,12 @@ metagene <- R6Class("metagene",
         invisible(coverage)
     },
     heatmap = function(region, bam_file, bin_size = 10) {
+        # Check that bin_size is a positive integer
+        if (!((is.numeric(bin_size) || is.integer(bin_size)) && 
+                bin_size > 0 &&  as.integer(bin_size) == bin_size)) {
+            stop("bin_size must be a positive integer")
+        }
+        
         region <- tools::file_path_sans_ext(basename(region))
         data <- private$get_matrix(region, bam_file, bin_size)
         gplots::heatmap.2(log2(data+1), dendrogram = "none", trace = "none",

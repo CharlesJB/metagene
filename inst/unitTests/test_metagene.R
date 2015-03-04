@@ -249,5 +249,40 @@ test.metagene_plot_region <- function() {
     checkIdentical(obs, exp, msg)
 } 
 
+###################################################
+## Test the metagene$heatmap() function 
+###################################################
+
+base_msg <- "metagene heatmap - "
+
+# Invalid negative bin_size
+test.metagene_heatmap_negative_bin_size <- function() {
+    obs <- tryCatch(mg$heatmap(bin_size=-2), 
+                    error=conditionMessage)
+    exp <- "bin_size must be a positive integer"
+    msg <- paste0(base_msg, "A negative bin_size ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+} 
+
+# Invalid zero bin_size
+test.metagene_heatmap_negative_bin_size <- function() {
+    obs <- tryCatch(mg$heatmap(bin_size=0), 
+                    error=conditionMessage)
+    exp <- "bin_size must be a positive integer"
+    msg <- paste0(base_msg, "A negative bin_size ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+} 
+
+# Invalid numerical bin_size
+test.metagene_heatmap_negative_bin_size <- function() {
+    obs <- tryCatch(mg$heatmap(bin_size=2.3), 
+                    error=conditionMessage)
+    exp <- "bin_size must be a positive integer"
+    msg <- paste0(base_msg, "A negative bin_size ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+} 
 
 
