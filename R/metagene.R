@@ -326,8 +326,6 @@ metagene <- R6Class("metagene",
             names(regions) <- names
         } else if (class(regions) == "GRanges") {
             regions <- GRangesList(regions = regions)
-        } else if (class(regions) == "GRangesList") {
-            regions <- regions
         }
         # TODO: Check if there is a id column in the mcols of every ranges.
         #       If not, add one by merging seqnames, start and end.
