@@ -209,7 +209,7 @@ metagene <- R6Class("metagene",
         alignments <- GenomicAlignments::readGAlignments(bam_file, 
                                                             param = param)
         weight <- 1 - private$bam_handler$get_rpm_coefficient(bam_file)
-        seqlevels(alignments) <- seqlevels(region)
+        GenomeInfoDb::seqlevels(alignments) <- GenomeInfoDb::seqlevels(region)
         coverage <- GenomicAlignments::coverage(alignments, weight=weight)
         rtracklayer::export(coverage, file, "BED")
         invisible(coverage)
@@ -223,7 +223,7 @@ metagene <- R6Class("metagene",
         
         region <- tools::file_path_sans_ext(basename(region))
         data <- private$get_matrix(region, bam_file, bin_size)
-        gplots::heatmap.2(log2(data+1), dendrogram = "none", trace = "none",
+        heatmap.2(log2(data+1), dendrogram = "none", trace = "none",
                 labCol = NA, labRow = NA, margins = c(2,2),
                 xlab = "position", ylab = "log2(coverages)")
     }
@@ -337,7 +337,7 @@ metagene <- R6Class("metagene",
             start(x)[start(x) < 0] <- 1
             end(x) <- end(x) + self$params$padding_size
             # Clean seqlevels
-            seqlevels(x) <- unique(as.character(seqnames(x)))
+            GenomeInfoDb::seqlevels(x) <- unique(as.character(seqnames(x)))
             x
         }))
     },
