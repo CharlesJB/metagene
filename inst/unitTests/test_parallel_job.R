@@ -86,7 +86,7 @@ test.parallel_job_get_core_count_valid_multiple_core <- function() {
 
 ## Valid case, multiple cores BiocParallelParam
 test.parallel_job_get_core_count_valid_multiple_core_biocparallelparam <- function() {
-  parallel_job <- metagene:::Parallel_Job$new(cores = MulticoreParam(workers = 2))
+  parallel_job <- metagene:::Parallel_Job$new(cores = BiocParallel::MulticoreParam(workers = 2))
   obs <- parallel_job$get_core_count()
   exp <- 2
   checkIdentical(obs, exp,
@@ -120,7 +120,7 @@ test.parallel_job_set_core_count_valid_multiple_core <- function() {
 ## Valid case, multiple cores BiocParallelParam
 test.parallel_job_set_core_count_valid_multiple_core_biocparallelparam <- function() {
   parallel_job <- metagene:::Parallel_Job$new(cores = 1)
-  parallel_job$set_core_count(cores = MulticoreParam(workers = 2))
+  parallel_job$set_core_count(cores = BiocParallel::MulticoreParam(workers = 2))
   obs <- parallel_job$get_core_count()
   exp <- 2
   checkIdentical(obs, exp,
