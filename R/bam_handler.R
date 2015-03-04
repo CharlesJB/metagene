@@ -162,7 +162,7 @@ Bam_Handler <- R6Class("Bam_Handler",
         # To speed up analysis we split the file by chromosome
         cores <- private$parallel_job$get_core_count()
         chr <- scanBamHeader(bam_file)[[bam_file]]$targets
-        chr <- GRanges(seqnames = names(chr), IRanges(1, chr))
+        chr <- GRanges(seqnames = names(chr), IRanges::IRanges(1, chr))
         do.call(sum, private$parallel_job$launch_job(
                             data = suppressWarnings(split(chr, 1:cores)),
                             FUN = function(x) {
@@ -174,7 +174,7 @@ Bam_Handler <- R6Class("Bam_Handler",
     extract_coverage_by_regions = function(regions, bam_file, count=NULL) {
         param <- Rsamtools:::ScanBamParam(which=regions)
         alignment <- GenomicAlignments:::readGAlignments(bam_file, param=param)
-        seqlevels(alignment) <- seqlevels(regions)
+        GenomeInfoDb::seqlevels(alignment) <- GenomeInfoDb::seqlevels(regions)
         if (!is.null(count)) {
             weight <- 1 / (count / 1000000)
             GenomicAlignments::coverage(alignment, weight=weight)[regions]

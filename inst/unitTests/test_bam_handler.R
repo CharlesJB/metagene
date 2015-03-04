@@ -63,7 +63,7 @@ test.bam_handler_valid_files_no_cores <- function() {
 test.bam_handler_unamed_bam_files <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
   obs <- rownames(bam_handler$get_bam_files())
-  exp <- file_path_sans_ext(basename(bam_files))
+  exp <- tools::file_path_sans_ext(basename(bam_files))
   msg <- paste(base_msg, "Valid initialize call with unnamed bam files ",
                     "did not return correct values.")
   checkIdentical(obs, exp, msg)
@@ -90,7 +90,7 @@ test.bam_handler_valid_files_numeric_cores <- function() {
 ## Valid bam files, bpparam cores
 test.bam_handler_valid_files_bpparam_cores <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files, 
-                                    cores = MulticoreParam(workers = 2))
+                                    cores = BiocParallel::MulticoreParam(workers = 2))
   checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")),
             msg = paste0(base_msg, "Valid initialize call with multiple bam ",
                 "files and bpparam cores did not return correct class"))
@@ -253,7 +253,7 @@ test.bam_handler_get_normalized_coverage_valid_use <- function() {
   bam_file <- bam_files[1]
   obs <- bam_handler$get_normalized_coverage(bam_file, region)
   weight <- 1 / (bam_handler$get_aligned_count(bam_file) / 1000000)
-  exp <- coverage(readGAlignments(bam_file, param = ScanBamParam(which = region)), weight = weight)[region]
+  exp <- GenomicAlignments::coverage(GenomicAlignments::readGAlignments(bam_file, param = Rsamtools::ScanBamParam(which = region)), weight = weight)[region]
   msg <- paste(base_msg, "Valid use do not give the expected results")
   checkIdentical(obs, exp, msg)
 }
@@ -282,7 +282,7 @@ test.bam_handler_get_normalized_coverage_invalid_regions_class <- function() {
 test.bam_handler_get_normalized_coverage_invalid_regions_length <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
   bam_file <- bam_files[1]
-  obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file, regions = GRanges()), error = conditionMessage)
+  obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file, regions = GenomicRanges::GRanges()), error = conditionMessage)
   exp <- "Parameter regions must not be an empty GRanges object"
   msg <- paste(base_msg, "Invalid regions length did not give the expected error message.")
   checkIdentical(obs, exp, msg)
