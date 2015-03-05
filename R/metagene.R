@@ -209,7 +209,7 @@ metagene <- R6Class("metagene",
         alignments <- GenomicAlignments::readGAlignments(bam_file, 
                                                             param = param)
         weight <- 1 - private$bam_handler$get_rpm_coefficient(bam_file)
-        GenomeInfoDb::seqlevels(alignments) <- GenomeInfoDb::seqlevels(region)
+        seqlevels(alignments) <- seqlevels(region)
         coverage <- GenomicAlignments::coverage(alignments, weight=weight)
         rtracklayer::export(coverage, file, "BED")
         invisible(coverage)
