@@ -335,7 +335,7 @@ metagene <- R6Class("metagene",
             start(x)[start(x) < 0] <- 1
             end(x) <- end(x) + self$params$padding_size
             # Clean seqlevels
-            GenomeInfoDb::seqlevels(x) <- unique(as.character(seqnames(x)))
+            seqlevels(x) <- unique(as.character(seqnames(x)))
             x
         }))
     },
