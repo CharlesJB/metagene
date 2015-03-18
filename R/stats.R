@@ -186,11 +186,10 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
       # Calculate results
       position <- seq(range[1], range[2], length.out = ncol(data))
       if (!is.null(ctrl)) {
-        res <- data.frame(do.call(rbind, mapply(
-          private$calculate_statistic,
+        res <- data.frame(do.call(rbind, lapply(
           split(data, rep(1:ncol(data), each = nrow(data))),
-          split(ctrl, rep(1:ncol(ctrl), each = nrow(ctrl))),
-          SIMPLIFY = FALSE)))
+          private$calculate_statistic,
+          ctrl = ctrl)))
       } else {
         res <- data.frame(do.call(rbind, lapply(
           split(data, rep(1:ncol(data), each = nrow(data))),
@@ -199,13 +198,13 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
       cbind(position, res, row.names = NULL)
     },
     # Calculate the statistic for a single column
-    calculate_statistic = function(column_values, ctrl_values = NULL) {
+    calculate_statistic = function(column_values, ctrl = NULL) {
       # Check param
       stopifnot(is.numeric(column_values))
       stopifnot(length(column_values) > 0)
-      if (!is.null(ctrl_values)) {
-        stopifnot(is.numeric(ctrl_values))
-        stopifnot(length(ctrl_values) > 0)
+      if (!is.null(ctrl)) {
+        stopifnot(is.numeric(ctrl))
+        stopifnot(length(ctrl) > 0)
       }
 
       # Fetch relevant parameters
@@ -213,12 +212,8 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
       average <- private$parameters[["average"]]
 
       # Calculate result
-      replicates <- private$generate_draw_values(column_values)
-      if (!is.null(ctrl_values)) {
-        ctrl <- private$generate_draw_values(ctrl_values)
-        replicates <- replicates - ctrl
-        replicates[replicates < 0] <- 0
-      }
+      # Note: generate_draw_values remove ctrl values
+      replicates <- private$generate_draw_values(column_values, ctrl)
       values <- private$calculate_replicate_values(replicates)
       if (private$parameters[["debug"]]) {
         i <- length(private$replicates) + 1
@@ -230,7 +225,7 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
       names(res) <- c("value", "qinf", "qsup")
       res
     },
-    generate_draw_values = function(column_values) {
+    generate_draw_values_old = function(column_values) {
       sample_count <- private$parameters[["sample_count"]]
       sample_size <- private$parameters[["sample_size"]]
 
@@ -238,6 +233,24 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
         data[sample(1:length(data), sample_size, replace=TRUE)]
       }
       replicate(sample_count, sample_data(column_values))
+    },
+    generate_draw_values = function(column_values, ctrl = NULL) {
+      sample_count <- private$parameters[["sample_count"]]
+      sample_size <- private$parameters[["sample_size"]]
+
+      sample_data <- function() {
+        if (is.null(ctrl)) {
+          column_values[sample(seq_along(column_values), sample_size,
+                          replace=TRUE)]
+        } else {
+          row <- sample(1:length(column_values), sample_size, replace = TRUE)
+          col <- sample(1:ncol(ctrl), sample_size, replace = TRUE)
+          data <- column_values[row]
+          ctrl <- as.numeric(ctrl)[nrow(ctrl) * (col - 1) + row]
+          data - ctrl
+        }
+      }
+      replicate(sample_count, sample_data())
     },
     calculate_replicate_values = function(replicates) {
       workers <- private$parallel_job$get_core_count()
