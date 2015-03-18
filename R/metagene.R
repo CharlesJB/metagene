@@ -133,38 +133,24 @@ metagene <- R6Class("metagene",
     plot = function(design = NULL, regions_group = NULL, bin_size = 100,
                     alpha = 0.05, sample_count = 1000) {
         # Most parameters validation are done in Bootstrap_Stat constructor
-        if(!is.null(design) && !is.data.frame(design)) {
-            stop("design must be a data.frame object")
-        }
-        if(!is.null(design) && dim(design)[2] < 2) {
-            stop("design must have at least 2 columns")
-        }
-        if (!is.null(design) && !(is.character(design[,1]) || 
-                                    is.factor(design[,1]))) {
-            stop("The first column of design must be BAM filenames")
-        }
-        if (!is.null(design) && !all(apply(design[, -1, drop=FALSE], 
-                                        MARGIN=2, is.numeric))) {
-            stop(paste0("All design column, except the first one, must be in ",
-                            "numeric format"))
-        }
+        private$check_design(design)
         if (!is.null(regions_group) && !(is.vector(regions_group) ||
                         is.list(regions_group))) {
             stop("regions_group should be a list or a vector")
         }
-        if (!is.null(regions_group) &&  
+        if (!is.null(regions_group) &&
                 !all(unlist(regions_group) %in%  names(self$regions))) {
             stop(paste0("All elements in regions_group should be regions ",
                         "defined during the creation of metagene object"))
         }
         # At least one file must be used in the design
-        if (!is.null(design) && 
+        if (!is.null(design) &&
                 sum(rowSums(design[ , -1, drop=FALSE]) > 0) == 0) {
             stop("At least one BAM file must be used in the design")
         }
         # Test only BAM file used in the design
-        if(!is.null(design) && 
-            !all(apply(design[rowSums(design[ , -1, drop=FALSE]) > 0, 1, 
+        if(!is.null(design) &&
+            !all(apply(design[rowSums(design[ , -1, drop=FALSE]) > 0, 1,
                             drop=FALSE], MARGIN = 2, FUN=file.exists))) {
             stop("At least one BAM file does not exist")
         }
@@ -175,8 +161,8 @@ metagene <- R6Class("metagene",
         self$matrices <- private$produce_matrices(regions_group, bin_size)
 
         # 2. Calculate means and confidence intervals
-        sample_size <- as.integer(min(sapply(self$matrices, sapply, sapply, 
-                                            nrow)))
+        sample_size <- as.integer(min(unlist(sapply(self$matrices, sapply,
+                                              sapply, nrow))))
         DF <- data.frame(group = character(), position = numeric(),
                        value = numeric(), qinf = numeric(), qsup = numeric())
         for (region in names(self$matrices)) {
@@ -237,7 +223,7 @@ metagene <- R6Class("metagene",
         if (!is.logical(verbose)) {
             stop("verbose must be a logicial value (TRUE or FALSE)")
         }
-        if (!(is.numeric(padding_size) || is.integer(padding_size)) || 
+        if (!(is.numeric(padding_size) || is.integer(padding_size)) ||
             padding_size < 0 || as.integer(padding_size) != padding_size) {
             stop("padding_size must be a non-negative integer")
         }
@@ -266,6 +252,23 @@ metagene <- R6Class("metagene",
         if (is.vector(regions) && (!is.character(regions) || 
             !all(sapply(regions, file.exists)))) {
             stop("regions must be a list of existing BED files")
+        }
+    },
+    check_design = function(design) {
+        if(!is.null(design) && !is.data.frame(design)) {
+            stop("design must be a data.frame object")
+        }
+        if(!is.null(design) && dim(design)[2] < 2) {
+            stop("design must have at least 2 columns")
+        }
+        if (!is.null(design) && !(is.character(design[,1]) ||
+                                    is.factor(design[,1]))) {
+            stop("The first column of design must be BAM filenames")
+        }
+        if (!is.null(design) && !all(apply(design[, -1, drop=FALSE],
+                                        MARGIN=2, is.numeric))) {
+            stop(paste0("All design column, except the first one, must be in ",
+                            "numeric format"))
         }
     },
     print_verbose = function(to_print) {
