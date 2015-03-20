@@ -316,8 +316,9 @@ metagene <- R6Class("metagene",
         if (length(bam_files) == 0) {
             return(NULL)
         }
-        res <- do.call(rbind, lapply(bam_files, function(bam_file)
+        res <- do.call("+", lapply(bam_files, function(bam_file)
             t(sapply(self$coverages[[bam_file]][[region]], as.numeric))))
+        res <- res / length(bam_files)
         private$bin_matrix(res, bin_size)
     },
     prepare_regions = function(regions) {
