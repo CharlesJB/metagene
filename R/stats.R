@@ -225,15 +225,6 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
       names(res) <- c("value", "qinf", "qsup")
       res
     },
-    generate_draw_values_old = function(column_values) {
-      sample_count <- private$parameters[["sample_count"]]
-      sample_size <- private$parameters[["sample_size"]]
-
-      sample_data <- function(data) {
-        data[sample(1:length(data), sample_size, replace=TRUE)]
-      }
-      replicate(sample_count, sample_data(column_values))
-    },
     generate_draw_values = function(column_values, ctrl = NULL) {
       sample_count <- private$parameters[["sample_count"]]
       sample_size <- private$parameters[["sample_size"]]
@@ -247,7 +238,8 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
           col <- sample(1:ncol(ctrl), sample_size, replace = TRUE)
           data <- column_values[row]
           ctrl <- as.numeric(ctrl)[nrow(ctrl) * (col - 1) + row]
-          data - ctrl
+          data <- data - ctrl
+          data[data < 0] <- 0
         }
       }
       replicate(sample_count, sample_data())
