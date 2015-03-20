@@ -318,6 +318,7 @@ metagene <- R6Class("metagene",
         }
         res <- do.call("+", lapply(bam_files, function(bam_file)
             t(sapply(self$coverages[[bam_file]][[region]], as.numeric))))
+        res[res < 0] <- 0
         res <- res / length(bam_files)
         private$bin_matrix(res, bin_size)
     },
