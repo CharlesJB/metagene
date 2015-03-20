@@ -300,12 +300,12 @@ metagene <- R6Class("metagene",
                 matrices[[region]][[design]] <- list()
 
                 i <- self$design[[design]] == 1
-                bam_files <- self$design[,1][i]
+                bam_files <- as.character(self$design[,1][i])
                 matrices[[region]][[design]][["input"]] <-
                 private$get_matrix(region, bam_files, bin_size)
 
                 i <- self$design[[design]] == 2
-                bam_files <- self$design[,1][i]
+                bam_files <- as.character(self$design[,1][i])
                 matrices[[region]][[design]][["ctrl"]] <-
                 private$get_matrix(region, bam_files, bin_size)
          }
