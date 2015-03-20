@@ -240,6 +240,7 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
           ctrl <- as.numeric(ctrl)[nrow(ctrl) * (col - 1) + row]
           data <- data - ctrl
           data[data < 0] <- 0
+          data
         }
       }
       replicate(sample_count, sample_data())
