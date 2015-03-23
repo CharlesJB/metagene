@@ -181,7 +181,21 @@ metagene <- R6Class("metagene",
                 DF <- rbind(DF, current_DF)
             }
         }
-        # 3. Produce the graph
+        
+        #
+        # 3. Test de Friedman
+        #
+        # Friedman only done when more than 1 curve is present
+        # 
+        browser()
+        friedman <- NULL
+        if (length(unique(DF[["group"]])) > 1) {
+            friedman <- mu.friedman.test(DF[["value"]], group=DF[["group"]], 
+                             block=DF[["position"]])
+        }
+        print(friedman)
+        
+        # 4. Produce the graph
         #    DF <- metagene:::getDataFrame(bootstrap_result, 
         #                                     range=c(-1,1), binSize=1)
         private$plot_graphic(DF, paste(unique(DF[["group"]]), collapse=" vs "),
@@ -404,7 +418,7 @@ metagene <- R6Class("metagene",
     #
     # Ouput:
     #    The graph that is printed on the current device.
-    plot_graphic = function(DF, title, binSize) {
+    plot_graphic = function(DF, title, binSize, friedman=NULL) {
         # Prepare y label
         if (binSize > 1) {
             yLabel <- paste("Mean RPM for each", binSize, "positions")
@@ -423,7 +437,11 @@ metagene <- R6Class("metagene",
             theme(axis.title.x = element_blank())+
             ylab(yLabel)+
             ggtitle(title)
+        if (!is.null(friedman)){
+            p <- p + xlab(paste0("Friedman p-value : ", friedman$p.value))
+        }
         print(p)
     }
   )
 ) 
+
