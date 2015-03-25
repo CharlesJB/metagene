@@ -413,7 +413,8 @@ metagene <- R6Class("metagene",
     # Input:
     #    DF:       The data frame produced by the plot.getDataFrame function
     #    title:    The title of the graph
-    #
+    #    binSize:  The number of nucleotides in each bin
+    #    friedman: The Friedman test result or NULL if not test done
     # Ouput:
     #    The graph that is printed on the current device.
     plot_graphic = function(DF, title, binSize, friedman=NULL) {
@@ -430,17 +431,16 @@ metagene <- R6Class("metagene",
         p <- ggplot(DF, aes(x=position, y=value, ymin=qinf, ymax=1.25*qsup)) +
             geom_ribbon(aes(fill=group), alpha=0.3) +
             geom_line(aes(color=group), size=1, litype=1, bg="transparent") +
-            theme(panel.grid.major = element_line())+
-            theme(panel.grid.minor = element_line())+
-            theme(panel.background = element_blank())+
-            theme(panel.background = element_rect())+
-            theme_bw(base_size = 20)+
-            theme(axis.title.x = element_blank())+
+            theme(panel.grid.major = element_line()) +
+            theme(panel.grid.minor = element_line()) +
+            theme(panel.background = element_blank()) +
+            theme(panel.background = element_rect()) +
+            theme_bw(base_size = 20) +
+            theme(axis.title.x = element_blank()) +
             ylab(yLabel) + annotate("text", label = friedmanLabel, 
                             x = Inf, y = Inf, vjust=1, hjust=1, size=4) +
             ggtitle(title)
         print(p)
-        
     }
   )
 ) 
