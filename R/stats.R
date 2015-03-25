@@ -264,54 +264,52 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
 Paired_Friedman_Stat <- R6Class("Paired_Friedman_Stat",
     inherit = Stat,
     public = list(
-    initialize = function(data, ctrl = NULL, alpha = 0.05, average = "mean",
-                          range = c(-1, 1), cores = SerialParam(), dataComp, ctrlComp) {
-        super$initialize(data, ctrl, alpha, average, range, cores)
-        
-        # Check parameters validity
-        if (!is.matrix(dataComp) || sum(!is.na(dataComp) == 0)) {
-            stop("dataComp must be a matrix with at least one value")
-        }
-        if (!is.null(ctrlComp)) {
-            if (!is.matrix(ctrlComp) || sum(!is.na(ctrlComp) == 0)) {
-                stop("ctrlComp must be a matrix with at least one value")
+        initialize = function(data, ctrl = NULL, alpha = 0.05, average = "mean",
+            range = c(-1, 1), cores = SerialParam(), dataComp, ctrlComp) {
+            super$initialize(data, ctrl, alpha, average, range, cores)
+            
+            # Check parameters validity
+            if (!is.matrix(dataComp) || sum(!is.na(dataComp) == 0)) {
+                stop("dataComp must be a matrix with at least one value")
             }
-            if (!identical(dim(dataComp), dim(ctrlComp))) {
-                stop("dataComp and ctrlComp must be of identical dimensions")
+            if (!is.null(ctrlComp)) {
+                if (!is.matrix(ctrlComp) || sum(!is.na(ctrlComp) == 0)) {
+                    stop("ctrlComp must be a matrix with at least one value")
+                }
+                if (!identical(dim(dataComp), dim(ctrlComp))) {
+                    stop("dataComp and ctrlComp must be of identical dimensions")
+                }
+            }
+            
+            private$dataComp <- dataComp
+            if (!is.null(ctrlComp)) {
+                private$ctrlComp <- ctrlComp
             }
         }
-        
-        private$dataComp <- dataComp
-        if (!is.null(ctrlComp)) {
-            private$ctrlComp <- ctrlComp
-        }
-    }
-    ),
     private = list(
         calculate_statistics = function() {
-            # Fetch relevant params
-            alpha <- private$parameters[["alpha"]]
-            data <- private$data
-            ctrl <- private$ctrl
-            dataComp <- private$dataComp
-            ctrlComp <- private$ctrlComp
-            average <- private$parameters[["average"]]
-            range <- private$parameters[["range"]]
-            
-            # Prepare function
-            calculate_statistic <- function(column_values) {
-                average(column_values)
-            }
-            
-            # Calculate results
-            dataEstimator <- apply(data, MARGIN = 2, FUN = calculate_statistic)
-            dataCompEstimator <- apply(dataComp, MARGIN = 2, FUN = calculate_statistic)
-            
-            # Calculate results
-            mu.friedman.test(c(dataEstimator,dataCompEstimator),
-                             c(sapply(seq(1:2), rep, length(dataEstimator))),
-                             rep(seq(1:length(dataEstimator)), 2))
+                # Fetch relevant params
+                alpha <- private$parameters[["alpha"]]
+                data <- private$data
+                ctrl <- private$ctrl
+                dataComp <- private$dataComp
+                ctrlComp <- private$ctrlComp
+                average <- private$parameters[["average"]]
+                range <- private$parameters[["range"]]
+                              
+                # Prepare function
+                calculate_statistic <- function(column_values) {
+                    average(column_values)
+                }
+                
+                # Calculate results
+                dataEstimator <- apply(data, MARGIN = 2, FUN = calculate_statistic)
+                dataCompEstimator <- apply(dataComp, MARGIN = 2, FUN = calculate_statistic)
+                
+                # Calculate results
+                mu.friedman.test(c(dataEstimator,dataCompEstimator), 
+                                 c(sapply(seq(1:2), rep, length(dataEstimator))), 
+                                 rep(seq(1:length(dataEstimator)), 2))
         }
     )
 )
-    
