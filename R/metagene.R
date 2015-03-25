@@ -428,7 +428,7 @@ metagene <- R6Class("metagene",
                             paste0("Friedman p-value \n", 
                             signif(friedman$p.value, digits = 6), " "))
         # TODO: add x label
-        p <- ggplot(DF, aes(x=position, y=value, ymin=qinf, ymax=1.25*qsup)) +
+        p <- ggplot(DF, aes(x=position, y=value, ymin=qinf, ymax=qsup)) +
             geom_ribbon(aes(fill=group), alpha=0.3) +
             geom_line(aes(color=group), size=1, litype=1, bg="transparent") +
             theme(panel.grid.major = element_line()) +
