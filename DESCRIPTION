@@ -21,7 +21,7 @@ Description: This package produces metagene plots to compare the behavior of
     Bootstraping analysis is used to compare the groups and locate regions with
     statistically different enrichment profiles.
 biocViews: ChIPSeq, Genetics, MultipleComparison, Coverage, Alignment
-License: Artistic-2.0
+License: Artistic-2.0  | file LICENSE
 BugReports: https://github.com/CharlesJB/metagene/issues
 VignetteBuilder: knitr
 Depends:
