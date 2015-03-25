@@ -187,20 +187,18 @@ metagene <- R6Class("metagene",
         #
         # Friedman only done when more than 1 curve is present
         # 
-        browser()
         friedman <- NULL
         if (length(unique(DF[["group"]])) > 1) {
             friedman <- mu.friedman.test(DF[["value"]], group=DF[["group"]], 
                              block=DF[["position"]])
         }
-        print(friedman)
         
         # 4. Produce the graph
         #    DF <- metagene:::getDataFrame(bootstrap_result, 
         #                                     range=c(-1,1), binSize=1)
         private$plot_graphic(DF, paste(unique(DF[["group"]]), collapse=" vs "),
-                                binSize = 1)
-        return(DF)
+                                binSize = 1, friedman=friedman)
+        return(list(DF=DF, friedman_test=friedman))
     },
     export = function(bam_file, region, file) {
         region <- tools::file_path_sans_ext(basename(region))
@@ -425,22 +423,24 @@ metagene <- R6Class("metagene",
         } else {
             yLabel <- paste("Mean RPM for each position")
         }
+        friedmanLabel <- ifelse(is.null(friedman), "", 
+                            paste0("Friedman p-value \n", 
+                            signif(friedman$p.value, digits = 6), " "))
         # TODO: add x label
-        p <- ggplot(DF, aes(x=position, y=value, ymin=qinf, ymax=qsup)) +
+        p <- ggplot(DF, aes(x=position, y=value, ymin=qinf, ymax=1.25*qsup)) +
             geom_ribbon(aes(fill=group), alpha=0.3) +
-            geom_line(aes(color=group),size=1,litype=1,bg="transparent")+
+            geom_line(aes(color=group), size=1, litype=1, bg="transparent") +
             theme(panel.grid.major = element_line())+
             theme(panel.grid.minor = element_line())+
             theme(panel.background = element_blank())+
             theme(panel.background = element_rect())+
             theme_bw(base_size = 20)+
             theme(axis.title.x = element_blank())+
-            ylab(yLabel)+
+            ylab(yLabel) + annotate("text", label = friedmanLabel, 
+                            x = Inf, y = Inf, vjust=1, hjust=1, size=4) +
             ggtitle(title)
-        if (!is.null(friedman)){
-            p <- p + xlab(paste0("Friedman p-value : ", friedman$p.value))
-        }
         print(p)
+        
     }
   )
 ) 
