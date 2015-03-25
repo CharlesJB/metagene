@@ -35,6 +35,7 @@ Imports:
     tools,
     GenomicAlignments,
     ggplot2,
+    muStat,
     Rsamtools
 Suggests:
     RUnit,
