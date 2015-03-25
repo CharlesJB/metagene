@@ -165,12 +165,13 @@ The statistical analysis and the production of the metagene plot are done
 in a single step with the function `plot` of the metagene object.
 
 ```{r producePlotEx1}
-df <- mg$plot()
+results <- mg$plot()
 ```
 
-The plot function returns the data.frame that was used by ggplot2 to produce 
-the results.
+The plot function returns a list containing the `data.frame` used by 
+ggplot2 to produce the results as well as the Friedman test results 
+(or `NULL` if no test run).
 
 ```{r showDataFrame}
-head(df)
+head(results)
 ```
