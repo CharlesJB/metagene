@@ -172,6 +172,8 @@ The plot function returns a list containing the `data.frame` used by
 ggplot2 to produce the results as well as the Friedman test results 
 (or `NULL` if no test run).
 
-```{r showDataFrame}
-head(results)
+```{r showDataFrame, collapse=TRUE}
+class(results)
+names(results)
+head(results$DF)
 ```
