@@ -162,16 +162,21 @@ mg <- metagene$new(regions, bam_files)
 ### Plotting results
 
 The statistical analysis and the production of the metagene plot are done 
-in a single step with the function `plot` of the metagene object.
+in a single step with the function `plot` of the metagene object. In this
+specific case, we know that all the regions have the same size and are all
+centered on the same element. We can specify this information with the `range`
+parameter.
 
 ```{r producePlotEx1}
-results <- mg$plot()
+results <- mg$plot(range = c(-1000,1000))
 ```
 
 The plot function returns a list containing the `data.frame` used by 
 ggplot2 to produce the results as well as the Friedman test results 
 (or `NULL` if no test run).
 
-```{r showDataFrame}
-head(results)
+```{r showDataFrame, collapse=TRUE}
+class(results)
+names(results)
+head(results$DF)
 ```
