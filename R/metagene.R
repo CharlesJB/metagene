@@ -131,7 +131,7 @@ metagene <- R6Class("metagene",
         private$bam_handler$get_aligned_count(filename)
     },
     plot = function(design = NULL, regions_group = NULL, bin_size = 100,
-                    alpha = 0.05, sample_count = 1000) {
+                    alpha = 0.05, sample_count = 1000, range = c(-1,1)) {
         # Most parameters validation are done in Bootstrap_Stat constructor
         private$check_design(design)
         if (!is.null(regions_group) && !(is.vector(regions_group) ||
@@ -173,7 +173,8 @@ metagene <- R6Class("metagene",
                 ctrl <- self$matrices[[region]][[bam_file]][["ctrl"]]
                 bootstrap_stat <- Bootstrap_Stat$new(data = data, ctrl = ctrl,
                                                 sample_size = sample_size, 
-                                                sample_count = sample_count)
+                                                sample_count = sample_count,
+                                                range = range)
                 current_DF <- bootstrap_stat$get_statistics()
                 current_DF <- cbind(rep(group_name, nrow(current_DF)), 
                                     current_DF)
@@ -196,9 +197,10 @@ metagene <- R6Class("metagene",
         # 4. Produce the graph
         #    DF <- metagene:::getDataFrame(bootstrap_result, 
         #                                     range=c(-1,1), binSize=1)
-        private$plot_graphic(DF, paste(unique(DF[["group"]]), collapse=" vs "),
+        p <- private$plot_graphic(DF, paste(unique(DF[["group"]]), collapse=" vs "),
                                 binSize = 1, friedman=friedman)
-        return(list(DF=DF, friedman_test=friedman))
+        print(p)
+        return(list(DF = DF, friedman_test = friedman, graph = p))
     },
     export = function(bam_file, region, file) {
         region <- tools::file_path_sans_ext(basename(region))
@@ -440,7 +442,7 @@ metagene <- R6Class("metagene",
             ylab(yLabel) + annotate("text", label = friedmanLabel, 
                             x = Inf, y = Inf, vjust=1, hjust=1, size=4) +
             ggtitle(title)
-        print(p)
+        p
     }
   )
 ) 
