@@ -268,7 +268,7 @@ test.bam_handler_get_normalized_coverage_invalid_bam_file <- function() {
   checkIdentical(obs, exp, msg)
 }
 
-## Invalid regoins class
+## Invalid regions class
 test.bam_handler_get_normalized_coverage_invalid_regions_class <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
   bam_file <- bam_files[1]
