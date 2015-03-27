@@ -268,7 +268,7 @@ test.bam_handler_get_normalized_coverage_invalid_bam_file <- function() {
   checkIdentical(obs, exp, msg)
 }
 
-## Invalid regoins class
+## Invalid regions class
 test.bam_handler_get_normalized_coverage_invalid_regions_class <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
   bam_file <- bam_files[1]
@@ -285,5 +285,17 @@ test.bam_handler_get_normalized_coverage_invalid_regions_length <- function() {
   obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file, regions = GenomicRanges::GRanges()), error = conditionMessage)
   exp <- "Parameter regions must not be an empty GRanges object"
   msg <- paste(base_msg, "Invalid regions length did not give the expected error message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Invalid regions levels
+test.bam_handler_get_normalized_coverage_invalid_regions_length <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_file <- bam_files[1]
+  region <- regions[[1]]
+  seqlevels(region) <- c(seqlevels(region), "invalid_level")
+  obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file, regions = region), error = conditionMessage)
+  exp <- "Some seqlevels of regions are absent in bam_file header"
+  msg <- paste(base_msg, "Invalid regions levels did not give the expected error message.")
   checkIdentical(obs, exp, msg)
 }
