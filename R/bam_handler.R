@@ -124,6 +124,10 @@ Bam_Handler <- R6Class("Bam_Handler",
             stop("Parameter regions must not be an empty GRanges object")
         }
 
+        # The seqlevels of regions must all be present in bam_file
+        private$check_bam_levels(bam_file, regions)
+
+
         count <- self$get_aligned_count(bam_file)
         cores <- self$parameters[["cores"]]
 
@@ -149,6 +153,12 @@ Bam_Handler <- R6Class("Bam_Handler",
         if (! bam_file %in% private$bam_files[["bam"]]) {
             stop(paste0("Bam file ", bam_file, " not found."))
         }
+    },
+    check_bam_levels = function(bam_file, regions) {
+      bam_levels <- names(scanBamHeader(bam_file)[[1]]$targets)
+      if (!all(seqlevels(regions) %in% bam_levels)) {
+            stop("Some seqlevels of regions are absent in bam_file header")
+      }
     },
     index_bam_file = function(bam_file) {
         if (file.exists(paste(bam_file, ".bai", sep=""))  == FALSE) {
