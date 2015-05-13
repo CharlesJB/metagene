@@ -1,13 +1,11 @@
 
-metagene: A package to produce Metafeature plots
+metagene: A package to produce metagene plots
 ========================================================
 
 
 This repository contains R functions used to do multiple ChIP-Seq experiments comparisons.
 
 This package produces Metagene-like plots to compare the behavior of DNA-interacting proteins at selected groups of features. A typical analysis can be done in viscinity of transcription start sites (TSS) of genes or at any regions of interest (such as enhancers). Multiple combinations of group of features and/or group of bam files can be compared in a single analysis. Bootstraping analysis is used to compare the groups and locate regions with statistically different enrichment profiles. In order to increase the sensitivity of the analysis, alignment data is used instead of peaks produced with peak callers (i.e.: MACS2 or PICS). The metagene package uses bootstrap to obtain a better estimation of the mean enrichment and the confidence interval for every group of samples.
-
-Currently supported species are **human** and **mouse**.
 
 ## Authors ##
 
