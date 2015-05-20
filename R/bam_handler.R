@@ -190,7 +190,6 @@ Bam_Handler <- R6Class("Bam_Handler",
     extract_coverage_by_regions = function(regions, bam_file, count=NULL) {
         param <- Rsamtools:::ScanBamParam(which=reduce(regions))
         alignment <- GenomicAlignments:::readGAlignments(bam_file, param=param)
-        seqlevels(alignment) <- seqlevels(regions)
         if (!is.null(count)) {
             weight <- 1 / (count / 1000000)
             GenomicAlignments::coverage(alignment, weight=weight)[regions]
