@@ -192,7 +192,7 @@ Bam_Handler <- R6Class("Bam_Handler",
         alignment <- GenomicAlignments:::readGAlignments(bam_file, param=param)
         if (!is.null(count)) {
             weight <- 1 / (count / 1000000)
-            GenomicAlignments::coverage(alignment, weight=weight)[regions]
+            GenomicAlignments::coverage(alignment)[regions] * weight
         } else {
             GenomicAlignments::coverage(alignment)[regions]
         }

@@ -253,7 +253,7 @@ test.bam_handler_get_normalized_coverage_valid_use <- function() {
   bam_file <- bam_files[1]
   obs <- bam_handler$get_normalized_coverage(bam_file, region)
   weight <- 1 / (bam_handler$get_aligned_count(bam_file) / 1000000)
-  exp <- GenomicAlignments::coverage(GenomicAlignments::readGAlignments(bam_file, param = Rsamtools::ScanBamParam(which = region)), weight = weight)[region]
+  exp <- GenomicAlignments::coverage(GenomicAlignments::readGAlignments(bam_file, param = Rsamtools::ScanBamParam(which = reduce(region))))[region] * weight
   msg <- paste(base_msg, "Valid use do not give the expected results")
   checkIdentical(obs, exp, msg)
 }
@@ -274,6 +274,21 @@ test.bam_handler_get_normalized_coverage_duplicated_regions <- function() {
   checkTrue(!identical(reduce(region), region), msg = msg)
   msg <- paste(base_msg, "Duplicated regions did not pass sanity test - identical")
   checkTrue(!identical(obs, sane), msg = msg)
+}
+
+## Negative coverage
+test.bam_handler_get_normalized_coverage_negative_coverage <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  region <- regions[[1]][1]
+  bam_file <- bam_files[4]
+  obs <- bam_handler$get_normalized_coverage(bam_file, region)
+  msg <- paste(base_msg, "Negative coverage returns some negative values")
+  checkTrue(all(sapply(obs, function(x) all(as.numeric(x) >= 0))), msg = msg)
+  # Sanity check
+  weight <- 1 / (bam_handler$get_aligned_count(bam_file) / 1000000)
+  sane <- GenomicAlignments::coverage(GenomicAlignments::readGAlignments(bam_file, param = Rsamtools::ScanBamParam(which = reduce(region))), weight = weight)[region]
+  msg <- paste(base_msg, "Negative coverage did not pass sanity test")
+  checkTrue(!all(sapply(sane, function(x) all(as.numeric(x) >= 0))), msg = msg)
 }
 
 ## Invalid bam file
