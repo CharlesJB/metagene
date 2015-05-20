@@ -258,6 +258,24 @@ test.bam_handler_get_normalized_coverage_valid_use <- function() {
   checkIdentical(obs, exp, msg)
 }
 
+## Duplicated regions
+test.bam_handler_get_normalized_coverage_duplicated_regions <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  region <- regions[[1]]
+  bam_file <- bam_files[1]
+  obs <- bam_handler$get_normalized_coverage(bam_file, region)
+  msg <- paste(base_msg, "Duplicated regions do not give expected results")
+  weight <- 1 / (bam_handler$get_aligned_count(bam_file) / 1000000)
+  exp <- GenomicAlignments::coverage(GenomicAlignments::readGAlignments(bam_file, param = Rsamtools::ScanBamParam(which = reduce(region))))[region] * weight
+  checkIdentical(obs, exp, msg)
+  # Sanity check
+  sane <- GenomicAlignments::coverage(GenomicAlignments::readGAlignments(bam_file, param = Rsamtools::ScanBamParam(which = region)))[region] * weight
+  msg <- paste(base_msg, "Duplicated regions did not pass sanity test - reduced regions")
+  checkTrue(!identical(reduce(region), region), msg = msg)
+  msg <- paste(base_msg, "Duplicated regions did not pass sanity test - identical")
+  checkTrue(!identical(obs, sane), msg = msg)
+}
+
 ## Invalid bam file
 test.bam_handler_get_normalized_coverage_invalid_bam_file <- function() {
   region <- regions[1]
