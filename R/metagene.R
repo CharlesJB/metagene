@@ -33,7 +33,8 @@
 #' @section Methods:
 #' \describe{
 #'   \item{}{\code{df <- mg$plot(design = NULL, regions_group = NULL,
-#'               bin_size = 100, alpha = 0.05, sample_count = 1000)}}
+#'               bin_size = 100, alpha = 0.05, sample_count = 1000,
+#'               title = NULL)}}
 #'   \item{design}{A \code{data.frame} that describe to experiment to plot. The
 #'                 first column must be the existing BAM filenames. The other 
 #'                 columns (at least one is required) represent how the files 
@@ -65,6 +66,8 @@
 #'                Default = 0.05.}
 #'   \item{sample_count}{The number of draw to do during bootstrap analysis.
 #'                       Default: 1000.}
+#'   \item{title}{A title to add to the graph. If \code{NULL}, will be
+#'                       automatically created. Default: NULL}
 #' }
 #' \describe{
 #'   \item{}{\code{mg$export(bam_file, region, file)}}
@@ -131,7 +134,8 @@ metagene <- R6Class("metagene",
         private$bam_handler$get_aligned_count(filename)
     },
     plot = function(design = NULL, regions_group = NULL, bin_size = 100,
-                    alpha = 0.05, sample_count = 1000, range = c(-1,1)) {
+                    alpha = 0.05, sample_count = 1000, range = c(-1,1),
+		    title = NULL) {
         # Most parameters validation are done in Bootstrap_Stat constructor
         private$check_design(design)
         if (!is.null(regions_group) && !(is.vector(regions_group) ||
@@ -197,7 +201,10 @@ metagene <- R6Class("metagene",
         # 4. Produce the graph
         #    DF <- metagene:::getDataFrame(bootstrap_result, 
         #                                     range=c(-1,1), binSize=1)
-        p <- private$plot_graphic(DF, paste(unique(DF[["group"]]), collapse=" vs "),
+	if (is.null(title)) {
+	    title <- paste(unique(DF[["group"]]), collapse=" vs ")
+	}
+        p <- private$plot_graphic(DF, title = title,
                                 binSize = 1, friedman=friedman)
         print(p)
         return(list(DF = DF, friedman_test = friedman, graph = p))

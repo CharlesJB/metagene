@@ -168,7 +168,7 @@ centered on the same element. We can specify this information with the `range`
 parameter.
 
 ```{r producePlotEx1}
-results <- mg$plot(range = c(-1000,1000))
+results <- mg$plot(range = c(-1000,1000), title = "Demo metagene plot")
 ```
 
 The plot function returns a list containing the `data.frame` used by 
