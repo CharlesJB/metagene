@@ -25,3 +25,7 @@ get_demo_regions <- function() {
 get_not_indexed_bam_file <- function() {
     system.file("extdata/not_indexed.bam", package = "metagene")
 }
+
+get_different_seqnames_bam_file <- function() {
+    system.file("extdata/different_header.bam", package = "metagene")
+}
