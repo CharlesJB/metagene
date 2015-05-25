@@ -14,6 +14,7 @@ bam_files <- get_demo_bam_files()
 named_bam_files <- bam_files
 names(named_bam_files) <- paste("file", seq(1, length(bam_files)), sep = "_")
 not_indexed_bam_file <- metagene:::get_not_indexed_bam_file()
+different_seqnames <- c(bam_files[1], get_different_seqnames_bam_file())
 regions <- lapply(metagene:::get_demo_regions(), rtracklayer::import)
 
 ###################################################
@@ -28,6 +29,25 @@ test.bam_handler_single_valid_file <- function() {
   msg <- paste0(base_msg,  
         "Valid initialize call with one bam file did not return correct class")
   checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")), msg = msg)
+}
+
+## Different seqnames bam file warning
+test.bam_handler_different_seqnames_bam_file_warning <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files[1])
+  exp <- "\n\n  Some bam files have discrepancies in their seqnames."
+  exp <- paste0(exp, "\n\n")
+  exp <- paste0(exp, "  This could be caused by chromosome names ")
+  mgs <- paste0(exp, "present only in a subset of the bam files ")
+  exp <- paste0(exp, "(i.e.: chrY in some bam files, but absent in ")
+  exp <- paste0(exp, "others.\n\n")
+  exp <- paste0(exp, "  This could also be caused by discrepancies ")
+  exp <- paste0(exp, "in the seqlevels style (i.e.: UCSC:chr1 ")
+  exp <- paste0(exp, "versus NCBI:1)\n\n")
+  obs <- tryCatch(metagene:::Bam_Handler$new(different_seqnames),
+		  warning = conditionMessage)
+  msg <- paste0(base_msg, "Valid initialize with different bam files seqnames")
+  msg <- paste0(base_msg, " did not generate the correct warning.")
+  checkIdentical(obs, exp, msg)
 }
 
 ## Invalid bam file - not indexed
