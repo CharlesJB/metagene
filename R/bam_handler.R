@@ -91,6 +91,26 @@ Bam_Handler <- R6Class("Bam_Handler",
         }
         private$bam_files[["aligned_count"]] <-
             sapply(private$bam_files[["bam"]], private$get_file_count)
+
+	# Check the seqnames
+	get_seqnames <- function(bam_file) {
+	    bam_file <- Rsamtools::BamFile(bam_file)
+            GenomeInfoDb::seqnames(GenomeInfoDb::seqinfo(bam_file))
+	}
+	bam_seqnames <- lapply(private$bam_files$bam, get_seqnames)
+	all_seqnames <- unlist(bam_seqnames)
+	if (!all(table(all_seqnames) == length(bam_seqnames))) {
+	    msg <- "\n\n  Some bam files have discrepancies in their seqnames."
+            msg <- paste0(msg, "\n\n")
+	    msg <- paste0(msg, "  This could be caused by chromosome names ")
+	    mgs <- paste0(msg, "present only in a subset of the bam files ")
+	    msg <- paste0(msg, "(i.e.: chrY in some bam files, but absent in ")
+	    msg <- paste0(msg, "others.\n\n")
+	    msg <- paste0(msg, "  This could also be caused by discrepancies ")
+	    msg <- paste0(msg, "in the seqlevels style (i.e.: UCSC:chr1 ")
+	    msg <- paste0(msg, "versus NCBI:1)\n\n")
+	    warning(msg)
+	}
     },
     get_aligned_count = function(bam_file) {
         # Check prerequisites
