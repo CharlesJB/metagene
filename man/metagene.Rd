@@ -21,7 +21,8 @@ metagene plots on the data (or a subset of the data).
 
 \describe{
   \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
-                             cores = SerialParam(), verbose = FALSE)}}
+                             cores = SerialParam(), verbose = FALSE,
+                             force_seqlevels = FALSE)}}
   \item{regions}{Either a \code{vector} of BED filenames, a \code{GRanges}
                  object or a \code{GRangesList} object.}
   \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
@@ -35,6 +36,8 @@ metagene plots on the data (or a subset of the data).
                Default: \code{SerialParam()}.}
   \item{verbose}{Print progression of the analysis. A logical constant.
                  Default: \code{FALSE}.}
+  \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found in
+                         bam file header. Default: \code{FALSE}.}
 }
 
  \code{metagene$new} returns a \code{metagene} object that contains the

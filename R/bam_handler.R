@@ -129,7 +129,8 @@ Bam_Handler <- R6Class("Bam_Handler",
     get_bam_files = function() {
         private$bam_files
     },
-    get_normalized_coverage = function(bam_file, regions) {
+    get_normalized_coverage = function(bam_file, regions,
+				       force_seqlevels = FALSE) {
         ## Check prerequisites
         # The bam file must be in the list of bam files used for initialization
         private$check_bam_file(bam_file)
@@ -139,14 +140,14 @@ Bam_Handler <- R6Class("Bam_Handler",
             stop("Parameter regions must be a GRanges object.")
         }
 
+        # The seqlevels of regions must all be present in bam_file
+        regions <- private$check_bam_levels(bam_file, regions,
+					    force = force_seqlevels)
+
         # The regions must not be empty
         if (length(regions) == 0) {
             stop("Parameter regions must not be an empty GRanges object")
         }
-
-        # The seqlevels of regions must all be present in bam_file
-        private$check_bam_levels(bam_file, regions)
-
 
         count <- self$get_aligned_count(bam_file)
         cores <- self$parameters[["cores"]]
@@ -174,11 +175,17 @@ Bam_Handler <- R6Class("Bam_Handler",
             stop(paste0("Bam file ", bam_file, " not found."))
         }
     },
-    check_bam_levels = function(bam_file, regions) {
+    check_bam_levels = function(bam_file, regions, force) {
       bam_levels <- names(scanBamHeader(bam_file)[[1]]$targets)
-      if (!all(seqlevels(regions) %in% bam_levels)) {
-            stop("Some seqlevels of regions are absent in bam_file header")
+      if (!all(unique(GenomeInfoDb::seqnames(regions)) %in% bam_levels)) {
+	    if (force == FALSE) {
+                stop("Some seqnames of regions are absent in bam_file header")
+            } else {
+		i <- seqlevels(regions) %in% bam_levels
+	        seqlevels(regions, force = TRUE) <- seqlevels(regions)[i]
+            }
       }
+      regions
     },
     index_bam_file = function(bam_file) {
         if (file.exists(paste(bam_file, ".bai", sep=""))  == FALSE) {

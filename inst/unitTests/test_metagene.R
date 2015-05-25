@@ -30,6 +30,16 @@ test.metagene_initialize_invalid_verbose_value <- function() {
     checkIdentical(obs, exp, msg)
 }
 
+## Invalid force_seqlevels value
+test.metagene_initialize_invalid_force_seqlevels_value <- function() {
+    obs <- tryCatch(metagene:::metagene$new(force_seqlevels="ZOMBIES"),
+                    error=conditionMessage)
+    exp <- "force_seqlevels must be a logicial value (TRUE or FALSE)"
+    msg <- paste0(base_msg, "An invalid force_seqlevels value did not generate an ",
+                "exception with expected message." )
+    checkIdentical(obs, exp, msg)
+}
+
 ## Negative padding_size value
 test.metagene_initialize_negative_padding_value <- function() {
     obs <- tryCatch(metagene:::metagene$new(padding_size=-1), 
@@ -152,6 +162,56 @@ test.metagene_initialize_invalid_array_region_value <- function() {
     checkIdentical(obs, exp, msg)
 } 
 
+# Valid regions with extra seqlevels
+test.metagene_initialize_valid_regions_supplementary_seqlevels <- function() {
+    region <- rtracklayer::import(regions[1])
+    GenomeInfoDb::seqlevels(region) <- c(GenomeInfoDb::seqlevels(region),
+				      "extra_seqlevels")
+    mg <- tryCatch(metagene$new(regions = region, bam_files = named_bam_files),
+		   error = conditionMessage)
+    msg <- paste0(base_msg, "Valid regions with extra seqlevels did not ")
+    msg <- paste0(msg, "return a valid metagene object.")
+    checkIdentical(class(mg), c("metagene", "R6"), msg = msg)
+}
+
+# Invalid Extra seqnames
+test.metagene_initialize_invalid_extra_seqnames <- function() {
+    region <- rtracklayer::import(regions[1])
+    GenomeInfoDb::seqlevels(region) <- "extra_seqlevels"
+    obs <- tryCatch(metagene$new(regions = region, bam_files = named_bam_files),
+		   error = conditionMessage)
+    exp <- "Some seqnames of regions are absent in bam_file header"
+    msg <- paste(base_msg, "Invalid regions seqnames did not give the expected")
+    msg <- paste(msg, "error message.")
+    checkIdentical(obs, exp, msg)
+}
+
+# Extra seqnames with force
+test.metagene_initialize_one_extra_seqnames_force_seqlevels <- function() {
+    region <- rtracklayer::import(regions[1])
+    GenomeInfoDb::seqlevels(region) <- c(GenomeInfoDb::seqlevels(region),
+					 "extra_seqlevels")
+    GenomeInfoDb::seqnames(region)[1] <- "extra_seqlevels"
+    mg <- tryCatch(metagene$new(regions = region, bam_files = bam_files,
+				 force_seqlevels = TRUE),
+		   error = conditionMessage)
+    msg <- paste(base_msg, "Supplementary seqnames should not have raised an")
+    msg <- paste(msg, "error with force_seqlevels = TRUE.")
+    checkIdentical(class(mg), c("metagene", "R6"), msg = msg)
+}
+
+# Invalid all extra seqnames with force
+test.metagene_initialize_all_extra_seqnames_force_seqlevels <- function() {
+    region <- rtracklayer::import(regions[1])
+    GenomeInfoDb::seqlevels(region) <- "extra_seqlevels"
+    obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files,
+				 force_seqlevels = TRUE),
+		   error = conditionMessage)
+    exp <- "Parameter regions must not be an empty GRanges object"
+    msg <- paste(base_msg, "Invalid all extra seqnames did not generate the")
+    msg <- paste(msg, "expected error with force_seqlevels = TRUE.")
+    checkIdentical(obs, exp, msg)
+}
 
 ###################################################
 ## Test the metagene$plot() function 
