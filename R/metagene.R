@@ -7,7 +7,8 @@
 #' @section Constructor:
 #' \describe{
 #'   \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
-#'                              cores = SerialParam(), verbose = FALSE)}}
+#'                              cores = SerialParam(), verbose = FALSE,
+#'                              force_seqlevels = FALSE)}}
 #'   \item{regions}{Either a \code{vector} of BED filenames, a \code{GRanges}
 #'                  object or a \code{GRangesList} object.}
 #'   \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be 
@@ -21,6 +22,8 @@
 #'                Default: \code{SerialParam()}.}
 #'   \item{verbose}{Print progression of the analysis. A logical constant. 
 #'                  Default: \code{FALSE}.}
+#'   \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found in
+#'                          bam file header. Default: \code{FALSE}.}
 #' }
 #'
 #'  \code{metagene$new} returns a \code{metagene} object that contains the
@@ -105,16 +108,19 @@ metagene <- R6Class("metagene",
     
     # Methods
     initialize = function(regions, bam_files, padding_size = 0,
-                          cores = SerialParam(), verbose = FALSE) {
+                          cores = SerialParam(), verbose = FALSE,
+			  force_seqlevels = FALSE) {
         # Check params...
         private$check_param(regions = regions, bam_files = bam_files, 
                           padding_size = padding_size,
-                          cores = cores, verbose = verbose)
+                          cores = cores, verbose = verbose,
+			  force_seqlevels = force_seqlevels)
         # Save params
         private$parallel_job <- Parallel_Job$new(cores)
         self$params[["padding_size"]] <- padding_size
         self$params[["verbose"]] <- verbose
         self$params[["bam_files"]] <- bam_files
+        self$params[["force_seqlevels"]] <- force_seqlevels
       
         # Prepare bam files
         private$print_verbose("Prepare bam files...")
@@ -239,10 +245,13 @@ metagene <- R6Class("metagene",
     bam_handler = "",
     parallel_job = "",
     check_param = function(regions, bam_files, padding_size,
-                           cores, verbose) {
+                           cores, verbose, force_seqlevels) {
         # Check parameters validity
         if (!is.logical(verbose)) {
             stop("verbose must be a logicial value (TRUE or FALSE)")
+        }
+        if (!is.logical(force_seqlevels)) {
+            stop("force_seqlevels must be a logicial value (TRUE or FALSE)")
         }
         if (!(is.numeric(padding_size) || is.integer(padding_size)) ||
             padding_size < 0 || as.integer(padding_size) != padding_size) {
@@ -369,7 +378,7 @@ metagene <- R6Class("metagene",
         res <- lapply(self$params[["bam_files"]], function(bam_file) {
                 lapply(self$regions, function(regions) {
                     private$bam_handler$get_normalized_coverage(bam_file, 
-                                                                regions)
+                    regions, force_seqlevels = self$params[["force_seqlevels"]])
                     })
                 })
         names(res) <- self$params[["bam_files"]]
