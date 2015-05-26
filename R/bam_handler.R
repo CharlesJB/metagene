@@ -39,9 +39,12 @@
 #'   \item{}{\code{bh$get_bam_files()}}
 #' }
 #' \describe{
-#'   \item{}{\code{bh$get_normalized_coverage(bam_file, regions)}}
+#'   \item{}{\code{bh$get_normalized_coverage(bam_file, regions)
+#'				              force_seqlevels = FALSE)}}
 #'   \item{bam_file}{The name of the BAM file.}
 #'   \item{regions}{A not empty \code{GRanges} object.}
+#'   \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found in
+#'                          bam file header. Default: \code{FALSE}.}
 #' }
 #' @examples
 #'  bh <- metagene:::Bam_Handler$new(bam_files=get_demo_bam_files())
@@ -219,9 +222,9 @@ Bam_Handler <- R6Class("Bam_Handler",
         alignment <- GenomicAlignments:::readGAlignments(bam_file, param=param)
         if (!is.null(count)) {
             weight <- 1 / (count / 1000000)
-            GenomicAlignments::coverage(alignment)[regions] * weight
+            GenomicAlignments::coverage(alignment) * weight
         } else {
-            GenomicAlignments::coverage(alignment)[regions]
+            GenomicAlignments::coverage(alignment)
         }
     }
   )

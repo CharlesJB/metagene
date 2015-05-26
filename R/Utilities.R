@@ -16,18 +16,20 @@
 #   gr <- GRanges("chr1", IRanges(c(100, 300), c(200, 500))
 #   gr <- intoNbins(gr)
 intoNbins <- function(gr, n = 10) {
-    if (any(width(gr) < n)) stop("all 'width(gr)' must be >= 'n'")
+    if (any(GenomicRanges::width(gr) < n)) {
+        stop("all 'width(gr)' must be >= 'n'")
+    }
     d <- width(gr) / n
     dd <- cumsum(rep(d, each=n))
     mask <- logical(n); mask[1] <- TRUE
     dd <- dd - rep(dd[mask], each=n)
 
-    starts <- round(rep(start(gr), each=n) + dd)
+    starts <- round(rep(GenomicRanges::start(gr), each=n) + dd)
     ends <- c(starts[-1], 0) - 1L
     ends[rev(mask)] <- end(gr)
 
     gr <- gr[rep(seq_along(gr), each=n)]
-    ranges(gr) <- IRanges(starts, ends)
+    GenomicRanges::ranges(gr) <- IRanges(starts, ends)
     gr
 }
 

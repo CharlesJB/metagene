@@ -54,8 +54,8 @@
 #'                 0: Do not use file.
 #'                 1: File is input.
 #'                 2: File is control.}
-#'   \item{region_group}{A \code{list} or a \code{vector} of region names to 
-#'                      include in the analysis. If \code{NULL}, all the 
+#'   \item{regions_group}{A \code{list} or a \code{vector} of region names to
+#'                      include in the analysis. If \code{NULL}, all the
 #'                      regions used when creating the
 #'                      \code{metagene} object will be used.
 #'                      Default: \code{NULL}}
@@ -139,36 +139,21 @@ metagene <- R6Class("metagene",
         # Parameters validation are done by Bam_Handler object
         private$bam_handler$get_aligned_count(filename)
     },
-    plot = function(design = NULL, regions_group = NULL, bin_size = 100,
-                    alpha = 0.05, sample_count = 1000, range = c(-1,1),
-		    title = NULL) {
-        # Most parameters validation are done in Bootstrap_Stat constructor
-        private$check_design(design)
-        if (!is.null(regions_group) && !(is.vector(regions_group) ||
-                        is.list(regions_group))) {
-            stop("regions_group should be a list or a vector")
-        }
-        if (!is.null(regions_group) &&
-                !all(unlist(regions_group) %in%  names(self$regions))) {
-            stop(paste0("All elements in regions_group should be regions ",
-                        "defined during the creation of metagene object"))
-        }
-        # At least one file must be used in the design
-        if (!is.null(design) &&
-                sum(rowSums(design[ , -1, drop=FALSE]) > 0) == 0) {
-            stop("At least one BAM file must be used in the design")
-        }
-        # Test only BAM file used in the design
-        if(!is.null(design) &&
-            !all(apply(design[rowSums(design[ , -1, drop=FALSE]) > 0, 1,
-                            drop=FALSE], MARGIN = 2, FUN=file.exists))) {
-            stop("At least one BAM file does not exist")
-        }
-        
+    plot = function(design = NULL, regions_group = NULL, bin_count = 100,
+                    bin_size = NULL, alpha = 0.05, sample_count = 1000,
+		    range = c(-1,1), title = NULL) {
+	private$check_plot_param(design = design, regions_group = regions_group,
+			       bin_count = bin_count, bin_size = bin_size,
+			       alpha = alpha, sample_count = sample_count,
+			       range = range, title = title)
+        if (!is.null(bin_size)) {
+            width <- width(self$regions[[1]][1])
+	    bin_count <- floor(width / bin_size)
+	}
         self$design <- private$prepare_design(design)
 
         # 1. Get the correctly formatted matrices
-        self$matrices <- private$produce_matrices(regions_group, bin_size)
+        self$matrices <- private$produce_matrices(regions_group, bin_count)
 
         # 2. Calculate means and confidence intervals
         sample_size <- as.integer(min(unlist(sapply(self$matrices, sapply,
@@ -273,14 +258,13 @@ metagene <- R6Class("metagene",
         if (!all(sapply(paste0(bam_files, ".bai"), file.exists))) {
             stop("All BAM files must be indexed")
         }
-        if (!is(regions, "GRangesList") && !is.vector(regions) 
-            && !is(regions, "GRanges")) {
+        if (!is(regions, "GRangesList") && !is.character(regions)
+            && !is(regions, "GRanges") && !is.list(regions)) {
             stop(paste0("regions must be either a vector of BED filenames, a ",
                 "GRanges object or a GrangesList object"))
         }
         # Validation specific to regions as a vector
-        if (is.vector(regions) && (!is.character(regions) || 
-            !all(sapply(regions, file.exists)))) {
+        if (is.character(regions) && !all(sapply(regions, file.exists))) {
             stop("regions must be a list of existing BED files")
         }
     },
@@ -301,6 +285,66 @@ metagene <- R6Class("metagene",
                             "numeric format"))
         }
     },
+    check_plot_param = function(design, regions_group, bin_count, bin_size,
+			       alpha, sample_count, range, title) {
+        # Most parameters validation are done in Bootstrap_Stat constructor
+        private$check_design(design)
+        if (!is.null(regions_group) && !(is.vector(regions_group) ||
+                        is.list(regions_group))) {
+            stop("regions_group should be a list or a vector")
+        }
+        if (!is.null(regions_group) &&
+                !all(unlist(regions_group) %in%  names(self$regions))) {
+            stop(paste0("All elements in regions_group should be regions ",
+                        "defined during the creation of metagene object"))
+        }
+        # At least one file must be used in the design
+        if (!is.null(design) &&
+                sum(rowSums(design[ , -1, drop=FALSE]) > 0) == 0) {
+            stop("At least one BAM file must be used in the design")
+        }
+        # Test only BAM file used in the design
+        if(!is.null(design) &&
+            !all(apply(design[rowSums(design[ , -1, drop=FALSE]) > 0, 1,
+                            drop=FALSE], MARGIN = 2, FUN=file.exists))) {
+            stop("At least one BAM file does not exist")
+        }
+	# bin_count should be a numeric value without digits
+        if (!is.null(bin_count)) {
+	    if (!is.numeric(bin_count) || bin_count < 0 ||
+		as.integer(bin_count) != bin_count) {
+              stop("bin_count must be NULL or a positive integer")
+          }
+	}
+	# bin_size should be a numeric value without digits
+        if (!is.null(bin_size)) {
+	    if (!is.numeric(bin_size) || bin_size < 0 ||
+		as.integer(bin_size) != bin_size) {
+              stop("bin_size must be NULL or a positive integer")
+          }
+	}
+	# bin_size should be used only if all regions have the same width
+	if (!is.null(bin_size)) {
+          if (is.null(regions_group)) {
+              regions_group <- names(self$regions)
+          }
+	  widths <- width(self$regions[names(self$regions) %in% regions_group])
+	  widths <- unique(unlist(widths))
+	  if (length(widths) != 1) {
+	      msg <- "bin_size can only be used if all selected regions have"
+	      msg <- paste(msg, "same width")
+	      stop(msg)
+	  } else {
+              modulo <- widths %% bin_size
+	      if (modulo != 0) {
+                  msg <- paste0("width (", widths, ") is not a multiple of ")
+	          msg <- paste0(msg, "bin_size (", bin_size, "), last bin ")
+	          msg <- paste0(msg, "will be removed.")
+		  warning(msg)
+	      }
+	  }
+	}
+    },
     print_verbose = function(to_print) {
         if (self$params[["verbose"]]) {
             cat(paste0(to_print, "\n"))
@@ -319,7 +363,7 @@ metagene <- R6Class("metagene",
         }
         design
     },
-    produce_matrices = function(regions_group, bin_size) {
+    produce_matrices = function(regions_group, bin_count) {
         matrices <- list()
         if (is.null(regions_group)) {
             regions_group <- names(self$regions)
@@ -332,36 +376,54 @@ metagene <- R6Class("metagene",
                 i <- self$design[[design]] == 1
                 bam_files <- as.character(self$design[,1][i])
                 matrices[[region]][[design]][["input"]] <-
-                private$get_matrix(region, bam_files, bin_size)
+                private$get_matrix(region, bam_files, bin_count)
 
                 i <- self$design[[design]] == 2
                 bam_files <- as.character(self$design[,1][i])
                 matrices[[region]][[design]][["ctrl"]] <-
-                private$get_matrix(region, bam_files, bin_size)
+                private$get_matrix(region, bam_files, bin_count)
          }
       }
       matrices
     },
-    get_matrix = function(region, bam_files, bin_size) {
+    get_matrix = function(region, bam_files, bcount) {
         if (length(bam_files) == 0) {
             return(NULL)
         }
-        res <- do.call("+", lapply(bam_files, function(bam_file)
-            t(sapply(self$coverages[[bam_file]][[region]], as.numeric))))
-        res[res < 0] <- 0
-        res <- res / length(bam_files)
-        private$bin_matrix(res, bin_size)
+        # 1. Produce the matrices
+        get_matrices <- function(bf, gr) {
+	  grl <- split(gr, GenomeInfoDb::seqnames(gr))
+	  do.call("rbind", lapply(grl, private$get_view_means, bam_file = bf,
+				  bcount = bcount))
+	}
+        matrices <- lapply(bam_files, get_matrices, gr = self$regions[[region]])
+        # 2. Calculate the means
+	means <- do.call("+", matrices) / length(matrices)
+    },
+    get_view_means = function(gr, bam_file, bcount) {
+	chr <- unique(as.character(GenomeInfoDb::seqnames(gr)))
+        gr <- intoNbins(gr, bcount)
+        stopifnot(length(chr) == 1)
+        views <- Views(self$coverages[[bam_file]][[chr]], start(gr), end(gr))
+	matrix(viewMeans(views), ncol = bcount, byrow = TRUE)
     },
     prepare_regions = function(regions) {
         if (class(regions) == "character") {
-            names <- sapply(regions, 
+            names <- sapply(regions,
                             function(x) file_path_sans_ext(basename(x)))
             regions <- private$parallel_job$launch_job(data = regions,
                                                         FUN = import)
             names(regions) <- names
         } else if (class(regions) == "GRanges") {
             regions <- GRangesList(regions = regions)
-        }
+        } else if (class(regions) == "list") {
+            regions <- GRangesList(regions)
+	}
+        if (is.null(names(regions))) {
+	    names(regions) <- sapply(seq_along(regions), function(x) {
+				paste("region", x, sep = "_")
+	                      })
+	}
         # TODO: Check if there is a id column in the mcols of every ranges.
         #       If not, add one by merging seqnames, start and end.
         GRangesList(lapply(regions, function(x) {
@@ -370,61 +432,20 @@ metagene <- R6Class("metagene",
             start(x)[start(x) < 0] <- 1
             end(x) <- end(x) + self$params$padding_size
             # Clean seqlevels
-            seqlevels(x) <- unique(as.character(seqnames(x)))
+	    x <- sortSeqlevels(x)
+#            seqlevels(x) <- unique(as.character(seqnames(x)))
             x
         }))
     },
     produce_coverages = function() {
-        res <- lapply(self$params[["bam_files"]], function(bam_file) {
-                lapply(self$regions, function(regions) {
-                    private$bam_handler$get_normalized_coverage(bam_file, 
-                    regions, force_seqlevels = self$params[["force_seqlevels"]])
-                    })
-                })
+	# TODO: add support for named bam files
+	regions <- GenomicRanges::reduce(BiocGenerics::unlist(self$regions))
+	res <- lapply(self$params[["bam_files"]],
+		      FUN = private$bam_handler$get_normalized_coverage,
+		      regions = regions,
+		      force_seqlevels= self$params[["force_seqlevels"]])
         names(res) <- self$params[["bam_files"]]
-        res
-    },
-    # Bin matrix columns
-    #
-    # Input:
-    #    data:        The matrix to bin.
-    #    bin_size:    The number of nucleotides in each bin.
-    #
-    # OUPUT:
-    #    A matrix with each column representing the mean of 
-    #    bin_size nucleotides.
-    bin_matrix = function(data, bin_size) {
-        stopifnot(bin_size %% 1 == 0)
-        stopifnot(bin_size > 0)
-      
-        # If the number of bins is too small, we warn the user.
-        bin_count <- floor(ncol(data) / bin_size)
-        if (bin_count < 5) {
-            message <- paste0("Number of bins is very small: ", bin_count, 
-                        "\n  You should consider reducing the bin_size value.")
-            warning(message)
-        }
-        # If bin_size is not a multiple of ncol(data), we remove the bin that 
-        # have a different size than the others.
-        remainder <- ncol(data) %% bin_size
-        if (remainder != 0) {
-            message <- paste0("bin_size is not a multiple of the number of ", 
-                        "columns in data.\n")
-            message <- paste0(message, "  Columns ", ncol(data) - remainder, 
-                        "-", ncol(data), " will be removed.")
-            warning(message)
-            data <- data[,1:(ncol(data)-remainder)]
-        }
-      
-        # TODO : remplacer par un ifelse sans le "return"
-        splitMean <- function(x, bs) {
-            if (bs < length(x)) {
-                return(tapply(x, (seq_along(x)-1) %/% bs, mean))
-            } else {
-                return(x)
-            }
-        }
-        return(unname(t(apply(data, 1, splitMean, bin_size))))
+        lapply(res, GenomeInfoDb::sortSeqlevels)
     },
     # Produce a plot with based on a data.frame
     #
