@@ -309,6 +309,97 @@ test.metagene_plot_region <- function() {
     checkIdentical(obs, exp, msg)
 } 
 
+# Invalid bin_count class
+test.metagene_plot_invalid_bin_count_class <- function() {
+   obs <- tryCatch(mg$plot(bin_count = "a"), error = conditionMessage)
+   exp <- "bin_count must be NULL or a positive integer"
+   msg <- paste0(base_msg, "Invalid bin_count class did not generate the ")
+   msg <- paste0(msg, "expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Invalid bin_count negative value
+test.metagene_plot_invalid_bin_count_negative_value <- function() {
+   obs <- tryCatch(mg$plot(bin_count = -1), error = conditionMessage)
+   exp <- "bin_count must be NULL or a positive integer"
+   msg <- paste0(base_msg, "Invalid bin_count negative value did not generate ")
+   msg <- paste0(msg, "the expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Invalid bin_count decimals
+test.metagene_plot_invalid_bin_count_decimals <- function() {
+   obs <- tryCatch(mg$plot(bin_count = 1.2), error = conditionMessage)
+   exp <- "bin_count must be NULL or a positive integer"
+   msg <- paste0(base_msg, "Invalid bin_count decimals did not generate ")
+   msg <- paste0(msg, "the expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Invalid bin_size class
+test.metagene_plot_invalid_bin_size_class <- function() {
+   obs <- tryCatch(mg$plot(bin_size = "a"), error = conditionMessage)
+   exp <- "bin_size must be NULL or a positive integer"
+   msg <- paste0(base_msg, "Invalid bin_size class did not generate the ")
+   msg <- paste0(msg, "expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Invalid bin_size negative value
+test.metagene_plot_invalid_bin_size_negative_value <- function() {
+   obs <- tryCatch(mg$plot(bin_size = -1), error = conditionMessage)
+   exp <- "bin_size must be NULL or a positive integer"
+   msg <- paste0(base_msg, "Invalid bin_size negative value did not generate ")
+   msg <- paste0(msg, "the expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Invalid bin_size decimals
+test.metagene_plot_invalid_bin_size_decimals <- function() {
+   obs <- tryCatch(mg$plot(bin_size = 1.2), error = conditionMessage)
+   exp <- "bin_size must be NULL or a positive integer"
+   msg <- paste0(base_msg, "Invalid bin_size decimals did not generate ")
+   msg <- paste0(msg, "the expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Invalid bin_size regions widths
+test.metagene_plot_invalid_bin_size_regions_width <- function() {
+   region <- lapply(regions[1:2], rtracklayer::import)
+   width(region[[1]]) <- 1000
+   mg <- metagene$new(bam_files=bam_files, regions=region)
+   obs <- tryCatch(mg$plot(bin_size = 100), error = conditionMessage)
+   exp <- "bin_size can only be used if all selected regions have"
+   exp <- paste(exp, "same width")
+   msg <- paste0(base_msg, "Invalid bin_size regions width did not generate ")
+   msg <- paste0(msg, "the expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Warning width not multiple of bin_size
+test.metagene_plot_invalid_bin_size_regions_width_not_multiple <- function() {
+   bin_size <- 1234
+   width <- 2000
+   obs <- tryCatch(mg$plot(bin_size = 1234), warning = conditionMessage)
+   exp <- paste0("width (", width, ") is not a multiple of ")
+   exp <- paste0(exp, "bin_size (", bin_size, "), last bin ")
+   exp <- paste0(exp, "will be removed.")
+   msg <- paste0(base_msg, "Invalid bin_size decimals did not generate ")
+   msg <- paste0(msg, "the expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+## Valid bin_size
+#test.metagene_plot_valid_bin_size <- function() {
+#  pdf(NULL)
+#  res <- tryCatch(mg$plot(bin_size = 100), error = conditionMessage)
+#  dev.off()
+#  msg <- paste0(base_msg, "Valid bin_size did not return the expected class.")
+#  checkTrue(class(res) == "list", msg)
+#  msg <- paste0(base_msg, "Valid bin_size did not return the expected content.")
+#  checkIdentical(names(res), c("DF", "friedman_test", "graph"))
+#}
+
 ###################################################
 ## Test the metagene$heatmap() function 
 ###################################################
