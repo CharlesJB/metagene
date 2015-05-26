@@ -1,6 +1,36 @@
 # Created by Charles Joly Beauparlant
 # 2013-11-26
 
+# Split a GRanges into N bins
+#
+# Originally posted by Martin Morgan:
+# https://stat.ethz.ch/pipermail/bioconductor/2012-September/047923.html
+#
+# param gr A GRanges with only one seqnames value.
+# param n Number of bins to produce.
+#
+# return
+#   A GRanges object splitted into N bins
+#
+# examples
+#   gr <- GRanges("chr1", IRanges(c(100, 300), c(200, 500))
+#   gr <- intoNbins(gr)
+intoNbins <- function(gr, n = 10) {
+    if (any(width(gr) < n)) stop("all 'width(gr)' must be >= 'n'")
+    d <- width(gr) / n
+    dd <- cumsum(rep(d, each=n))
+    mask <- logical(n); mask[1] <- TRUE
+    dd <- dd - rep(dd[mask], each=n)
+
+    starts <- round(rep(start(gr), each=n) + dd)
+    ends <- c(starts[-1], 0) - 1L
+    ends[rev(mask)] <- end(gr)
+
+    gr <- gr[rep(seq_along(gr), each=n)]
+    ranges(gr) <- IRanges(starts, ends)
+    gr
+}
+
 # Fetch the annotation of all genes
 #
 # Input:
