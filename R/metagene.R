@@ -399,7 +399,7 @@ metagene <- R6Class("metagene",
 	}
         matrices <- lapply(bam_files, get_matrices, gr = self$regions[[region]])
         # 2. Calculate the means
-	means <- do.call("+", matrices) / length(matrices)
+	means <- Reduce("+", matrices) / length(matrices)
     },
     get_view_means = function(gr, bam_file, bcount) {
 	chr <- unique(as.character(GenomeInfoDb::seqnames(gr)))
