@@ -393,7 +393,8 @@ metagene <- R6Class("metagene",
         # 1. Produce the matrices
         get_matrices <- function(bf, gr) {
 	  grl <- split(gr, GenomeInfoDb::seqnames(gr))
-	  do.call("rbind", lapply(grl, private$get_view_means, bam_file = bf,
+	  i <- sapply(grl, length) > 0
+	  do.call("rbind", lapply(grl[i], private$get_view_means, bam_file = bf,
 				  bcount = bcount))
 	}
         matrices <- lapply(bam_files, get_matrices, gr = self$regions[[region]])
