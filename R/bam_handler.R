@@ -156,7 +156,7 @@ Bam_Handler <- R6Class("Bam_Handler",
         cores <- self$parameters[["cores"]]
 
         coverage <- private$parallel_job$launch_job(
-            data = suppressWarnings(split(regions, 1:cores)),
+            data = split(regions, GenomeInfoDb::seqnames(regions)),
             FUN = private$extract_coverage_by_regions,
             bam_file = bam_file, count = count)
         
