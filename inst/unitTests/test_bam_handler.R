@@ -278,6 +278,16 @@ test.bam_handler_get_normalized_coverage_valid_use <- function() {
   checkIdentical(obs, exp, msg)
 }
 
+## Multicore
+test.bam_handler_get_normalized_coverage_multicore <- function() {
+  bam_file <- bam_files[1]
+  region <- regions[[1]]
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_file, cores = 2)
+  coverages <- bam_handler$get_normalized_coverage(bam_file, region)
+  msg <- paste(base_msg, "Multicore call did not return the correct number of chromosomes")
+  checkEquals(length(coverages), 22, msg)
+}
+
 ## Duplicated regions
 test.bam_handler_get_normalized_coverage_duplicated_regions <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
