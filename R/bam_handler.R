@@ -152,16 +152,11 @@ Bam_Handler <- R6Class("Bam_Handler",
             stop("Parameter regions must not be an empty GRanges object")
         }
 
-        count <- self$get_aligned_count(bam_file)
-        cores <- self$parameters[["cores"]]
+        # The regions must not be overlapping
+        regions <- reduce(regions)
 
-        coverage <- private$parallel_job$launch_job(
-            data = split(regions, GenomeInfoDb::seqnames(regions)),
-            FUN = private$extract_coverage_by_regions,
-            bam_file = bam_file, count = count)
-        
-        # Merge all the SimpleRleList into a single one
-        do.call("c", unname(coverage))
+        count <- self$get_aligned_count(bam_file)
+        private$extract_coverage_by_regions(regions, bam_file, count)
     }
   ),
   private = list(
