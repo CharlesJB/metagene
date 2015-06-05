@@ -441,10 +441,11 @@ metagene <- R6Class("metagene",
     produce_coverages = function() {
 	# TODO: add support for named bam files
 	regions <- GenomicRanges::reduce(BiocGenerics::unlist(self$regions))
-	res <- lapply(self$params[["bam_files"]],
-		      FUN = private$bam_handler$get_normalized_coverage,
-		      regions = regions,
-		      force_seqlevels= self$params[["force_seqlevels"]])
+        res <- private$parallel_job$launch_job(
+	                data = self$params[["bam_files"]],
+		            FUN = private$bam_handler$get_normalized_coverage,
+		            regions = regions,
+		            force_seqlevels= self$params[["force_seqlevels"]])
         names(res) <- self$params[["bam_files"]]
         lapply(res, GenomeInfoDb::sortSeqlevels)
     },
