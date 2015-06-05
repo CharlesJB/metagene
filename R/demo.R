@@ -29,3 +29,11 @@ get_not_indexed_bam_file <- function() {
 get_different_seqnames_bam_file <- function() {
     system.file("extdata/different_header.bam", package = "metagene")
 }
+
+get_coverage_bam_file <- function() {
+    system.file("extdata/coverage.bam", package = "metagene")
+}
+
+get_coverage_region <- function() {
+    system.file("extdata/list_coverage.bed", package = "metagene")
+}

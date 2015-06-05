@@ -288,6 +288,22 @@ test.bam_handler_get_normalized_coverage_multicore <- function() {
   checkEquals(length(coverages), 22, msg)
 }
 
+## Multiple chromosomes
+test.bam_handler_get_normalized_coverage_multiple_chromosomes <- function() {
+    bam_file <- metagene:::get_coverage_bam_file()
+    region <- rtracklayer::import(metagene:::get_coverage_region())
+    param <- Rsamtools::ScanBamParam(which = GenomicRanges::reduce(region))
+    exp <- GenomicAlignments::readGAlignments(bam_file, param = param)
+    count <- Rsamtools::countBam(bam_file)$records
+    weight <- weight <- 1 / (count / 1000000)
+    exp <- GenomicAlignments::coverage(exp) * weight
+    bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_file)
+    obs <- bam_handler$get_normalized_coverage(bam_file, region)
+    msg <- paste(base_msg, "Coverage is different that what was expected.")
+    checkTrue(all(sum(exp - obs) == 0), msg)
+    checkTrue(identical(names(exp), names(obs)))
+}
+
 ## Duplicated regions
 test.bam_handler_get_normalized_coverage_duplicated_regions <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
