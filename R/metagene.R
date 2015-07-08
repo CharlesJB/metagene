@@ -139,43 +139,46 @@ metagene <- R6Class("metagene",
         # Parameters validation are done by Bam_Handler object
         private$bam_handler$get_aligned_count(filename)
     },
-    produce_matrices = function(regions_group = NULL, design = NA, bin_count = 100,
+    produce_matrices = function(select_regions = NULL, design = NA, bin_count = 100,
                                 bin_size = NULL) {
         design = private$get_design(design)
-        private$check_produce_matrices_params(regions_group = regions_group, bin_count = bin_count,
+        private$check_produce_matrices_params(select_regions = select_regions,
+                                              bin_count = bin_count,
                                               bin_size = bin_size,
                                               design = design)
-            if (!identical(design, self$design) |
-                !identical(bin_size, self$params[["bin_size"]]) |
-                !identical(bin_count, self$params[["bin_count"]])) {
-                self$params[["bin_size"]] <- bin_size
-                self$params[["bin_count"]] <- bin_count
-                self$design <- design
+            if (private$matrices_need_update(select_regions = select_regions,
+                                             design = design,
+                                             bin_count = bin_count,
+                                             bin_size = bin_size)) {
                 if (!is.null(bin_size)) {
                     width <- width(self$regions[[1]][1])
                     bin_count <- floor(width / bin_size)
                 }
                 matrices <- list()
-                if (is.null(regions_group)) {
-                    regions_group <- names(self$regions)
+                if (is.null(select_regions)) {
+                    select_regions <- names(self$regions)
                 }
-                for (region in regions_group) {
+                for (region in select_regions) {
                     matrices[[region]] <- list()
-                    for (design in colnames(self$design)[-1]) {
-                        matrices[[region]][[design]] <- list()
+                    for (design_name in colnames(design)[-1]) {
+                        matrices[[region]][[design_name]] <- list()
 
-                        i <- self$design[[design]] == 1
-                        bam_files <- as.character(self$design[,1][i])
-                        matrices[[region]][[design]][["input"]] <-
+                        i <- design[[design_name]] == 1
+                        bam_files <- as.character(design[,1][i])
+                        matrices[[region]][[design_name]][["input"]] <-
                         private$get_matrix(region, bam_files, bin_count)
 
-                        i <- self$design[[design]] == 2
-                        bam_files <- as.character(self$design[,1][i])
-                        matrices[[region]][[design]][["ctrl"]] <-
+                        i <- design[[design_name]] == 2
+                        bam_files <- as.character(design[,1][i])
+                        matrices[[region]][[design_name]][["ctrl"]] <-
                         private$get_matrix(region, bam_files, bin_count)
                     }
                 }
                 self$matrices <- matrices
+                self$params[["bin_size"]] <- bin_size
+                self$params[["bin_count"]] <- bin_count
+                self$params[["select_regions"]] <- select_regions
+                self$design <- design
             }
         invisible(self)
     },
@@ -326,11 +329,16 @@ metagene <- R6Class("metagene",
                             "numeric format"))
         }
     },
-    check_produce_matrices_params = function(regions_group, bin_count, bin_size, design) {
-        if (!is.null(regions_group) &&
-                !all(unlist(regions_group) %in%  names(self$regions))) {
-            stop(paste0("All elements in regions_group should be regions ",
-                        "defined during the creation of metagene object"))
+    check_produce_matrices_params = function(select_regions, bin_count,
+                                             bin_size, design) {
+        if (!is.null(select_regions)) {
+            if (class(select_regions) != "character") {
+                stop("select_regions must be a character vector.")
+            }
+            if (!all(select_regions %in% names(self$regions))) {
+                stop(paste0("All elements in select_regions should be regions ",
+                            "defined during the creation of metagene object"))
+            }
         }
         # At least one file must be used in the design
         if (!identical(design, NA)) {
@@ -364,10 +372,10 @@ metagene <- R6Class("metagene",
         }
         # bin_size should be used only if all regions have the same width
         if (!is.null(bin_size)) {
-            if (is.null(regions_group)) {
-                regions_group <- names(self$regions)
+            if (is.null(select_regions)) {
+                select_regions <- names(self$regions)
             }
-            widths <- width(self$regions[names(self$regions) %in% regions_group])
+            widths <- width(self$regions[names(self$regions) %in% select_regions])
             widths <- unique(unlist(widths))
             if (length(widths) != 1) {
                 msg <- "bin_size can only be used if all selected regions have"
@@ -382,6 +390,22 @@ metagene <- R6Class("metagene",
                     warning(msg)
                 }
             }
+        }
+    },
+    matrices_need_update = function(select_regions, design, bin_count,
+                                    bin_size) {
+        if (!is.na(design) && !identical(self$design, design)) {
+            return(TRUE)
+        }
+        if (!is.na(select_regions) &&
+            !identical(self$params[["select_regions"]], select_regions)) {
+            return(TRUE)
+        }
+        if (!identical(self$params[["bin_count"]], bin_count)) {
+            return(TRUE)
+        }
+        if (!identical(self$params[["bin_size"]], bin_size)) {
+            return(TRUE)
         }
     },
     print_verbose = function(to_print) {
