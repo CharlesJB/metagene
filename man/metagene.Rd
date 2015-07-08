@@ -66,7 +66,7 @@ metagene plots on the data (or a subset of the data).
                 0: Do not use file.
                 1: File is input.
                 2: File is control.}
-  \item{region_group}{A \code{list} or a \code{vector} of region names to
+  \item{regions_group}{A \code{list} or a \code{vector} of region names to
                      include in the analysis. If \code{NULL}, all the
                      regions used when creating the
                      \code{metagene} object will be used.
@@ -83,6 +83,22 @@ metagene plots on the data (or a subset of the data).
                       Default: 1000.}
   \item{title}{A title to add to the graph. If \code{NULL}, will be
                       automatically created. Default: NULL}
+}
+\describe{
+  \item{}{\code{mg$produce_matrices(select_regions, design, bin_count,
+                bin_size}}
+  \item{select_regions}{A character vector representing corresponding to the
+                        regions to include in the metagene plot. The names
+                        of the regions must correspond to the names used for
+                        the initialization (\code{new}) of the metagene
+                        object. \code{NA} can be used to keep previous
+                        select_regions values. \code{NULL} can be used to
+                        keep all regions. Default: \code{NULL}.}
+  \item{design}{A \code{data.frame} that describe to experiment to plot. See
+                \code{new} function for more details.}
+  \item{bin_count}{The number of bin to create.}
+  \item{bin_size}{The size of bin to create. Can only be used if all the
+                  regions have the same size.}
 }
 \describe{
   \item{}{\code{mg$export(bam_file, region, file)}}

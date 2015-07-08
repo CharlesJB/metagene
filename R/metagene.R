@@ -73,6 +73,22 @@
 #'                       automatically created. Default: NULL}
 #' }
 #' \describe{
+#'   \item{}{\code{mg$produce_matrices(select_regions, design, bin_count,
+#'                 bin_size}}
+#'   \item{select_regions}{A character vector representing corresponding to the
+#'                         regions to include in the metagene plot. The names
+#'                         of the regions must correspond to the names used for
+#'                         the initialization (\code{new}) of the metagene
+#'                         object. \code{NA} can be used to keep previous
+#'                         select_regions values. \code{NULL} can be used to
+#'                         keep all regions. Default: \code{NULL}.}
+#'   \item{design}{A \code{data.frame} that describe to experiment to plot. See
+#'                 \code{new} function for more details.}
+#'   \item{bin_count}{The number of bin to create.}
+#'   \item{bin_size}{The size of bin to create. Can only be used if all the
+#'                   regions have the same size.}
+#' }
+#' \describe{
 #'   \item{}{\code{mg$export(bam_file, region, file)}}
 #'   \item{bam_file}{The name of the bam file to export.}
 #'   \item{region}{The name of the region to export.}
