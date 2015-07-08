@@ -211,14 +211,6 @@ metagene <- R6Class("metagene",
             }
         invisible(self)
     },
-    add_design = function(design) {
-        design <- private$get_design(design)
-        if (!identical(design, self$design)) {
-            self$design = design
-            private$update_matrices
-        }
-        invisible(self)
-    },
     plot = function(design = NULL, regions_group = NULL, bin_count = 100,
                     bin_size = NULL, alpha = 0.05, sample_count = 1000,
 		    range = c(-1,1), title = NULL) {
