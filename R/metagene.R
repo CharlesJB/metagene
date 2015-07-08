@@ -81,12 +81,19 @@
 #'                         the initialization (\code{new}) of the metagene
 #'                         object. \code{NA} can be used to keep previous
 #'                         select_regions values. \code{NULL} can be used to
-#'                         keep all regions. Default: \code{NULL}.}
+#'                         keep all regions. Default: \code{NA}.}
 #'   \item{design}{A \code{data.frame} that describe to experiment to plot. See
-#'                 \code{new} function for more details.}
-#'   \item{bin_count}{The number of bin to create.}
+#'                 \code{new} function for more details. \code{NA} can be used
+#'                 keep previous design value. Default: \code{NA}.}
+#'   \item{bin_count}{The number of bin to create. \code{NA} can be used to
+#'                    keep previous bin_count value. If both bin_count and
+#'                    bin_size are \code{NA}, a bin_count value of 100 will be
+#'                    used. Default: \code{NA}.}
 #'   \item{bin_size}{The size of bin to create. Can only be used if all the
-#'                   regions have the same size.}
+#'                   regions have the same size. \code{NA} can be used to keep
+#'                   previous bin_size value. If both bin_count and bin_size
+#'                   are \code{NA}, a bin_count value of 100 will be used.
+#'                   Default: \code{NA}.}
 #' }
 #' \describe{
 #'   \item{}{\code{mg$export(bam_file, region, file)}}
@@ -155,13 +162,19 @@ metagene <- R6Class("metagene",
         # Parameters validation are done by Bam_Handler object
         private$bam_handler$get_aligned_count(filename)
     },
-    produce_matrices = function(select_regions = NULL, design = NA, bin_count = 100,
-                                bin_size = NULL) {
+    produce_matrices = function(select_regions = NA, design = NA, bin_count = NA,
+                                bin_size = NA) {
         design = private$get_design(design)
         private$check_produce_matrices_params(select_regions = select_regions,
                                               bin_count = bin_count,
                                               bin_size = bin_size,
                                               design = design)
+            select_regions <- private$get_param_value(select_regions)
+            bin_count <- private$get_param_value(bin_count)
+            bin_size <- private$get_param_value(bin_size)
+            if (is.null(bin_count) & is.null(bin_size)) {
+                bin_count = 100
+            }
             if (private$matrices_need_update(select_regions = select_regions,
                                              design = design,
                                              bin_count = bin_count,
@@ -347,13 +360,15 @@ metagene <- R6Class("metagene",
     },
     check_produce_matrices_params = function(select_regions, bin_count,
                                              bin_size, design) {
-        if (!is.null(select_regions)) {
-            if (class(select_regions) != "character") {
-                stop("select_regions must be a character vector.")
-            }
-            if (!all(select_regions %in% names(self$regions))) {
-                stop(paste0("All elements in select_regions should be regions ",
-                            "defined during the creation of metagene object"))
+        if (!identical(select_regions, NA)) {
+            if (!is.null(select_regions)) {
+                if (class(select_regions) != "character") {
+                    stop("select_regions must be a character vector.")
+                }
+                if (!all(select_regions %in% names(self$regions))) {
+                    stop(paste0("All elements in select_regions should be regions ",
+                                "defined during the creation of metagene object"))
+                }
             }
         }
         # At least one file must be used in the design
@@ -373,56 +388,72 @@ metagene <- R6Class("metagene",
             }
         }
         # bin_count should be a numeric value without digits
-        if (!is.null(bin_count)) {
-            if (!is.numeric(bin_count) || bin_count < 0 ||
-                as.integer(bin_count) != bin_count) {
-                stop("bin_count must be NULL or a positive integer")
+        if (!identical(bin_count, NA)) {
+            if (!is.null(bin_count)) {
+                if (!is.numeric(bin_count) || bin_count < 0 ||
+                    as.integer(bin_count) != bin_count) {
+                    stop("bin_count must be NULL or a positive integer")
+                }
             }
         }
         # bin_size should be a numeric value without digits
-        if (!is.null(bin_size)) {
-            if (!is.numeric(bin_size) || bin_size < 0 ||
-                as.integer(bin_size) != bin_size) {
-                stop("bin_size must be NULL or a positive integer")
+        if (!identical(bin_size, NA)) {
+            if (!is.null(bin_size)) {
+                if (!is.numeric(bin_size) || bin_size < 0 ||
+                    as.integer(bin_size) != bin_size) {
+                    stop("bin_size must be NULL or a positive integer")
+                }
             }
         }
         # bin_size should be used only if all regions have the same width
-        if (!is.null(bin_size)) {
-            if (is.null(select_regions)) {
-                select_regions <- names(self$regions)
-            }
-            widths <- width(self$regions[names(self$regions) %in% select_regions])
-            widths <- unique(unlist(widths))
-            if (length(widths) != 1) {
-                msg <- "bin_size can only be used if all selected regions have"
-                msg <- paste(msg, "same width")
-                stop(msg)
-            } else {
-                modulo <- widths %% bin_size
-                if (modulo != 0) {
-                    msg <- paste0("width (", widths, ") is not a multiple of ")
-                    msg <- paste0(msg, "bin_size (", bin_size, "), last bin ")
-                    msg <- paste0(msg, "will be removed.")
-                    warning(msg)
+        if (!identical(bin_size, NA)) {
+            if (!is.null(bin_size)) {
+                if (is.null(select_regions) | identical(select_regions, NA)) {
+                    select_regions <- names(self$regions)
+                }
+                widths <- width(self$regions[names(self$regions) %in% select_regions])
+                widths <- unique(unlist(widths))
+                if (length(widths) != 1) {
+                    msg <- "bin_size can only be used if all selected regions have"
+                    msg <- paste(msg, "same width")
+                    stop(msg)
+                } else {
+                    modulo <- widths %% bin_size
+                    if (modulo != 0) {
+                        msg <- paste0("width (", widths, ") is not a multiple of ")
+                        msg <- paste0(msg, "bin_size (", bin_size, "), last bin ")
+                        msg <- paste0(msg, "will be removed.")
+                        warning(msg)
+                    }
                 }
             }
         }
     },
     matrices_need_update = function(select_regions, design, bin_count,
                                     bin_size) {
-        if (!is.na(design) && !identical(self$design, design)) {
+        if (!identical(self$design, design)) {
             return(TRUE)
         }
-        if (!is.na(select_regions) &&
-            !identical(self$params[["select_regions"]], select_regions)) {
-            return(TRUE)
-        }
-        if (!identical(self$params[["bin_count"]], bin_count)) {
+        if (!identical(self$params[["select_regions"]], select_regions)) {
             return(TRUE)
         }
         if (!identical(self$params[["bin_size"]], bin_size)) {
             return(TRUE)
         }
+        if (!identical(self$params[["bin_count"]], bin_count)) {
+            return(TRUE)
+        }
+    },
+    get_param_value = function(param_value) {
+        param_name <- as.character(quote(param_value))
+        if (identical(param_value, NA)) {
+            if (! param_name %in% names(self$params)) {
+                param_value <- NULL
+            } else {
+                param_value <- self$params[[param_value]]
+            }
+        }
+        return(param_value)
     },
     print_verbose = function(to_print) {
         if (self$params[["verbose"]]) {
