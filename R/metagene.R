@@ -157,6 +157,9 @@ metagene <- R6Class("metagene",
         private$print_verbose("Parse bam files...\n")
         private$print_verbose("  coverages...\n")
         self$coverages <- private$produce_coverages()
+
+        # Produce matrices
+        #self$produce_matrices()
     },
     get_bam_count = function(filename) {
         # Parameters validation are done by Bam_Handler object
@@ -482,7 +485,7 @@ metagene <- R6Class("metagene",
                                                         FUN = import)
             names(regions) <- names
         } else if (class(regions) == "GRanges") {
-            regions <- GRangesList(regions = regions)
+            regions <- GRangesList("regions" = regions)
         } else if (class(regions) == "list") {
             regions <- GRangesList(regions)
 	}
