@@ -220,7 +220,7 @@ metagene <- R6Class("metagene",
 	self$design <- private$get_design(design)
 
         # 1. Get the correctly formatted matrices
-        self$produce_matrices(regions_group = regions_group, design = self$design, bin_count = bin_count, bin_size = bin_size)
+        self$produce_matrices(select_regions = regions_group, design = self$design, bin_count = bin_count, bin_size = bin_size)
 
         # 2. Calculate means and confidence intervals
         sample_size <- as.integer(min(unlist(sapply(self$matrices, sapply,
