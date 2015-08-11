@@ -179,473 +179,472 @@ test.metagene_initialize_valid_regions_supplementary_seqlevels <- function() {
     checkIdentical(class(mg), c("metagene", "R6"), msg = msg)
 }
 
-## Invalid Extra seqnames
-#test.metagene_initialize_invalid_extra_seqnames <- function() {
-#    region <- rtracklayer::import(regions[1])
-#    GenomeInfoDb::seqlevels(region) <- "extra_seqlevels"
-#    obs <- tryCatch(metagene$new(regions = region, bam_files = named_bam_files),
-#		   error = conditionMessage)
-#    exp <- "Some seqnames of regions are absent in bam_file header"
-#    msg <- paste(base_msg, "Invalid regions seqnames did not give the expected")
-#    msg <- paste(msg, "error message.")
-#    checkIdentical(obs, exp, msg)
-#}
-#
-## Extra seqnames with force
-#test.metagene_initialize_one_extra_seqnames_force_seqlevels <- function() {
-#    region <- rtracklayer::import(regions[1])
-#    GenomeInfoDb::seqlevels(region) <- c(GenomeInfoDb::seqlevels(region),
-#					 "extra_seqlevels")
-#    GenomeInfoDb::seqnames(region)[1] <- "extra_seqlevels"
-#    mg <- tryCatch(metagene$new(regions = region, bam_files = bam_files,
-#				 force_seqlevels = TRUE),
-#		   error = conditionMessage)
-#    msg <- paste(base_msg, "Supplementary seqnames should not have raised an")
-#    msg <- paste(msg, "error with force_seqlevels = TRUE.")
-#    checkIdentical(class(mg), c("metagene", "R6"), msg = msg)
-#}
-#
-## Invalid all extra seqnames with force
-#test.metagene_initialize_all_extra_seqnames_force_seqlevels <- function() {
-#    region <- rtracklayer::import(regions[1])
-#    GenomeInfoDb::seqlevels(region) <- "extra_seqlevels"
-#    obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files,
-#				 force_seqlevels = TRUE),
-#		   error = conditionMessage)
-#    exp <- "Parameter regions must not be an empty GRanges object"
-#    msg <- paste(base_msg, "Invalid all extra seqnames did not generate the")
-#    msg <- paste(msg, "expected error with force_seqlevels = TRUE.")
-#    checkIdentical(obs, exp, msg)
-#}
-#
-####################################################
-### Test the metagene$plot() function 
-####################################################
-#
-#base_msg <- "metagene plot - "
-#
-#
+# Invalid Extra seqnames
+test.metagene_initialize_invalid_extra_seqnames <- function() {
+    region <- rtracklayer::import(regions[1])
+    GenomeInfoDb::seqlevels(region) <- "extra_seqlevels"
+    obs <- tryCatch(metagene$new(regions = region, bam_files = named_bam_files),
+		   error = conditionMessage)
+    exp <- "Some seqnames of regions are absent in bam_file header"
+    msg <- paste(base_msg, "Invalid regions seqnames did not give the expected")
+    msg <- paste(msg, "error message.")
+    checkIdentical(obs, exp, msg)
+}
+
+# Extra seqnames with force
+test.metagene_initialize_one_extra_seqnames_force_seqlevels <- function() {
+    region <- rtracklayer::import(regions[1])
+    GenomeInfoDb::seqlevels(region) <- c(GenomeInfoDb::seqlevels(region),
+					 "extra_seqlevels")
+    GenomeInfoDb::seqnames(region)[1] <- "extra_seqlevels"
+    mg <- tryCatch(metagene$new(regions = region, bam_files = bam_files,
+				 force_seqlevels = TRUE),
+		   error = conditionMessage)
+    msg <- paste(base_msg, "Supplementary seqnames should not have raised an")
+    msg <- paste(msg, "error with force_seqlevels = TRUE.")
+    checkIdentical(class(mg), c("metagene", "R6"), msg = msg)
+}
+
+# Invalid all extra seqnames with force
+test.metagene_initialize_all_extra_seqnames_force_seqlevels <- function() {
+    region <- rtracklayer::import(regions[1])
+    GenomeInfoDb::seqlevels(region) <- "extra_seqlevels"
+    obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files,
+				 force_seqlevels = TRUE),
+		   error = conditionMessage)
+    exp <- "Parameter regions must not be an empty GRanges object"
+    msg <- paste(base_msg, "Invalid all extra seqnames did not generate the")
+    msg <- paste(msg, "expected error with force_seqlevels = TRUE.")
+    checkIdentical(obs, exp, msg)
+}
+
+###################################################
+## Test the metagene$plot() function 
+###################################################
+
+base_msg <- "metagene plot - "
+
 
 ## Valid bin_size
-#test.metagene_plot_valid_bin_size <- function() {
-#  pdf(NULL)
-#  res <- tryCatch(mg$plot(bin_size = 100), error = conditionMessage)
-#  dev.off()
-#  msg <- paste0(base_msg, "Valid bin_size did not return the expected class.")
-#  checkTrue(class(res) == "list", msg)
-#  msg <- paste0(base_msg, "Valid bin_size did not return the expected content.")
-#  checkIdentical(names(res), c("DF", "friedman_test", "graph"))
-#}
-#
-####################################################
-### Test the metagene$heatmap() function 
-####################################################
-#
-#base_msg <- "metagene heatmap - "
-#
-## Invalid negative bin_size
-#test.metagene_heatmap_negative_bin_size <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    obs <- tryCatch(mg$heatmap(bin_size=-2), 
-#                    error=conditionMessage)
-#    exp <- "bin_size must be a positive integer"
-#    msg <- paste0(base_msg, "A negative bin_size ",
-#                  "did not generate an exception with expected message." )
-#    checkIdentical(obs, exp, msg)
-#}
-#
-## Invalid zero bin_size
-#test.metagene_heatmap_zero_bin_size <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    obs <- tryCatch(mg$heatmap(bin_size=0), 
-#                    error=conditionMessage)
-#    exp <- "bin_size must be a positive integer"
-#    msg <- paste0(base_msg, "A zero bin_size ",
-#                  "did not generate an exception with expected message." )
-#    checkIdentical(obs, exp, msg)
-#}
-#
-## Invalid numerical bin_size
-#test.metagene_heatmap_decimal_bin_size <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    obs <- tryCatch(mg$heatmap(bin_size=2.3), 
-#                    error=conditionMessage)
-#    exp <- "bin_size must be a positive integer"
-#    msg <- paste0(base_msg, "A decimal bin_size ",
-#                  "did not generate an exception with expected message." )
-#    checkIdentical(obs, exp, msg)
-#}
-#
+test.metagene_plot_valid_bin_size <- function() {
+  mg <- metagene$new(regions = regions, bam_files = bam_files)
+  pdf(NULL)
+  res <- tryCatch(mg$plot(bin_size = 100), error = conditionMessage)
+  dev.off()
+  msg <- paste0(base_msg, "Valid bin_size did not return the expected class.")
+  checkTrue(class(res) == "list", msg)
+  msg <- paste0(base_msg, "Valid bin_size did not return the expected content.")
+  checkIdentical(names(res), c("DF", "friedman_test", "graph"))
+}
+
 ###################################################
-## Test the metagene$produce_matrices() function 
+## Test the metagene$heatmap() function 
 ###################################################
 
+base_msg <- "metagene heatmap - "
+
+# Invalid negative bin_size
+test.metagene_heatmap_negative_bin_size <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    obs <- tryCatch(mg$heatmap(bin_size=-2), 
+                    error=conditionMessage)
+    exp <- "bin_size must be a positive integer"
+    msg <- paste0(base_msg, "A negative bin_size ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+}
+
+# Invalid zero bin_size
+test.metagene_heatmap_zero_bin_size <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    obs <- tryCatch(mg$heatmap(bin_size=0), 
+                    error=conditionMessage)
+    exp <- "bin_size must be a positive integer"
+    msg <- paste0(base_msg, "A zero bin_size ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+}
+
+# Invalid numerical bin_size
+test.metagene_heatmap_decimal_bin_size <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    obs <- tryCatch(mg$heatmap(bin_size=2.3), 
+                    error=conditionMessage)
+    exp <- "bin_size must be a positive integer"
+    msg <- paste0(base_msg, "A decimal bin_size ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+}
+
+##################################################
+# Test the metagene$produce_matrices() function 
+##################################################
 #base_msg <- "metagene produce_matrices - "
-#
-#test.metagene_produce_matrices_valid_default <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    checkIdentical("bin_size" %in% mg$params, FALSE)
-#    checkIdentical("bin_count" %in% mg$params, FALSE)
-#    mg$produce_matrices()
-#    checkIdentical(mg$params[["bin_size"]], NULL)
-#    checkIdentical(mg$params[["bin_count"]], 100)
-#    checkIdentical(is.list(mg$matrices), TRUE)
-#    checkIdentical(length(mg$matrices) == 2, TRUE)
-#    checkIdentical(all(sapply(mg$matrices, class) == c("list", "list")), TRUE)
-#    checkIdentical(all(sapply(mg$matrices, length) == c(5,5)), TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,100)), TRUE)
-#}
-#
-#test.metagene_produce_matrices_valid_design <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    checkIdentical("bin_size" %in% mg$params, FALSE)
-#    checkIdentical("bin_count" %in% mg$params, FALSE)
-#    mg$produce_matrices(design = design)
-#    checkIdentical(mg$params[["bin_size"]], NULL)
-#    checkIdentical(mg$params[["bin_count"]], 100)
-#    checkIdentical(is.list(mg$matrices), TRUE)
-#    checkIdentical(length(mg$matrices) == 2, TRUE)
-#    checkIdentical(all(sapply(mg$matrices, class) == c("list", "list")), TRUE)
-#    checkIdentical(all(sapply(mg$matrices, length) == c(2,2)), TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[1]]) == 2, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[2]]) == 2, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[1]]) == 2, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[2]]) == 2, TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[2]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[2]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[2]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[2]]), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[1]][[2]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[2]][[2]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[1]][[2]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[2]][[2]]) == c(50,100)), TRUE)
-#}
-#
-#test.metagene_produce_matrices_valid_select_region <- function() {
-#    select_regions <- "list1"
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    checkIdentical("bin_size" %in% mg$params, FALSE)
-#    checkIdentical("bin_count" %in% mg$params, FALSE)
-#    mg$produce_matrices(select_regions = select_regions)
-#    checkIdentical(mg$params[["bin_size"]], NULL)
-#    checkIdentical(mg$params[["bin_count"]], 100)
-#    checkIdentical(is.list(mg$matrices), TRUE)
-#    checkIdentical(length(mg$matrices) == 1, TRUE)
-#    checkIdentical(all(sapply(mg$matrices, class) == "list"), TRUE)
-#    checkIdentical(all(sapply(mg$matrices, length) == 5), TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,100)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,100)), TRUE)
-#}
-#
-#test.metagene_produce_matrices_valid_bin_count <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    checkIdentical("bin_size" %in% mg$params, FALSE)
-#    checkIdentical("bin_count" %in% mg$params, FALSE)
-#    mg$produce_matrices(bin_count = 200)
-#    checkIdentical(mg$params[["bin_size"]], NULL)
-#    checkIdentical(mg$params[["bin_count"]], 200)
-#    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,200)), TRUE)
-#}
-#
-#test.metagene_produce_matrices_valid_bin_size <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    checkIdentical("bin_size" %in% mg$params, FALSE)
-#    checkIdentical("bin_count" %in% mg$params, FALSE)
-#    mg$produce_matrices(bin_size = 10)
-#    checkIdentical(mg$params[["bin_size"]], 10)
-#    checkIdentical(mg$params[["bin_count"]], 200)
-#    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
-#    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
-#    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,200)), TRUE)
-#    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,200)), TRUE)
-#}
-#
-## Not valid design object
-#test.metagene_produce_matrices_invalid_design <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    obs <- tryCatch(mg$produce_matrices(design=c(1,2)), 
-#                    error=conditionMessage)
-#    exp <- "design must be a data.frame object"
-#    msg <- paste0(base_msg, "A vector design object ",
-#                  "did not generate an exception with expected message." )
-#    checkIdentical(obs, exp, msg)
-#}
-#
-## Design data.frame with not enough columns
-#test.metagene_produce_matrices_invalid_design_data_frame <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    obs <- tryCatch(mg$produce_matrices(design=data.frame(a=c("ZOMBIE_ONE", "ZOMBIE_TWO"))), 
-#                    error=conditionMessage)
-#    exp <- "design must have at least 2 columns"
-#    msg <- paste0(base_msg, "A design data.frame with only one column ",
-#                  "did not generate an exception with expected message." )
-#    checkIdentical(obs, exp, msg)
-#}
-#
-## Design data.frame with invalid first column
-#test.metagene_produce_matrices_invalid_design_first_column <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    obs <- tryCatch(mg$produce_matrices(design=data.frame(a=c(1,3), 
-#                zombies=c("ZOMBIE_ONE", "ZOMBIE_TWO"))), 
-#                error=conditionMessage)
-#    exp <- "The first column of design must be BAM filenames"
-#    msg <- paste0(base_msg, "A design data.frame with numbers in first column ",
-#                  "did not generate an exception with expected message." )
-#    checkIdentical(obs, exp, msg)
-#}
-#
-## Design data.frame with invalid second column
-#test.metagene_produce_matrices_invalid_design_second_column <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    designTemp<-data.frame(a=named_bam_files, 
-#                           zombies=rep("ZOMBIE_ONE", length(named_bam_files)))
-#    obs <- tryCatch(mg$produce_matrices(design=designTemp), error=conditionMessage)
-#    exp <- paste0("All design column, except the first one, must be in ", 
-#                    "numeric format")
-#    msg <- paste0(base_msg, "A design data.frame with characters in second column ",
-#                  "did not generate an exception with expected message." )
-#    checkIdentical(obs, exp, msg)
-#}
-#
-## Design data.frame with invalid second column
-#test.metagene_produce_matrices_invalid_design_not_defined_file <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    designNew<-data.frame(a=c(named_bam_files, "I am not a file"), 
-#                          b=rep(1, length(named_bam_files) + 1))
-#    obs <- tryCatch(mg$produce_matrices(design=designNew), 
-#                        error=conditionMessage)
-#    exp <- "At least one BAM file does not exist"
-#    msg <- paste0(base_msg, "A design data.frame with not existing file in ", 
-#            "first column did not generate an exception with expected message.")
-#    checkIdentical(obs, exp, msg)
-#}
-#
-## Design using zero file (0 in all rows of the design object)
-#test.metagene_produce_matrices_design_using_no_file <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    designNew<-data.frame(a=named_bam_files, 
-#                          b=rep(0, length(named_bam_files)))
-#    obs <- tryCatch(mg$produce_matrices(design=designNew), 
-#                    error=conditionMessage)
-#    exp <- "At least one BAM file must be used in the design"
-#    msg <- paste0(base_msg, "A design data.frame which does not use BAM file ", 
-#                  "did not generate an exception with expected message.")
-#    checkIdentical(obs, exp, msg)
-#}
-#
-## Invalid select_regions class
-#test.metagene_produce_matrices_invalid_select_regions_class <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    obs <- tryCatch(mg$produce_matrices(select_regions=array(NA, dim = c(2,2,2))), 
-#                    error=conditionMessage)
-#    exp <- "select_regions must be a character vector."
-#
-#    msg <- paste0(base_msg, "A invalid select_regions object class ",
-#                  "did not generate an exception with expected message." )
-#    checkIdentical(obs, exp, msg)
-#}
-#
-## Invalid select_regions content
-#test.metagene_produce_matrices_invalid_select_regions_content <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    obs <- tryCatch(mg$produce_matrices(select_regions=c(regions, "Hello Word!")), 
-#                    error=conditionMessage)
-#    exp <- paste0("All elements in select_regions should be regions ",
-#                  "defined during the creation of metagene object")
-#    msg <- paste0(base_msg, "A invalid select_regions object content ",
-#                  "did not generate an exception with expected message." )
-#    checkIdentical(obs, exp, msg)
-#}
-#
-## Invalid bin_count class
-#test.metagene_produce_matrices_invalid_bin_count_class <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#   obs <- tryCatch(mg$produce_matrices(bin_count = "a"), error = conditionMessage)
-#   exp <- "bin_count must be NULL or a positive integer"
-#   msg <- paste0(base_msg, "Invalid bin_count class did not generate the ")
-#   msg <- paste0(msg, "expected error message.")
-#   checkIdentical(obs, exp, msg)
-#}
-#
-## Invalid bin_count negative value
-#test.metagene_produce_matrices_invalid_bin_count_negative_value <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#   obs <- tryCatch(mg$produce_matrices(bin_count = -1), error = conditionMessage)
-#   exp <- "bin_count must be NULL or a positive integer"
-#   msg <- paste0(base_msg, "Invalid bin_count negative value did not generate ")
-#   msg <- paste0(msg, "the expected error message.")
-#   checkIdentical(obs, exp, msg)
-#}
-#
-## Invalid bin_count decimals
-#test.metagene_produce_matrices_invalid_bin_count_decimals <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#   obs <- tryCatch(mg$produce_matrices(bin_count = 1.2), error = conditionMessage)
-#   exp <- "bin_count must be NULL or a positive integer"
-#   msg <- paste0(base_msg, "Invalid bin_count decimals did not generate ")
-#   msg <- paste0(msg, "the expected error message.")
-#   checkIdentical(obs, exp, msg)
-#}
-#
-## Invalid bin_size class
-#test.metagene_produce_matrices_invalid_bin_size_class <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#    obs <- tryCatch(mg$produce_matrices(bin_size = "a"), error = conditionMessage)
-#    exp <- "bin_size must be NULL or a positive integer"
-#    msg <- paste0(base_msg, "Invalid bin_size class did not generate the ")
-#    msg <- paste0(msg, "expected error message.")
-#    checkIdentical(obs, exp ,msg)
-#}
-#
-## Invalid bin_size negative value
-#test.metagene_produce_matrices_invalid_bin_size_negative_value <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#   obs <- tryCatch(mg$produce_matrices(bin_size = -1), error = conditionMessage)
-#   exp <- "bin_size must be NULL or a positive integer"
-#   msg <- paste0(base_msg, "Invalid bin_size negative value did not generate ")
-#   msg <- paste0(msg, "the expected error message.")
-#   checkIdentical(obs, exp, msg)
-#}
-#
-## Invalid bin_size decimals
-#test.metagene_produce_matrices_invalid_bin_size_decimals <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#   obs <- tryCatch(mg$produce_matrices(bin_size = 1.2), error = conditionMessage)
-#   exp <- "bin_size must be NULL or a positive integer"
-#   msg <- paste0(base_msg, "Invalid bin_size decimals did not generate ")
-#   msg <- paste0(msg, "the expected error message.")
-#   checkIdentical(obs, exp, msg)
-#}
-#
-## Invalid bin_size regions widths
-#test.metagene_produce_matrices_invalid_bin_size_regions_width <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#   region <- lapply(regions[1:2], rtracklayer::import)
-#   width(region[[1]]) <- 1000
-#   mg <- metagene$new(bam_files=bam_files, regions=region)
-#   obs <- tryCatch(mg$produce_matrices(bin_size = 100), error = conditionMessage)
-#   exp <- "bin_size can only be used if all selected regions have"
-#   exp <- paste(exp, "same width")
-#   msg <- paste0(base_msg, "Invalid bin_size regions width did not generate ")
-#   msg <- paste0(msg, "the expected error message.")
-#   checkIdentical(obs, exp, msg)
-#}
-#
-## Warning width not multiple of bin_size
-#test.metagene_produce_matrices_invalid_bin_size_regions_width_not_multiple <- function() {
-#    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
-#   bin_size <- 1234
-#   width <- 2000
-#   obs <- tryCatch(mg$produce_matrices(bin_size = 1234), warning = conditionMessage)
-#   exp <- paste0("width (", width, ") is not a multiple of ")
-#   exp <- paste0(exp, "bin_size (", bin_size, "), last bin ")
-#   exp <- paste0(exp, "will be removed.")
-#   msg <- paste0(base_msg, "Invalid bin_size decimals did not generate ")
-#   msg <- paste0(msg, "the expected error message.")
-#   checkIdentical(obs, exp, msg)
-#}
+
+test.metagene_produce_matrices_valid_default <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    checkIdentical("bin_size" %in% mg$params, FALSE)
+    checkIdentical("bin_count" %in% mg$params, FALSE)
+    mg$produce_matrices()
+    checkIdentical(mg$params[["bin_size"]], NULL)
+    checkIdentical(mg$params[["bin_count"]], 100)
+    checkIdentical(is.list(mg$matrices), TRUE)
+    checkIdentical(length(mg$matrices) == 2, TRUE)
+    checkIdentical(all(sapply(mg$matrices, class) == c("list", "list")), TRUE)
+    checkIdentical(all(sapply(mg$matrices, length) == c(5,5)), TRUE)
+    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,100)), TRUE)
+}
+
+test.metagene_produce_matrices_valid_design <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    checkIdentical("bin_size" %in% mg$params, FALSE)
+    checkIdentical("bin_count" %in% mg$params, FALSE)
+    mg$produce_matrices(design = design)
+    checkIdentical(mg$params[["bin_size"]], NULL)
+    checkIdentical(mg$params[["bin_count"]], 100)
+    checkIdentical(is.list(mg$matrices), TRUE)
+    checkIdentical(length(mg$matrices) == 2, TRUE)
+    checkIdentical(all(sapply(mg$matrices, class) == c("list", "list")), TRUE)
+    checkIdentical(all(sapply(mg$matrices, length) == c(2,2)), TRUE)
+    checkIdentical(length(mg$matrices[[1]][[1]]) == 2, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[2]]) == 2, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[1]]) == 2, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[2]]) == 2, TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[2]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[2]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[2]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[2]]), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[1]][[2]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[2]][[2]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[1]][[2]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[2]][[2]]) == c(50,100)), TRUE)
+}
+
+test.metagene_produce_matrices_valid_select_region <- function() {
+    select_regions <- "list1"
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    checkIdentical("bin_size" %in% mg$params, FALSE)
+    checkIdentical("bin_count" %in% mg$params, FALSE)
+    mg$produce_matrices(select_regions = select_regions)
+    checkIdentical(mg$params[["bin_size"]], NULL)
+    checkIdentical(mg$params[["bin_count"]], 100)
+    checkIdentical(is.list(mg$matrices), TRUE)
+    checkIdentical(length(mg$matrices) == 1, TRUE)
+    checkIdentical(all(sapply(mg$matrices, class) == "list"), TRUE)
+    checkIdentical(all(sapply(mg$matrices, length) == 5), TRUE)
+    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,100)), TRUE)
+}
+
+test.metagene_produce_matrices_valid_bin_count <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    checkIdentical("bin_size" %in% mg$params, FALSE)
+    checkIdentical("bin_count" %in% mg$params, FALSE)
+    mg$produce_matrices(bin_count = 200)
+    checkIdentical(mg$params[["bin_size"]], NULL)
+    checkIdentical(mg$params[["bin_count"]], 200)
+    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,200)), TRUE)
+}
+
+test.metagene_produce_matrices_valid_bin_size <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    checkIdentical("bin_size" %in% mg$params, FALSE)
+    checkIdentical("bin_count" %in% mg$params, FALSE)
+    mg$produce_matrices(bin_size = 10)
+    checkIdentical(mg$params[["bin_size"]], 10)
+    checkIdentical(mg$params[["bin_count"]], 200)
+    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,200)), TRUE)
+}
+
+# Not valid design object
+test.metagene_produce_matrices_invalid_design <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    obs <- tryCatch(mg$produce_matrices(design=c(1,2)), 
+                    error=conditionMessage)
+    exp <- "design must be a data.frame object"
+    msg <- paste0(base_msg, "A vector design object ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+}
+
+# Design data.frame with not enough columns
+test.metagene_produce_matrices_invalid_design_data_frame <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    obs <- tryCatch(mg$produce_matrices(design=data.frame(a=c("ZOMBIE_ONE", "ZOMBIE_TWO"))), 
+                    error=conditionMessage)
+    exp <- "design must have at least 2 columns"
+    msg <- paste0(base_msg, "A design data.frame with only one column ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+}
+
+# Design data.frame with invalid first column
+test.metagene_produce_matrices_invalid_design_first_column <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    obs <- tryCatch(mg$produce_matrices(design=data.frame(a=c(1,3), 
+                zombies=c("ZOMBIE_ONE", "ZOMBIE_TWO"))), 
+                error=conditionMessage)
+    exp <- "The first column of design must be BAM filenames"
+    msg <- paste0(base_msg, "A design data.frame with numbers in first column ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+}
+
+# Design data.frame with invalid second column
+test.metagene_produce_matrices_invalid_design_second_column <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    designTemp<-data.frame(a=named_bam_files, 
+                           zombies=rep("ZOMBIE_ONE", length(named_bam_files)))
+    obs <- tryCatch(mg$produce_matrices(design=designTemp), error=conditionMessage)
+    exp <- paste0("All design column, except the first one, must be in ", 
+                    "numeric format")
+    msg <- paste0(base_msg, "A design data.frame with characters in second column ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+}
+
+# Design data.frame with invalid second column
+test.metagene_produce_matrices_invalid_design_not_defined_file <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    designNew<-data.frame(a=c(named_bam_files, "I am not a file"), 
+                          b=rep(1, length(named_bam_files) + 1))
+    obs <- tryCatch(mg$produce_matrices(design=designNew), 
+                        error=conditionMessage)
+    exp <- "At least one BAM file does not exist"
+    msg <- paste0(base_msg, "A design data.frame with not existing file in ", 
+            "first column did not generate an exception with expected message.")
+    checkIdentical(obs, exp, msg)
+}
+
+# Design using zero file (0 in all rows of the design object)
+test.metagene_produce_matrices_design_using_no_file <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    designNew<-data.frame(a=named_bam_files, 
+                          b=rep(0, length(named_bam_files)))
+    obs <- tryCatch(mg$produce_matrices(design=designNew), 
+                    error=conditionMessage)
+    exp <- "At least one BAM file must be used in the design"
+    msg <- paste0(base_msg, "A design data.frame which does not use BAM file ", 
+                  "did not generate an exception with expected message.")
+    checkIdentical(obs, exp, msg)
+}
+
+# Invalid select_regions class
+test.metagene_produce_matrices_invalid_select_regions_class <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    obs <- tryCatch(mg$produce_matrices(select_regions=array(NA, dim = c(2,2,2))), 
+                    error=conditionMessage)
+    exp <- "select_regions must be a character vector."
+
+    msg <- paste0(base_msg, "A invalid select_regions object class ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+}
+
+# Invalid select_regions content
+test.metagene_produce_matrices_invalid_select_regions_content <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    obs <- tryCatch(mg$produce_matrices(select_regions=c(regions, "Hello Word!")), 
+                    error=conditionMessage)
+    exp <- paste0("All elements in select_regions should be regions ",
+                  "defined during the creation of metagene object")
+    msg <- paste0(base_msg, "A invalid select_regions object content ",
+                  "did not generate an exception with expected message." )
+    checkIdentical(obs, exp, msg)
+}
+
+# Invalid bin_count class
+test.metagene_produce_matrices_invalid_bin_count_class <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   obs <- tryCatch(mg$produce_matrices(bin_count = "a"), error = conditionMessage)
+   exp <- "bin_count must be NULL or a positive integer"
+   msg <- paste0(base_msg, "Invalid bin_count class did not generate the ")
+   msg <- paste0(msg, "expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Invalid bin_count negative value
+test.metagene_produce_matrices_invalid_bin_count_negative_value <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   obs <- tryCatch(mg$produce_matrices(bin_count = -1), error = conditionMessage)
+   exp <- "bin_count must be NULL or a positive integer"
+   msg <- paste0(base_msg, "Invalid bin_count negative value did not generate ")
+   msg <- paste0(msg, "the expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Invalid bin_count decimals
+test.metagene_produce_matrices_invalid_bin_count_decimals <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   obs <- tryCatch(mg$produce_matrices(bin_count = 1.2), error = conditionMessage)
+   exp <- "bin_count must be NULL or a positive integer"
+   msg <- paste0(base_msg, "Invalid bin_count decimals did not generate ")
+   msg <- paste0(msg, "the expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Invalid bin_size class
+test.metagene_produce_matrices_invalid_bin_size_class <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    obs <- tryCatch(mg$produce_matrices(bin_size = "a"), error = conditionMessage)
+    exp <- "bin_size must be NULL or a positive integer"
+    msg <- paste0(base_msg, "Invalid bin_size class did not generate the ")
+    msg <- paste0(msg, "expected error message.")
+    checkIdentical(obs, exp ,msg)
+}
+
+# Invalid bin_size negative value
+test.metagene_produce_matrices_invalid_bin_size_negative_value <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   obs <- tryCatch(mg$produce_matrices(bin_size = -1), error = conditionMessage)
+   exp <- "bin_size must be NULL or a positive integer"
+   msg <- paste0(base_msg, "Invalid bin_size negative value did not generate ")
+   msg <- paste0(msg, "the expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Invalid bin_size decimals
+test.metagene_produce_matrices_invalid_bin_size_decimals <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   obs <- tryCatch(mg$produce_matrices(bin_size = 1.2), error = conditionMessage)
+   exp <- "bin_size must be NULL or a positive integer"
+   msg <- paste0(base_msg, "Invalid bin_size decimals did not generate ")
+   msg <- paste0(msg, "the expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Invalid bin_size regions widths
+test.metagene_produce_matrices_invalid_bin_size_regions_width <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   region <- lapply(regions[1:2], rtracklayer::import)
+   width(region[[1]]) <- 1000
+   mg <- metagene$new(bam_files=bam_files, regions=region)
+   obs <- tryCatch(mg$produce_matrices(bin_size = 100), error = conditionMessage)
+   exp <- "bin_size can only be used if all selected regions have"
+   exp <- paste(exp, "same width")
+   msg <- paste0(base_msg, "Invalid bin_size regions width did not generate ")
+   msg <- paste0(msg, "the expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Warning width not multiple of bin_size
+test.metagene_produce_matrices_invalid_bin_size_regions_width_not_multiple <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   bin_size <- 1234
+   width <- 2000
+   obs <- tryCatch(mg$produce_matrices(bin_size = 1234), warning = conditionMessage)
+   exp <- paste0("width (", width, ") is not a multiple of ")
+   exp <- paste0(exp, "bin_size (", bin_size, "), last bin ")
+   exp <- paste0(exp, "will be removed.")
+   msg <- paste0(base_msg, "Invalid bin_size decimals did not generate ")
+   msg <- paste0(msg, "the expected error message.")
+   checkIdentical(obs, exp, msg)
+}

@@ -217,7 +217,7 @@ metagene <- R6Class("metagene",
     plot = function(design = NULL, regions_group = NULL, bin_count = 100,
                     bin_size = NULL, alpha = 0.05, sample_count = 1000,
 		    range = c(-1,1), title = NULL) {
-        self$add_design(design)
+	self$design <- private$get_design(design)
 
         # 1. Get the correctly formatted matrices
         self$produce_matrices(regions_group = regions_group, design = self$design, bin_count = bin_count, bin_size = bin_size)
