@@ -262,6 +262,176 @@ test.bam_handler_get_rpm_coefficient_invalid_bam_file <- function() {
 }
 
 ###################################################
+## Test the bam_handler$get_coverage()
+###################################################
+
+base_msg <- "Bam_Handler get_coverage -"
+
+## Valid use
+test.bam_handler_get_coverage_valid_use <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  region <- regions[[1]][1]
+  bam_file <- bam_files[1]
+  obs <- bam_handler$get_coverage(bam_file, region)
+  exp <- GenomicAlignments::coverage(GenomicAlignments::readGAlignments(bam_file, param = Rsamtools::ScanBamParam(which = reduce(region))))
+  msg <- paste(base_msg, "Valid use do not give the expected results")
+  checkIdentical(obs, exp, msg)
+}
+
+## Multicore
+test.bam_handler_get_coverage_multicore <- function() {
+  bam_file <- bam_files[1]
+  region <- regions[[1]]
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_file, cores = 2)
+  coverages <- bam_handler$get_coverage(bam_file, region)
+  msg <- paste(base_msg, "Multicore call did not return the correct number of chromosomes")
+  checkEquals(length(coverages), 22, msg)
+}
+
+## Multiple chromosomes
+test.bam_handler_get_coverage_multiple_chromosomes <- function() {
+    bam_file <- metagene:::get_coverage_bam_file()
+    region <- rtracklayer::import(metagene:::get_coverage_region())
+    param <- Rsamtools::ScanBamParam(which = GenomicRanges::reduce(region))
+    exp <- GenomicAlignments::readGAlignments(bam_file, param = param)
+    count <- Rsamtools::countBam(bam_file)$records
+    exp <- GenomicAlignments::coverage(exp)
+    bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_file)
+    obs <- bam_handler$get_coverage(bam_file, region)
+    msg <- paste(base_msg, "Coverage is different that what was expected.")
+    checkTrue(all(sum(exp - obs) == 0), msg)
+    checkTrue(identical(names(exp), names(obs)))
+}
+
+## Duplicated regions
+test.bam_handler_get_coverage_duplicated_regions <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  region <- regions[[1]]
+  bam_file <- bam_files[1]
+  obs <- bam_handler$get_coverage(bam_file, region)
+  msg <- paste(base_msg, "Duplicated regions do not give expected results")
+  exp <- GenomicAlignments::coverage(GenomicAlignments::readGAlignments(bam_file, param = Rsamtools::ScanBamParam(which = reduce(region))))
+  checkIdentical(obs, exp, msg)
+  # Sanity check
+  sane <- GenomicAlignments::coverage(GenomicAlignments::readGAlignments(bam_file, param = Rsamtools::ScanBamParam(which = region)))
+  msg <- paste(base_msg, "Duplicated regions did not pass sanity test - reduced regions")
+  checkTrue(!identical(reduce(region), region), msg = msg)
+  msg <- paste(base_msg, "Duplicated regions did not pass sanity test - identical")
+  checkTrue(!identical(obs, sane), msg = msg)
+}
+
+## Negative coverage
+test.bam_handler_get_coverage_negative_coverage <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  region <- regions[[1]][1]
+  bam_file <- bam_files[4]
+  obs <- bam_handler$get_coverage(bam_file, region)
+  msg <- paste(base_msg, "Negative coverage returns some negative values")
+  checkTrue(all(sapply(obs, function(x) all(as.numeric(x) >= 0))), msg = msg)
+  # Sanity check
+  weight <- 1 / (bam_handler$get_aligned_count(bam_file) / 1000000)
+  sane <- GenomicAlignments::coverage(GenomicAlignments::readGAlignments(bam_file, param = Rsamtools::ScanBamParam(which = reduce(region))), weight = weight)
+  msg <- paste(base_msg, "Negative coverage did not pass sanity test")
+  checkTrue(!all(sapply(sane, function(x) all(as.numeric(x) >= 0))), msg = msg)
+}
+
+## Invalid bam file
+test.bam_handler_get_coverage_invalid_bam_file <- function() {
+  region <- regions[1]
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  obs <- tryCatch(bam_handler$get_coverage(bam_file = "not_a_valid_bam_file", regions = region), error = conditionMessage)
+  exp <- "Bam file not_a_valid_bam_file not found."
+  msg <- paste(base_msg, "Invalid bam file did not give the expected error message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Invalid regions class
+test.bam_handler_get_coverage_invalid_regions_class <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_file <- bam_files[1]
+  obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file, regions = "not_a_valid_region"), error = conditionMessage)
+  exp <- "Parameter regions must be a GRanges object."
+  msg <- paste(base_msg, "Invalid regions class file did not give the expected error message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Invalid regions length
+test.bam_handler_get_coverage_invalid_regions_length <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_file <- bam_files[1]
+  obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file, regions = GenomicRanges::GRanges()), error = conditionMessage)
+  exp <- "Parameter regions must not be an empty GRanges object"
+  msg <- paste(base_msg, "Invalid regions length did not give the expected error message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## All seqnames not in bam
+test.bam_handler_get_coverage_invalid_regions_all_seqnames_not_in_bam <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_file <- bam_files[1]
+  region <- regions[[1]]
+  # All seqlevels
+  seqlevels(region) <- "invalid_level"
+  obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file, regions = region), error = conditionMessage)
+  exp <- "Some seqnames of regions are absent in bam_file header"
+  msg <- paste(base_msg, "Invalid regions levels did not give the expected error message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## All seqnames not in bam force seqlevels
+test.bam_handler_get_coverage_invalid_regions_all_seqnames_not_in_bam_force_seqlevels<- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_file <- bam_files[1]
+  region <- regions[[1]]
+  # All seqlevels
+  seqlevels(region) <- "invalid_level"
+  obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file,
+						      regions = region,
+						      force_seqlevels = TRUE),
+		  error = conditionMessage)
+  exp <- "Parameter regions must not be an empty GRanges object"
+  msg <- paste(base_msg, "Invalid regions levels did not give the expected")
+  msg <- paste(msg, "error message with force_seqlevels = TRUE.")
+  checkIdentical(obs, exp, msg)
+}
+
+## One Seqnames not in bam
+test.bam_handler_get_coverage_invalid_regions_one_seqnames_not_in_bam <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_file <- bam_files[1]
+  region <- regions[[1]]
+  seqlevels(region) <- c(seqlevels(region), "invalid_level")
+  seqnames(region)[1] <- "invalid_level"
+  obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file, regions = region), error = conditionMessage)
+  exp <- "Some seqnames of regions are absent in bam_file header"
+  msg <- paste(base_msg, "Invalid regions seqnames did not give the expected error message.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Valid regions seqlevels not in bam
+test.bam_handler_get_coverage_valid_regions_seqlevels_not_in_bam_force <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_file <- bam_files[1]
+  region <- regions[[1]]
+  seqlevels(region) <- c(seqlevels(region), "invalid_level")
+  obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file, regions = region), error = conditionMessage)
+  msg <- paste(base_msg, "Supplementary seqlevels should not have raised an error.")
+  checkTrue(class(obs) == "SimpleRleList", msg)
+}
+
+## Seqnames not in bam force seqlevels
+test.bam_handler_get_coverage_seqnames_not_in_bam_force <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_file <- bam_files[1]
+  region <- regions[[1]]
+  seqlevels(region) <- c(seqlevels(region), "invalid_level")
+  seqnames(region)[1] <- "invalid_level"
+  obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file, regions = region, force_seqlevels = TRUE), error = conditionMessage)
+  msg <- paste(base_msg, "Supplementary seqnames should not have raised an error.")
+  checkTrue(class(obs) == "SimpleRleList", msg)
+}
+
+###################################################
 ## Test the bam_handler$get_normalized_coverage()
 ###################################################
 
@@ -439,6 +609,7 @@ test.bam_handler_get_normalized_coverage_seqnames_not_in_bam_force <- function()
 ###################################################
 
 base_msg <- "Bam_Handler get_noise_ratio -"
+
 chip.bed <- system.file("extdata/align1_rep1.bed", package="metagene")
 input.bed <- system.file("extdata/ctrl.bed", package="metagene")
 chip.bam <- system.file("extdata/align1_rep1.bam", package="metagene")

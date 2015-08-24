@@ -39,6 +39,14 @@
 #'   \item{}{\code{bh$get_bam_files()}}
 #' }
 #' \describe{
+#'   \item{}{\code{bh$get_coverage(bam_file, regions)
+#'				              force_seqlevels = FALSE)}}
+#'   \item{bam_file}{The name of the BAM file.}
+#'   \item{regions}{A not empty \code{GRanges} object.}
+#'   \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found in
+#'                          bam file header. Default: \code{FALSE}.}
+#' }
+#' \describe{
 #'   \item{}{\code{bh$get_normalized_coverage(bam_file, regions)
 #'				              force_seqlevels = FALSE)}}
 #'   \item{bam_file}{The name of the BAM file.}
@@ -137,29 +145,15 @@ Bam_Handler <- R6Class("Bam_Handler",
     get_bam_files = function() {
         private$bam_files
     },
+    get_coverage = function(bam_file, regions, force_seqlevels = FALSE) {
+        private$check_bam_file(bam_file)
+        regions <- private$prepare_regions(regions, bam_file, force_seqlevels)
+        private$extract_coverage_by_regions(regions, bam_file)
+    },
     get_normalized_coverage = function(bam_file, regions,
 				       force_seqlevels = FALSE) {
-        ## Check prerequisites
-        # The bam file must be in the list of bam files used for initialization
         private$check_bam_file(bam_file)
-
-        # The regions must be a GRanges object
-        if (class(regions) != "GRanges") {
-            stop("Parameter regions must be a GRanges object.")
-        }
-
-        # The seqlevels of regions must all be present in bam_file
-        regions <- private$check_bam_levels(bam_file, regions,
-					    force = force_seqlevels)
-
-        # The regions must not be empty
-        if (length(regions) == 0) {
-            stop("Parameter regions must not be an empty GRanges object")
-        }
-
-        # The regions must not be overlapping
-        regions <- reduce(regions)
-
+        regions <- private$prepare_regions(regions, bam_file, force_seqlevels)
         count <- self$get_aligned_count(bam_file)
         private$extract_coverage_by_regions(regions, bam_file, count)
     },
@@ -223,6 +217,24 @@ Bam_Handler <- R6Class("Bam_Handler",
                               countBam(bam_file, param = param)$records;
                             }))
 
+    },
+    prepare_regions = function(regions, bam_file, force_seqlevels) {
+        # The regions must be a GRanges object
+        if (class(regions) != "GRanges") {
+            stop("Parameter regions must be a GRanges object.")
+        }
+
+        # The seqlevels of regions must all be present in bam_file
+        regions <- private$check_bam_levels(bam_file, regions,
+					    force = force_seqlevels)
+
+        # The regions must not be empty
+        if (length(regions) == 0) {
+            stop("Parameter regions must not be an empty GRanges object")
+        }
+
+        # The regions must not be overlapping
+        reduce(regions)
     },
     extract_coverage_by_regions = function(regions, bam_file, count=NULL) {
         param <- Rsamtools:::ScanBamParam(which=reduce(regions))
