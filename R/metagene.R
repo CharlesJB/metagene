@@ -73,6 +73,29 @@
 #'                       automatically created. Default: NULL}
 #' }
 #' \describe{
+#'   \item{}{\code{mg$produce_matrices(select_regions, design, bin_count,
+#'                 bin_size}}
+#'   \item{select_regions}{A character vector representing corresponding to the
+#'                         regions to include in the metagene plot. The names
+#'                         of the regions must correspond to the names used for
+#'                         the initialization (\code{new}) of the metagene
+#'                         object. \code{NA} can be used to keep previous
+#'                         select_regions values. \code{NULL} can be used to
+#'                         keep all regions. Default: \code{NA}.}
+#'   \item{design}{A \code{data.frame} that describe to experiment to plot. See
+#'                 \code{new} function for more details. \code{NA} can be used
+#'                 keep previous design value. Default: \code{NA}.}
+#'   \item{bin_count}{The number of bin to create. \code{NA} can be used to
+#'                    keep previous bin_count value. If both bin_count and
+#'                    bin_size are \code{NA}, a bin_count value of 100 will be
+#'                    used. Default: \code{NA}.}
+#'   \item{bin_size}{The size of bin to create. Can only be used if all the
+#'                   regions have the same size. \code{NA} can be used to keep
+#'                   previous bin_size value. If both bin_count and bin_size
+#'                   are \code{NA}, a bin_count value of 100 will be used.
+#'                   Default: \code{NA}.}
+#' }
+#' \describe{
 #'   \item{}{\code{mg$export(bam_file, region, file)}}
 #'   \item{bam_file}{The name of the bam file to export.}
 #'   \item{region}{The name of the region to export.}
@@ -134,26 +157,70 @@ metagene <- R6Class("metagene",
         private$print_verbose("Parse bam files...\n")
         private$print_verbose("  coverages...\n")
         self$coverages <- private$produce_coverages()
+
+        # Produce matrices
+        #self$produce_matrices()
     },
     get_bam_count = function(filename) {
         # Parameters validation are done by Bam_Handler object
         private$bam_handler$get_aligned_count(filename)
     },
+    produce_matrices = function(select_regions = NA, design = NA, bin_count = NA,
+                                bin_size = NA) {
+        design = private$get_design(design)
+        private$check_produce_matrices_params(select_regions = select_regions,
+                                              bin_count = bin_count,
+                                              bin_size = bin_size,
+                                              design = design)
+            select_regions <- private$get_param_value(select_regions)
+            bin_count <- private$get_param_value(bin_count)
+            bin_size <- private$get_param_value(bin_size)
+            if (is.null(bin_count) & is.null(bin_size)) {
+                bin_count = 100
+            }
+            if (private$matrices_need_update(select_regions = select_regions,
+                                             design = design,
+                                             bin_count = bin_count,
+                                             bin_size = bin_size)) {
+                if (!is.null(bin_size)) {
+                    width <- width(self$regions[[1]][1])
+                    bin_count <- floor(width / bin_size)
+                }
+                matrices <- list()
+                if (is.null(select_regions)) {
+                    select_regions <- names(self$regions)
+                }
+                for (region in select_regions) {
+                    matrices[[region]] <- list()
+                    for (design_name in colnames(design)[-1]) {
+                        matrices[[region]][[design_name]] <- list()
+
+                        i <- design[[design_name]] == 1
+                        bam_files <- as.character(design[,1][i])
+                        matrices[[region]][[design_name]][["input"]] <-
+                        private$get_matrix(region, bam_files, bin_count)
+
+                        i <- design[[design_name]] == 2
+                        bam_files <- as.character(design[,1][i])
+                        matrices[[region]][[design_name]][["ctrl"]] <-
+                        private$get_matrix(region, bam_files, bin_count)
+                    }
+                }
+                self$matrices <- matrices
+                self$params[["bin_size"]] <- bin_size
+                self$params[["bin_count"]] <- bin_count
+                self$params[["select_regions"]] <- select_regions
+                self$design <- design
+            }
+        invisible(self)
+    },
     plot = function(design = NULL, regions_group = NULL, bin_count = 100,
                     bin_size = NULL, alpha = 0.05, sample_count = 1000,
 		    range = c(-1,1), title = NULL) {
-	private$check_plot_param(design = design, regions_group = regions_group,
-			       bin_count = bin_count, bin_size = bin_size,
-			       alpha = alpha, sample_count = sample_count,
-			       range = range, title = title)
-        if (!is.null(bin_size)) {
-            width <- width(self$regions[[1]][1])
-	    bin_count <- floor(width / bin_size)
-	}
-        self$design <- private$prepare_design(design)
+	self$design <- private$get_design(design)
 
         # 1. Get the correctly formatted matrices
-        self$matrices <- private$produce_matrices(regions_group, bin_count)
+        self$produce_matrices(select_regions = regions_group, design = self$design, bin_count = bin_count, bin_size = bin_size)
 
         # 2. Calculate means and confidence intervals
         sample_size <- as.integer(min(unlist(sapply(self$matrices, sapply,
@@ -269,122 +336,124 @@ metagene <- R6Class("metagene",
         }
     },
     check_design = function(design) {
-        if(!is.null(design) && !is.data.frame(design)) {
+        if(!is.null(design) && !is.data.frame(design) &&
+           !identical(design, NA)) {
             stop("design must be a data.frame object")
         }
-        if(!is.null(design) && dim(design)[2] < 2) {
+        if(is.data.frame(design) && ncol(design) < 2) {
             stop("design must have at least 2 columns")
         }
-        if (!is.null(design) && !(is.character(design[,1]) ||
+        if (is.data.frame(design) && !(is.character(design[,1]) ||
                                     is.factor(design[,1]))) {
             stop("The first column of design must be BAM filenames")
         }
-        if (!is.null(design) && !all(apply(design[, -1, drop=FALSE],
+        if (is.data.frame(design) && !all(apply(design[, -1, drop=FALSE],
                                         MARGIN=2, is.numeric))) {
             stop(paste0("All design column, except the first one, must be in ",
                             "numeric format"))
         }
     },
-    check_plot_param = function(design, regions_group, bin_count, bin_size,
-			       alpha, sample_count, range, title) {
-        # Most parameters validation are done in Bootstrap_Stat constructor
-        private$check_design(design)
-        if (!is.null(regions_group) && !(is.vector(regions_group) ||
-                        is.list(regions_group))) {
-            stop("regions_group should be a list or a vector")
-        }
-        if (!is.null(regions_group) &&
-                !all(unlist(regions_group) %in%  names(self$regions))) {
-            stop(paste0("All elements in regions_group should be regions ",
-                        "defined during the creation of metagene object"))
+    check_produce_matrices_params = function(select_regions, bin_count,
+                                             bin_size, design) {
+        if (!identical(select_regions, NA)) {
+            if (!is.null(select_regions)) {
+                if (class(select_regions) != "character") {
+                    stop("select_regions must be a character vector.")
+                }
+                if (!all(select_regions %in% names(self$regions))) {
+                    stop(paste0("All elements in select_regions should be regions ",
+                                "defined during the creation of metagene object"))
+                }
+            }
         }
         # At least one file must be used in the design
-        if (!is.null(design) &&
-                sum(rowSums(design[ , -1, drop=FALSE]) > 0) == 0) {
-            stop("At least one BAM file must be used in the design")
+        if (!identical(design, NA)) {
+            if (!is.null(design)) {
+                if (sum(rowSums(design[ , -1, drop=FALSE]) > 0) == 0) {
+                    stop("At least one BAM file must be used in the design")
+                }
+            }
         }
         # Test only BAM file used in the design
-        if(!is.null(design) &&
-            !all(apply(design[rowSums(design[ , -1, drop=FALSE]) > 0, 1,
-                            drop=FALSE], MARGIN = 2, FUN=file.exists))) {
-            stop("At least one BAM file does not exist")
+        if (!identical(design, NA)) {
+            if(!is.null(design) &&
+                !all(apply(design[rowSums(design[ , -1, drop=FALSE]) > 0, 1,
+                                drop=FALSE], MARGIN = 2, FUN=file.exists))) {
+                stop("At least one BAM file does not exist")
+            }
         }
-	# bin_count should be a numeric value without digits
-        if (!is.null(bin_count)) {
-	    if (!is.numeric(bin_count) || bin_count < 0 ||
-		as.integer(bin_count) != bin_count) {
-              stop("bin_count must be NULL or a positive integer")
-          }
-	}
-	# bin_size should be a numeric value without digits
-        if (!is.null(bin_size)) {
-	    if (!is.numeric(bin_size) || bin_size < 0 ||
-		as.integer(bin_size) != bin_size) {
-              stop("bin_size must be NULL or a positive integer")
-          }
-	}
-	# bin_size should be used only if all regions have the same width
-	if (!is.null(bin_size)) {
-          if (is.null(regions_group)) {
-              regions_group <- names(self$regions)
-          }
-	  widths <- width(self$regions[names(self$regions) %in% regions_group])
-	  widths <- unique(unlist(widths))
-	  if (length(widths) != 1) {
-	      msg <- "bin_size can only be used if all selected regions have"
-	      msg <- paste(msg, "same width")
-	      stop(msg)
-	  } else {
-              modulo <- widths %% bin_size
-	      if (modulo != 0) {
-                  msg <- paste0("width (", widths, ") is not a multiple of ")
-	          msg <- paste0(msg, "bin_size (", bin_size, "), last bin ")
-	          msg <- paste0(msg, "will be removed.")
-		  warning(msg)
-	      }
-	  }
-	}
+        # bin_count should be a numeric value without digits
+        if (!identical(bin_count, NA)) {
+            if (!is.null(bin_count)) {
+                if (!is.numeric(bin_count) || bin_count < 0 ||
+                    as.integer(bin_count) != bin_count) {
+                    stop("bin_count must be NULL or a positive integer")
+                }
+            }
+        }
+        # bin_size should be a numeric value without digits
+        if (!identical(bin_size, NA)) {
+            if (!is.null(bin_size)) {
+                if (!is.numeric(bin_size) || bin_size < 0 ||
+                    as.integer(bin_size) != bin_size) {
+                    stop("bin_size must be NULL or a positive integer")
+                }
+            }
+        }
+        # bin_size should be used only if all regions have the same width
+        if (!identical(bin_size, NA)) {
+            if (!is.null(bin_size)) {
+                if (is.null(select_regions) | identical(select_regions, NA)) {
+                    select_regions <- names(self$regions)
+                }
+                widths <- width(self$regions[names(self$regions) %in% select_regions])
+                widths <- unique(unlist(widths))
+                if (length(widths) != 1) {
+                    msg <- "bin_size can only be used if all selected regions have"
+                    msg <- paste(msg, "same width")
+                    stop(msg)
+                } else {
+                    modulo <- widths %% bin_size
+                    if (modulo != 0) {
+                        msg <- paste0("width (", widths, ") is not a multiple of ")
+                        msg <- paste0(msg, "bin_size (", bin_size, "), last bin ")
+                        msg <- paste0(msg, "will be removed.")
+                        warning(msg)
+                    }
+                }
+            }
+        }
+    },
+    matrices_need_update = function(select_regions, design, bin_count,
+                                    bin_size) {
+        if (!identical(self$design, design)) {
+            return(TRUE)
+        }
+        if (!identical(self$params[["select_regions"]], select_regions)) {
+            return(TRUE)
+        }
+        if (!identical(self$params[["bin_size"]], bin_size)) {
+            return(TRUE)
+        }
+        if (!identical(self$params[["bin_count"]], bin_count)) {
+            return(TRUE)
+        }
+    },
+    get_param_value = function(param_value) {
+        param_name <- as.character(quote(param_value))
+        if (identical(param_value, NA)) {
+            if (! param_name %in% names(self$params)) {
+                param_value <- NULL
+            } else {
+                param_value <- self$params[[param_value]]
+            }
+        }
+        return(param_value)
     },
     print_verbose = function(to_print) {
         if (self$params[["verbose"]]) {
             cat(paste0(to_print, "\n"))
         }
-    },
-    prepare_design = function(design = NULL) {
-        if (is.null(design)) {
-            bam_files <- self$params[["bam_files"]]
-            design <- data.frame(bam_files = bam_files)
-            for (bam_file in names(self$coverages)) {
-                colname <- file_path_sans_ext(basename(bam_file))
-                design[[colname]] <- rep(0, length(bam_files))
-                i <- bam_files == bam_file
-                design[[colname]][i] <- 1
-            }
-        }
-        design
-    },
-    produce_matrices = function(regions_group, bin_count) {
-        matrices <- list()
-        if (is.null(regions_group)) {
-            regions_group <- names(self$regions)
-        }
-        for (region in regions_group) {
-            matrices[[region]] <- list()
-            for (design in colnames(self$design)[-1]) {
-                matrices[[region]][[design]] <- list()
-
-                i <- self$design[[design]] == 1
-                bam_files <- as.character(self$design[,1][i])
-                matrices[[region]][[design]][["input"]] <-
-                private$get_matrix(region, bam_files, bin_count)
-
-                i <- self$design[[design]] == 2
-                bam_files <- as.character(self$design[,1][i])
-                matrices[[region]][[design]][["ctrl"]] <-
-                private$get_matrix(region, bam_files, bin_count)
-         }
-      }
-      matrices
     },
     get_matrix = function(region, bam_files, bcount) {
         if (length(bam_files) == 0) {
@@ -416,7 +485,7 @@ metagene <- R6Class("metagene",
                                                         FUN = import)
             names(regions) <- names
         } else if (class(regions) == "GRanges") {
-            regions <- GRangesList(regions = regions)
+            regions <- GRangesList("regions" = regions)
         } else if (class(regions) == "list") {
             regions <- GRangesList(regions)
 	}
@@ -482,7 +551,31 @@ metagene <- R6Class("metagene",
                             x = Inf, y = Inf, vjust=1, hjust=1, size=4) +
             ggtitle(title)
         p
+    },
+    get_design = function(design) {
+        private$check_design(design = design)
+        get_complete_design <- function() {
+            bam_files <- self$params[["bam_files"]]
+            design <- data.frame(bam_files = bam_files)
+            for (bam_file in names(self$coverages)) {
+                colname <- file_path_sans_ext(basename(bam_file))
+                design[[colname]] <- rep(0, length(bam_files))
+                i <- bam_files == bam_file
+                design[[colname]][i] <- 1
+            }
+            design
+        }
+        if (is.null(design)) {
+            return(get_complete_design())
+        }
+        if (identical(design, NA)) {
+            if (all(dim(self$design) == c(0, 0))) {
+                return(get_complete_design())
+            } else {
+                return(self$design)
+            }
+        }
+        return(design)
     }
   )
 ) 
-

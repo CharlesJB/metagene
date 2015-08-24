@@ -183,13 +183,13 @@ test.bam_handler_initialize_with_not_existing_files<- function() {
 ###################################################
 
 # Note, count were obtained with "samtools view -c -F0x4 ${file}"
-exp <- list(4635, 1896, 956, 1999)
+exp <- list(4635, 1896, 956, 1999, 6025)
 names(exp) <- bam_files
 
 ## Valid use case
 test.bam_handler_get_aligned_count_valid_case <- function() {
   # Note, count were obtained with "samtools view -c -F0x4 ${file}"
-  exp <- list(4635, 1896, 956, 1999)
+  exp <- list(4635, 1896, 956, 1999, 6025)
   names(exp) <- bam_files
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
   obs <- lapply(bam_files, bam_handler$get_aligned_count)
@@ -202,7 +202,7 @@ test.bam_handler_get_aligned_count_valid_case <- function() {
 ## Valid use case, multicore
 test.bam_handler_get_aligned_count_valid_case_multicore <- function() {
   # Note, count were obtained with "samtools view -c -F0x4 ${file}"
-  exp <- list(4635, 1896, 956, 1999)
+  exp <- list(4635, 1896, 956, 1999, 6025)
   names(exp) <- bam_files
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files, cores = 2)
   obs <- lapply(bam_files, bam_handler$get_aligned_count)
@@ -230,7 +230,7 @@ test.bam_handler_get_aligned_count_invalid_bam_file <- function() {
 ## Valid use case
 test.bam_handler_get_rpm_coefficient_valid_case <- function() {
   # Note, count were obtained with "samtools view -c -F0x4 ${file}"
-  exp <- list(4635/1000000, 1896/1000000, 956/1000000, 1999/1000000)
+  exp <- list(4635/1000000, 1896/1000000, 956/1000000, 1999/1000000, 6025/1000000)
   names(exp) <- bam_files
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
   obs <- lapply(bam_files, bam_handler$get_rpm_coefficient)
@@ -242,7 +242,7 @@ test.bam_handler_get_rpm_coefficient_valid_case <- function() {
 ## Valid use case, multicore
 test.bam_handler_get_rpm_coefficient_valid_case_multicore <- function() {
   # Note, count were obtained with "samtools view -c -F0x4 ${file}"
-  exp <- list(4635/1000000, 1896/1000000, 956/1000000, 1999/1000000)
+  exp <- list(4635/1000000, 1896/1000000, 956/1000000, 1999/1000000, 6025/1000000)
   names(exp) <- bam_files
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files, cores = 2)
   obs <- lapply(bam_files, bam_handler$get_rpm_coefficient)
