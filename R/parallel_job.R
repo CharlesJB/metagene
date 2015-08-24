@@ -7,7 +7,16 @@ Parallel_Job <- R6Class("Parallel_Job",
       self$set_core_count(cores)
     },
     launch_job = function(data, FUN, ...) {
-      BiocParallel:::bplapply(data, FUN, BPPARAM = self$BPPARAM, ...)
+      res <- BiocParallel:::bplapply(data, FUN, BPPARAM = self$BPPARAM, ...)
+      # Check for errors
+      if (!all(bpok(res))) {
+          i <- grepl("stop", attr(res[[1]], "traceback"))
+          i <- which(i)[1] # We return first error message
+          msg <- strsplit(attr(res[[1]], "traceback")[i], "[()]")[[1]][2]
+          msg <- substring(msg, 2, nchar(msg)-1)
+          stop(msg)
+      }
+      res
     },
     get_core_count = function() {
       cores <- self$parameters[["cores"]]
