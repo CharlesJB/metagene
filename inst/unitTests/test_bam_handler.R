@@ -6,6 +6,7 @@ if(FALSE) {
   library( "RUnit" )
   library( "metagene" )
   library( "rtracklayer" )
+  library( "DBChIP" )
 }
 
 ### }}}
@@ -431,4 +432,49 @@ test.bam_handler_get_normalized_coverage_seqnames_not_in_bam_force <- function()
   obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file, regions = region, force_seqlevels = TRUE), error = conditionMessage)
   msg <- paste(base_msg, "Supplementary seqnames should not have raised an error.")
   checkTrue(class(obs) == "SimpleRleList", msg)
+}
+
+###################################################
+## Test the bam_handler$get_noise_ratio()
+###################################################
+
+base_msg <- "Bam_Handler get_noise_ratio -"
+chip.bed <- system.file("extdata/align1_rep1.bed", package="metagene")
+input.bed <- system.file("extdata/ctrl.bed", package="metagene")
+chip.bam <- system.file("extdata/align1_rep1.bam", package="metagene")
+input.bam <- system.file("extdata/ctrl.bam", package="metagene")
+
+## Valid use
+test.bam_handler_get_noise_ratio_valid_use <- function() {
+  exp <- DBChIP:::NCIS(chip.bed, input.bed, "BED")$est
+
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  obs <- bam_handler$get_noise_ratio(chip.bam, input.bam)
+
+  msg <- paste(base_msg, "Valid case did not give the expected results.")
+  checkIdentical(obs, exp, msg)
+}
+
+## Invalid chip_bam_file
+test.bam_handler_get_noise_ratio_invalid_chip_bam_file <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  obs <- tryCatch(bam_handler$get_noise_ratio(chip_bam_file =
+                    "not_a_valid_bam_file", input_bam_file = input.bam),
+		  error=conditionMessage)
+  exp <- "Bam file not_a_valid_bam_file not found."
+  msg <- paste0(base_msg, "Invalid chip_bam_file file ",
+                "does not give the expected error message")
+  checkEquals(obs, exp, msg = msg)
+}
+
+## Invalid input_bam_file
+test.bam_handler_get_noise_ratio_invalid_input_bam_file <- function() {
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  obs <- tryCatch(bam_handler$get_noise_ratio(chip_bam_file = chip.bam,
+                    input_bam_file = "not_a_valid_bam_file"),
+		  error=conditionMessage)
+  exp <- "Bam file not_a_valid_bam_file not found."
+  msg <- paste0(base_msg, "Invalid input_bam_file file ",
+                "does not give the expected error message")
+  checkEquals(obs, exp, msg = msg)
 }

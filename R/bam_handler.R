@@ -46,6 +46,11 @@
 #'   \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found in
 #'                          bam file header. Default: \code{FALSE}.}
 #' }
+#' \describe{
+#'   \item{}{\code{bh$get_noise_ratio(chip_bam_file, input_bam_file)}}
+#'   \item{chip_bam_file}{The path to the chip bam file.}
+#'   \item{input_bam_file}{The path to the input (control) bam file.}
+#' }
 #' @examples
 #'  bh <- metagene:::Bam_Handler$new(bam_files=get_demo_bam_files())
 #'  bh$get_aligned_count(metagene:::get_demo_bam_files()[1])
@@ -157,6 +162,13 @@ Bam_Handler <- R6Class("Bam_Handler",
 
         count <- self$get_aligned_count(bam_file)
         private$extract_coverage_by_regions(regions, bam_file, count)
+    },
+    get_noise_ratio = function(chip_bam_file, input_bam_file) {
+        private$check_bam_file(chip_bam_file)
+        private$check_bam_file(input_bam_file)
+        chip.pos <- read.BAM(chip_bam_file)
+        input.pos <- read.BAM(input_bam_file)
+	DBChIP:::NCIS.internal(chip.pos, input.pos)$est
     }
   ),
   private = list(

@@ -34,9 +34,12 @@ Imports:
     biomaRt,
     tools,
     GenomicAlignments,
+    GenomeInfoDb,
+    IRanges,
     ggplot2,
     muStat,
-    Rsamtools
+    Rsamtools,
+    DBChIP
 Suggests:
     RUnit,
     BiocGenerics,

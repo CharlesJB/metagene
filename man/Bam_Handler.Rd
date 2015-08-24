@@ -58,6 +58,11 @@ files/data.
   \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found in
                          bam file header. Default: \code{FALSE}.}
 }
+\describe{
+  \item{}{\code{bh$get_noise_ratio(chip_bam_file, input_bam_file)}}
+  \item{chip_bam_file}{The path to the chip bam file.}
+  \item{input_bam_file}{The path to the input (control) bam file.}
+}
 }
 \examples{
 bh <- metagene:::Bam_Handler$new(bam_files=get_demo_bam_files())
