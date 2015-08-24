@@ -81,44 +81,44 @@ Bam_Handler <- R6Class("Bam_Handler",
         
         # Core must be a positive integer or a BiocParallelParam instance
         isBiocParallel = is(cores, "BiocParallelParam")
-        isInteger = ((is.numeric(cores) || is.integer(cores)) && 
+        isInteger = ((is.numeric(cores) || is.integer(cores)) &&
                          cores > 0 &&  as.integer(cores) == cores)
         if (!isBiocParallel && !isInteger) {
-            stop(paste0("cores must be a positive numeric or ", 
+            stop(paste0("cores must be a positive numeric or ",
                         "BiocParallelParam instance"))
         }
 
         # Initialize the Bam_Handler object
         private$parallel_job <- Parallel_Job$new(cores)
         self$parameters[["cores"]] <- private$parallel_job$get_core_count()
-        private$bam_files <- data.frame(bam = bam_files, 
+        private$bam_files <- data.frame(bam = bam_files,
                                         stringsAsFactors = FALSE)
         if (is.null(names(bam_files))) {
-            rownames(private$bam_files) <- 
+            rownames(private$bam_files) <-
                 file_path_sans_ext(basename(bam_files))
         }
         private$bam_files[["aligned_count"]] <-
             sapply(private$bam_files[["bam"]], private$get_file_count)
 
 	# Check the seqnames
-	get_seqnames <- function(bam_file) {
-	    bam_file <- Rsamtools::BamFile(bam_file)
-            GenomeInfoDb::seqnames(GenomeInfoDb::seqinfo(bam_file))
-	}
-	bam_seqnames <- lapply(private$bam_files$bam, get_seqnames)
-	all_seqnames <- unlist(bam_seqnames)
-	if (!all(table(all_seqnames) == length(bam_seqnames))) {
-	    msg <- "\n\n  Some bam files have discrepancies in their seqnames."
+	    get_seqnames <- function(bam_file) {
+	        bam_file <- Rsamtools::BamFile(bam_file)
+                GenomeInfoDb::seqnames(GenomeInfoDb::seqinfo(bam_file))
+	    }
+	    bam_seqnames <- lapply(private$bam_files$bam, get_seqnames)
+	    all_seqnames <- unlist(bam_seqnames)
+	    if (!all(table(all_seqnames) == length(bam_seqnames))) {
+            msg <- "\n\n  Some bam files have discrepancies in their seqnames."
             msg <- paste0(msg, "\n\n")
-	    msg <- paste0(msg, "  This could be caused by chromosome names ")
-	    mgs <- paste0(msg, "present only in a subset of the bam files ")
-	    msg <- paste0(msg, "(i.e.: chrY in some bam files, but absent in ")
-	    msg <- paste0(msg, "others.\n\n")
-	    msg <- paste0(msg, "  This could also be caused by discrepancies ")
-	    msg <- paste0(msg, "in the seqlevels style (i.e.: UCSC:chr1 ")
-	    msg <- paste0(msg, "versus NCBI:1)\n\n")
-	    warning(msg)
-	}
+            msg <- paste0(msg, "  This could be caused by chromosome names ")
+            mgs <- paste0(msg, "present only in a subset of the bam files ")
+            msg <- paste0(msg, "(i.e.: chrY in some bam files, but absent in ")
+            msg <- paste0(msg, "others.\n\n")
+            msg <- paste0(msg, "  This could also be caused by discrepancies ")
+            msg <- paste0(msg, "in the seqlevels style (i.e.: UCSC:chr1 ")
+            msg <- paste0(msg, "versus NCBI:1)\n\n")
+	        warning(msg)
+	    }
     },
     get_aligned_count = function(bam_file) {
         # Check prerequisites
@@ -168,7 +168,7 @@ Bam_Handler <- R6Class("Bam_Handler",
         private$check_bam_file(input_bam_file)
         chip.pos <- read.BAM(chip_bam_file)
         input.pos <- read.BAM(input_bam_file)
-	DBChIP:::NCIS.internal(chip.pos, input.pos)$est
+        DBChIP:::NCIS.internal(chip.pos, input.pos)$est
     }
   ),
   private = list(
