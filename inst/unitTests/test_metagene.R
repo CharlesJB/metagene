@@ -18,6 +18,13 @@ design <- data.frame(Samples = c("align1_rep1.bam", "align1_rep2.bam",
                      align1 = c(1,1,0,0,2), align2 = c(0,0,1,1,2))
 design$Samples <- paste0(system.file("extdata", package="metagene"), "/",
                          design$Samples)
+regions_strand <- lapply(regions, rtracklayer::import)
+stopifnot(length(unique(vapply(regions, length, numeric(1)))) == 1)
+set.seed(1)
+index_strand <- sample(1:length(regions_strand[[1]]),
+            round(length(regions_strand[[1]])/2))
+regions_strand <- lapply(regions_strand,
+                         function(x) { strand(x[index_strand]) <- "-"; x })
 
 ###################################################
 ## Test the metagene$new() function (initialize)
@@ -759,4 +766,173 @@ test.metagene_produce_matrices_valid_normalization_rpm <- function() {
     checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,100)), TRUE)
     checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,100)), TRUE)
     checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,100)), TRUE)
+}
+
+# Invalid flip_regions class
+test.metagene_produce_matrices_invalid_flip_regions_class <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   obs <- tryCatch(mg$produce_matrices(flip_regions = 1234),
+                   error = conditionMessage)
+   exp <- "flip_regions must be a logical."
+   msg <- paste0(base_msg, "Invalid flip_regions class did not generate ")
+   msg <- paste0("the expected error message.")
+   checkIdentical(obs, exp, msg)
+}
+
+# Valid flip_regions true
+test.metagene_produce_matrices_valid_flip_regions_true <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    mg$produce_matrices(flip_regions = TRUE)
+    checkIdentical(mg$params[["bin_count"]], 100)
+    checkIdentical(mg$params[["flip_regions"]], TRUE)
+    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,100)), TRUE)
+}
+
+# Valid flip_regions false
+test.metagene_produce_matrices_valid_flip_regions_false <- function() {
+    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    mg$produce_matrices(flip_regions = FALSE)
+    checkIdentical(mg$params[["bin_count"]], 100)
+    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,100)), TRUE)
+}
+
+
+###################################################
+## Test the metagene$flip_regions() function
+###################################################
+
+# Valid case not previously flipped
+test.metagene_flip_regions_not_previously_flipped <- function() {
+    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions_strand)
+    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    mg$produce_matrices()
+    m1 <- mg$matrices[[1]][[1]][[1]]
+    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    mg$flip_regions()
+    m2 <- mg$matrices[[1]][[1]][[1]]
+    checkIdentical(mg$params[["flip_regions"]], TRUE)
+    mg$flip_regions()
+    m3 <- mg$matrices[[1]][[1]][[1]]
+    checkIdentical(mg$params[["flip_regions"]], TRUE)
+    # Compare the matrices
+    checkTrue(identical(m1, m2) == FALSE)
+    checkTrue(identical(m2, m3) == TRUE)
+    i <- index_strand
+    checkIdentical(m1[!(i),], m2[!(i),])
+    checkIdentical(m1[i,ncol(m1):1], m2[i,])
+}
+
+# Valid case previously flipped
+test.metagene_flip_regions_previously_flipped <- function() {
+    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions_strand)
+    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    mg$produce_matrices(flip_regions = TRUE)
+    m1 <- mg$matrices[[1]][[1]][[1]]
+    checkIdentical(mg$params[["flip_regions"]], TRUE)
+    mg$flip_regions()
+    m2 <- mg$matrices[[1]][[1]][[1]]
+    checkIdentical(mg$params[["flip_regions"]], TRUE)
+    # Compare the matrices
+    checkTrue(identical(m1, m2) == TRUE)
+}
+
+
+###################################################
+## Test the metagene$unflip_regions() function
+###################################################
+
+# Valid case not previously flipped
+test.metagene_unflip_regions_not_previously_flipped <- function() {
+    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions_strand)
+    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    mg$produce_matrices()
+    m1 <- mg$matrices[[1]][[1]][[1]]
+    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    mg$unflip_regions()
+    m2 <- mg$matrices[[1]][[1]][[1]]
+    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    # Compare the matrices
+    checkTrue(identical(m1, m2) == TRUE)
+}
+
+# Valid case previously flipped
+test.metagene_unflip_regions_previously_flipped <- function() {
+    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions_strand)
+    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    mg$produce_matrices(flip_regions = TRUE)
+    m1 <- mg$matrices[[1]][[1]][[1]]
+    checkIdentical(mg$params[["flip_regions"]], TRUE)
+    mg$unflip_regions()
+    m2 <- mg$matrices[[1]][[1]][[1]]
+    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    mg$unflip_regions()
+    m3 <- mg$matrices[[1]][[1]][[1]]
+    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    # Compare the matrices
+    checkTrue(identical(m1, m2) == FALSE)
+    checkTrue(identical(m2, m3) == TRUE)
+    i <- index_strand
+    checkIdentical(m1[!(i),], m2[!(i),])
+    checkIdentical(m1[i,ncol(m1):1], m2[i,])
 }

@@ -37,7 +37,7 @@
 #' \describe{
 #'   \item{}{\code{df <- mg$plot(design = NULL, regions_group = NULL,
 #'               bin_size = 100, alpha = 0.05, sample_count = 1000,
-#'               title = NULL)}}
+#'               title = NULL, flip_regions)}}
 #'   \item{design}{A \code{data.frame} that describe to experiment to plot. The
 #'                 first column must be the existing BAM filenames. The other 
 #'                 columns (at least one is required) represent how the files 
@@ -71,10 +71,12 @@
 #'                       Default: 1000.}
 #'   \item{title}{A title to add to the graph. If \code{NULL}, will be
 #'                       automatically created. Default: NULL}
+#'   \item{flip_regions}{Should regions on negative strand be flip_regions?
+#'                       Default: \code{FALSE}.}
 #' }
 #' \describe{
 #'   \item{}{\code{mg$produce_matrices(select_regions, design, bin_count,
-#'                 bin_size, noise_removal, normalization}}
+#'                 bin_size, noise_removal, normalization, flip_regions}}
 #'   \item{select_regions}{A character vector representing corresponding to the
 #'                         regions to include in the metagene plot. The names
 #'                         of the regions must correspond to the names used for
@@ -105,6 +107,8 @@
 #'                        default, value is \code{NULL}. Use \code{NA} keep
 #'                        previous \code{normalization} value (i.e. if
 #'                        \code{produce_matrices} was called before).}
+#'   \item{flip_regions}{Should regions on negative strand be flip_regions?
+#'                       Default: \code{FALSE}.}
 #' }
 #' \describe{
 #'   \item{}{\code{mg$export(bam_file, region, file)}}
@@ -118,6 +122,12 @@
 #'   \item{bam_file}{The name of the bam file to export.}
 #'   \item{bin_size}{The size of the bin to produce before creating heatmap. It
 #'                      must be a positive integer. Default: 10.}
+#' }
+#' \describe{
+#'   \item{}{\code{mg$flip_regions()}}
+#' }
+#' \describe{
+#'   \item{}{\code{mg$unflip_regions()}}
 #' }
 #'
 #' @examples
@@ -155,6 +165,7 @@ metagene <- R6Class("metagene",
         self$params[["verbose"]] <- verbose
         self$params[["bam_files"]] <- bam_files
         self$params[["force_seqlevels"]] <- force_seqlevels
+        self$params[["flip_regions"]] <- FALSE
       
         # Prepare bam files
         private$print_verbose("Prepare bam files...")
@@ -178,14 +189,15 @@ metagene <- R6Class("metagene",
     },
     produce_matrices = function(select_regions = NA, design = NA, bin_count = NA,
                                 bin_size = NA, noise_removal = NA,
-                                normalization = NA) {
+                                normalization = NA, flip_regions = FALSE) {
         design = private$get_design(design)
         private$check_produce_matrices_params(select_regions = select_regions,
                                               bin_count = bin_count,
                                               bin_size = bin_size,
                                               design = design,
                                               noise_removal = noise_removal,
-                                              normalization = normalization)
+                                              normalization = normalization,
+                                              flip_regions = flip_regions)
             select_regions <- private$get_param_value(select_regions)
             bin_count <- private$get_param_value(bin_count)
             bin_size <- private$get_param_value(bin_size)
@@ -235,15 +247,22 @@ metagene <- R6Class("metagene",
                 self$params[["normalization"]] <- normalization
                 self$design <- design
             }
+        if (flip_regions == TRUE) {
+            self$flip_regions()
+        } else {
+            self$unflip_regions()
+        }
         invisible(self)
     },
     plot = function(design = NULL, regions_group = NULL, bin_count = 100,
                     bin_size = NULL, alpha = 0.05, sample_count = 1000,
-		    range = c(-1,1), title = NULL) {
+		            range = c(-1,1), title = NULL, flip_regions = FALSE) {
 	self$design <- private$get_design(design)
 
         # 1. Get the correctly formatted matrices
-        self$produce_matrices(select_regions = regions_group, design = self$design, bin_count = bin_count, bin_size = bin_size)
+        self$produce_matrices(select_regions = regions_group,
+                              design = self$design, bin_count = bin_count,
+                              bin_size = bin_size, flip_regions = flip_regions)
 
         # 2. Calculate means and confidence intervals
         sample_size <- as.integer(min(unlist(sapply(self$matrices, sapply,
@@ -314,6 +333,20 @@ metagene <- R6Class("metagene",
         heatmap.2(log2(data+1), dendrogram = "none", trace = "none",
                 labCol = NA, labRow = NA, margins = c(2,2),
                 xlab = "position", ylab = "log2(coverages)")
+    },
+    flip_regions = function() {
+        if (self$params[["flip_regions"]] == FALSE) {
+            private$flip_matrices()
+            self$params[["flip_regions"]] <- TRUE
+        }
+        invisible(self)
+    },
+    unflip_regions = function() {
+        if (self$params[["flip_regions"]] == TRUE) {
+            private$flip_matrices()
+            self$params[["flip_regions"]] <- FALSE
+        }
+        invisible(self)
     }
   ),
   private = list(
@@ -378,7 +411,7 @@ metagene <- R6Class("metagene",
     },
     check_produce_matrices_params = function(select_regions, bin_count,
                                              bin_size, design, noise_removal,
-                                             normalization) {
+                                             normalization, flip_regions) {
         if (!identical(select_regions, NA)) {
             if (!is.null(select_regions)) {
                 if (class(select_regions) != "character") {
@@ -462,6 +495,10 @@ metagene <- R6Class("metagene",
                     stop(msg)
                 }
             }
+        }
+        if (!is.logical(flip_regions)) {
+            msg <- "flip_regions must be a logical."
+            stop(msg)
         }
     },
     matrices_need_update = function(select_regions, design, bin_count,
@@ -657,6 +694,19 @@ metagene <- R6Class("metagene",
             result[[design_name]] <- Reduce("+", cov)
         }
         result
+    },
+    flip_matrices = function() {
+        for (region_name in names(self$matrices)) {
+            region <- self$regions[[region_name]]
+            i <- as.logical(strand(region) == "-")
+            flip <- function(x) {
+                x[i,] <- x[i,ncol(x):1]
+                x
+            }
+            m <- self$matrices[[region_name]]
+            m <- lapply(m, lapply, flip)
+            self$matrices[[region_name]] <- m
+        }
     }
   )
 )
