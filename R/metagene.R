@@ -74,7 +74,7 @@
 #' }
 #' \describe{
 #'   \item{}{\code{mg$produce_matrices(select_regions, design, bin_count,
-#'                 bin_size}}
+#'                 bin_size, noise_removal, normalization}}
 #'   \item{select_regions}{A character vector representing corresponding to the
 #'                         regions to include in the metagene plot. The names
 #'                         of the regions must correspond to the names used for
@@ -94,6 +94,17 @@
 #'                   previous bin_size value. If both bin_count and bin_size
 #'                   are \code{NA}, a bin_count value of 100 will be used.
 #'                   Default: \code{NA}.}
+#'   \item{noise_removal}{The algorithm to use to remove control(s). Possible
+#;                        values are \code{NA}, \code{NULL} or "NCIS". By
+#'                        default, value is \code{NULL}. Use \code{NA} keep
+#'                        previous \code{noise_removal} value (i.e. if
+#'                        \code{produce_matrices} was called before). See
+#'                        Liand and Keles 2012 for the NCIS algorithm.}
+#'   \item{normalization}{The algorithm to use to normalize samples. Possible
+#;                        values are \code{NA}, \code{NULL} or "RPM". By
+#'                        default, value is \code{NULL}. Use \code{NA} keep
+#'                        previous \code{normalization} value (i.e. if
+#'                        \code{produce_matrices} was called before).}
 #' }
 #' \describe{
 #'   \item{}{\code{mg$export(bam_file, region, file)}}
@@ -166,25 +177,41 @@ metagene <- R6Class("metagene",
         private$bam_handler$get_aligned_count(filename)
     },
     produce_matrices = function(select_regions = NA, design = NA, bin_count = NA,
-                                bin_size = NA) {
+                                bin_size = NA, noise_removal = NA,
+                                normalization = NA) {
         design = private$get_design(design)
         private$check_produce_matrices_params(select_regions = select_regions,
                                               bin_count = bin_count,
                                               bin_size = bin_size,
-                                              design = design)
+                                              design = design,
+                                              noise_removal = noise_removal,
+                                              normalization = normalization)
             select_regions <- private$get_param_value(select_regions)
             bin_count <- private$get_param_value(bin_count)
             bin_size <- private$get_param_value(bin_size)
+            noise_removal <- private$get_param_value(noise_removal)
+            normalization <- private$get_param_value(normalization)
             if (is.null(bin_count) & is.null(bin_size)) {
                 bin_count = 100
             }
             if (private$matrices_need_update(select_regions = select_regions,
                                              design = design,
                                              bin_count = bin_count,
-                                             bin_size = bin_size)) {
+                                             bin_size = bin_size,
+                                             noise_removal = noise_removal,
+                                             normalization = normalization)) {
                 if (!is.null(bin_size)) {
                     width <- width(self$regions[[1]][1])
                     bin_count <- floor(width / bin_size)
+                }
+                coverages <- self$coverages
+                if (!is.null(noise_removal)) {
+                  coverages <- private$remove_controls(coverages, design)
+                } else {
+                  coverages <- private$merge_chip(coverages, design)
+                }
+                if (!is.null(normalization)) {
+                  coverages <- private$normalize_coverages(coverages, design)
                 }
                 matrices <- list()
                 if (is.null(select_regions)) {
@@ -195,21 +222,17 @@ metagene <- R6Class("metagene",
                     for (design_name in colnames(design)[-1]) {
                         matrices[[region]][[design_name]] <- list()
 
-                        i <- design[[design_name]] == 1
-                        bam_files <- as.character(design[,1][i])
                         matrices[[region]][[design_name]][["input"]] <-
-                        private$get_matrix(region, bam_files, bin_count)
-
-                        i <- design[[design_name]] == 2
-                        bam_files <- as.character(design[,1][i])
-                        matrices[[region]][[design_name]][["ctrl"]] <-
-                        private$get_matrix(region, bam_files, bin_count)
+                        private$get_matrix(coverages[[design_name]], region,
+                                           bin_count)
                     }
                 }
                 self$matrices <- matrices
                 self$params[["bin_size"]] <- bin_size
                 self$params[["bin_count"]] <- bin_count
                 self$params[["select_regions"]] <- select_regions
+                self$params[["noise_removal"]] <- noise_removal
+                self$params[["normalization"]] <- normalization
                 self$design <- design
             }
         invisible(self)
@@ -287,7 +310,7 @@ metagene <- R6Class("metagene",
         }
         
         region <- tools::file_path_sans_ext(basename(region))
-        data <- private$get_matrix(region, bam_file, bin_size)
+        data <- private$get_matrix(self$coverages, region, bam_file, bin_size)
         heatmap.2(log2(data+1), dendrogram = "none", trace = "none",
                 labCol = NA, labRow = NA, margins = c(2,2),
                 xlab = "position", ylab = "log2(coverages)")
@@ -354,7 +377,8 @@ metagene <- R6Class("metagene",
         }
     },
     check_produce_matrices_params = function(select_regions, bin_count,
-                                             bin_size, design) {
+                                             bin_size, design, noise_removal,
+                                             normalization) {
         if (!identical(select_regions, NA)) {
             if (!is.null(select_regions)) {
                 if (class(select_regions) != "character") {
@@ -423,9 +447,25 @@ metagene <- R6Class("metagene",
                 }
             }
         }
+        if (!identical(noise_removal, NA)) {
+            if (!is.null(noise_removal)) {
+                if (!noise_removal %in% c("NCIS", "RPM")) {
+                    msg <- "noise_removal must be NA, NULL, \"NCIS\" or \"RPM\"."
+                    stop(msg)
+                }
+            }
+        }
+        if (!identical(normalization, NA)) {
+            if (!is.null(normalization)) {
+                if (!normalization == "RPM") {
+                    msg <- "normalization must be NA, NULL or \"RPM\"."
+                    stop(msg)
+                }
+            }
+        }
     },
     matrices_need_update = function(select_regions, design, bin_count,
-                                    bin_size) {
+                                    bin_size, noise_removal, normalization) {
         if (!identical(self$design, design)) {
             return(TRUE)
         }
@@ -436,6 +476,12 @@ metagene <- R6Class("metagene",
             return(TRUE)
         }
         if (!identical(self$params[["bin_count"]], bin_count)) {
+            return(TRUE)
+        }
+        if (!identical(self$params[["noise_removal"]], noise_removal)) {
+            return(TRUE)
+        }
+        if (!identical(self$params[["normalization"]], normalization)) {
             return(TRUE)
         }
     },
@@ -455,27 +501,19 @@ metagene <- R6Class("metagene",
             cat(paste0(to_print, "\n"))
         }
     },
-    get_matrix = function(region, bam_files, bcount) {
-        if (length(bam_files) == 0) {
-            return(NULL)
-        }
-        # 1. Produce the matrices
-        get_matrices <- function(bf, gr) {
-	  grl <- split(gr, GenomeInfoDb::seqnames(gr))
-	  i <- sapply(grl, length) > 0
-	  do.call("rbind", lapply(grl[i], private$get_view_means, bam_file = bf,
-				  bcount = bcount))
-	}
-        matrices <- lapply(bam_files, get_matrices, gr = self$regions[[region]])
-        # 2. Calculate the means
-	means <- Reduce("+", matrices) / length(matrices)
+    get_matrix = function(coverages, region, bcount) {
+        gr <- self$regions[[region]]
+        grl <- split(gr, GenomeInfoDb::seqnames(gr))
+        i <- vapply(grl, length, numeric(1)) > 0
+        m <- do.call("rbind", lapply(grl[i], private$get_view_means,
+                                     bcount = bcount, cov = coverages))
     },
-    get_view_means = function(gr, bam_file, bcount) {
-	chr <- unique(as.character(GenomeInfoDb::seqnames(gr)))
+    get_view_means = function(gr, bcount, cov) {
+        chr <- unique(as.character(GenomeInfoDb::seqnames(gr)))
         gr <- intoNbins(gr, bcount)
         stopifnot(length(chr) == 1)
-        views <- Views(self$coverages[[bam_file]][[chr]], start(gr), end(gr))
-	matrix(viewMeans(views), ncol = bcount, byrow = TRUE)
+        views <- Views(cov[[chr]], start(gr), end(gr))
+	    matrix(viewMeans(views), ncol = bcount, byrow = TRUE)
     },
     prepare_regions = function(regions) {
         if (class(regions) == "character") {
@@ -512,7 +550,7 @@ metagene <- R6Class("metagene",
 	regions <- GenomicRanges::reduce(BiocGenerics::unlist(self$regions))
         res <- private$parallel_job$launch_job(
 	                data = self$params[["bam_files"]],
-		            FUN = private$bam_handler$get_normalized_coverage,
+		            FUN = private$bam_handler$get_coverage,
 		            regions = regions,
 		            force_seqlevels= self$params[["force_seqlevels"]])
         names(res) <- self$params[["bam_files"]]
@@ -576,6 +614,49 @@ metagene <- R6Class("metagene",
             }
         }
         return(design)
+    },
+    remove_controls = function(coverages, design) {
+        results <- list()
+        for (design_name in colnames(design)[-1]) {
+            i <- design[[design_name]] == 1
+            j <- design[[design_name]] == 2
+            chip_bam_files <- as.character(design[,1][i])
+            input_bam_files <- as.character(design[,1][j])
+            chip_coverages <- coverages[chip_bam_files]
+            chip_coverages <- Reduce("+", chip_coverages)
+            if (length(input_bam_files) > 0) {
+                noise_ratio <- private$bam_handler$get_noise_ratio(chip_bam_files,
+                                                                   input_bam_files)
+                input_coverages <- coverages[input_bam_files]
+                input_coverages <- noise_ratio * Reduce("+", input_coverages)
+                results[design_name] <- chip_coverages - input_coverages
+                i <- results[design_name] < 0
+                results[design_name][i] <- 0
+            } else {
+                results[design_name] <- chip_coverages
+            }
+        }
+        results
+    },
+    normalize_coverages = function(coverages, design) {
+        for (design_name in colnames(design)[-1]) {
+            bam_files <- as.character(design[,1][1])
+            counts <- lapply(bam_files, private$bam_handler$get_aligned_count)
+            count <- do.call("+", counts)
+            weight <- 1 / (count / 1000000)
+            coverages[[design_name]] <- coverages[[design_name]] * weight
+        }
+        coverages
+    },
+    merge_chip = function(coverages, design) {
+        result <- list()
+        for (design_name in colnames(design)[-1]) {
+            i <- design[[design_name]] == 1
+            bam_files <- as.character(design[,1][i])
+            cov <- coverages[bam_files]
+            result[[design_name]] <- Reduce("+", cov)
+        }
+        result
     }
   )
-) 
+)

@@ -157,11 +157,10 @@ Bam_Handler <- R6Class("Bam_Handler",
         count <- self$get_aligned_count(bam_file)
         private$extract_coverage_by_regions(regions, bam_file, count)
     },
-    get_noise_ratio = function(chip_bam_file, input_bam_file) {
-        private$check_bam_file(chip_bam_file)
-        private$check_bam_file(input_bam_file)
-        chip.pos <- read.BAM(chip_bam_file)
-        input.pos <- read.BAM(input_bam_file)
+    get_noise_ratio = function(chip_bam_files, input_bam_files) {
+        lapply(c(chip_bam_files, input_bam_files), private$check_bam_file)
+        chip.pos <- private$read_bam_files(chip_bam_files)
+        input.pos <- private$read_bam_files(input_bam_files)
         DBChIP:::NCIS.internal(chip.pos, input.pos)$est
     }
   ),
@@ -203,6 +202,27 @@ Bam_Handler <- R6Class("Bam_Handler",
             bam_file <- sorted_bam_file
         }
         bam_file
+    },
+    read_bam_files = function(bam_files) {
+        if (length(bam_files) > 1) {
+            pos <- lapply(bam_files, read.BAM)
+            names <- unique(unlist(lapply(pos, names), use.names = FALSE))
+            res <- list()
+            fetch_pos <- function(name) {
+                res[["-"]] <- lapply(pos, function(x) x[[name]][["-"]])
+                res[["+"]] <- lapply(pos, function(x) x[[name]][["+"]])
+                res[["-"]] <- do.call("c", res[["-"]])
+                res[["+"]] <- do.call("c", res[["+"]])
+                res[["-"]] <- res[["-"]][order(res[["-"]])]
+                res[["+"]] <- res[["+"]][order(res[["+"]])]
+                res
+            }
+            result <- lapply(names, fetch_pos)
+            names(result) <- names
+            result
+        } else {
+            read.BAM(bam_files)
+        }
     },
     get_file_count = function(bam_file) {
         param <- ScanBamParam(flag = scanBamFlag(isUnmappedQuery=FALSE))

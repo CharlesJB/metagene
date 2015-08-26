@@ -86,7 +86,7 @@ metagene plots on the data (or a subset of the data).
 }
 \describe{
   \item{}{\code{mg$produce_matrices(select_regions, design, bin_count,
-                bin_size}}
+                bin_size, noise_removal, normalization}}
   \item{select_regions}{A character vector representing corresponding to the
                         regions to include in the metagene plot. The names
                         of the regions must correspond to the names used for
@@ -106,6 +106,15 @@ metagene plots on the data (or a subset of the data).
                   previous bin_size value. If both bin_count and bin_size
                   are \code{NA}, a bin_count value of 100 will be used.
                   Default: \code{NA}.}
+  \item{noise_removal}{The algorithm to use to remove control(s). Possible
+                       default, value is \code{NULL}. Use \code{NA} keep
+                       previous \code{noise_removal} value (i.e. if
+                       \code{produce_matrices} was called before). See
+                       Liand and Keles 2012 for the NCIS algorithm.}
+  \item{normalization}{The algorithm to use to normalize samples. Possible
+                       default, value is \code{NULL}. Use \code{NA} keep
+                       previous \code{normalization} value (i.e. if
+                       \code{produce_matrices} was called before).}
 }
 \describe{
   \item{}{\code{mg$export(bam_file, region, file)}}
