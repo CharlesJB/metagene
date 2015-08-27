@@ -667,8 +667,8 @@ metagene <- R6Class("metagene",
                 input_coverages <- coverages[input_bam_files]
                 input_coverages <- noise_ratio * Reduce("+", input_coverages)
                 results[design_name] <- chip_coverages - input_coverages
-                i <- results[design_name] < 0
-                results[design_name][i] <- 0
+                i <- results[[design_name]] < 0
+                results[[design_name]][i] <- 0
             } else {
                 results[design_name] <- chip_coverages
             }
