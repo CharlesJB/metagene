@@ -39,7 +39,7 @@ Parallel_Job <- R6Class("Parallel_Job",
         if (cores == 1) {
           BPPARAM <- SerialParam()
         } else {
-          BPPARAM <- MulticoreParam(workers = cores)
+          BPPARAM <- SnowParam(workers = cores)
         }
       } else {
         # Must be one of the BiocParallelParam class
