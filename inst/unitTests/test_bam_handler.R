@@ -111,7 +111,7 @@ test.bam_handler_valid_files_numeric_cores <- function() {
 ## Valid bam files, bpparam cores
 test.bam_handler_valid_files_bpparam_cores <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files, 
-                                    cores = BiocParallel::MulticoreParam(workers = 2))
+                                    cores = BiocParallel::SnowParam(workers = 2))
   checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")),
             msg = paste0(base_msg, "Valid initialize call with multiple bam ",
                 "files and bpparam cores did not return correct class"))
