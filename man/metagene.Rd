@@ -49,7 +49,7 @@ metagene plots on the data (or a subset of the data).
 \describe{
   \item{}{\code{df <- mg$plot(design = NULL, regions_group = NULL,
               bin_size = 100, alpha = 0.05, sample_count = 1000,
-              title = NULL)}}
+              title = NULL, flip_regions)}}
   \item{design}{A \code{data.frame} that describe to experiment to plot. The
                 first column must be the existing BAM filenames. The other
                 columns (at least one is required) represent how the files
@@ -83,10 +83,12 @@ metagene plots on the data (or a subset of the data).
                       Default: 1000.}
   \item{title}{A title to add to the graph. If \code{NULL}, will be
                       automatically created. Default: NULL}
+  \item{flip_regions}{Should regions on negative strand be flipped?
+                      Default: \code{FALSE}.}
 }
 \describe{
   \item{}{\code{mg$produce_matrices(select_regions, design, bin_count,
-                bin_size}}
+                bin_size, noise_removal, normalization, flip_regions}}
   \item{select_regions}{A character vector representing corresponding to the
                         regions to include in the metagene plot. The names
                         of the regions must correspond to the names used for
@@ -106,6 +108,17 @@ metagene plots on the data (or a subset of the data).
                   previous bin_size value. If both bin_count and bin_size
                   are \code{NA}, a bin_count value of 100 will be used.
                   Default: \code{NA}.}
+  \item{noise_removal}{The algorithm to use to remove control(s). Possible
+                       default, value is \code{NULL}. Use \code{NA} keep
+                       previous \code{noise_removal} value (i.e. if
+                       \code{produce_matrices} was called before). See
+                       Liand and Keles 2012 for the NCIS algorithm.}
+  \item{normalization}{The algorithm to use to normalize samples. Possible
+                       default, value is \code{NULL}. Use \code{NA} keep
+                       previous \code{normalization} value (i.e. if
+                       \code{produce_matrices} was called before).}
+  \item{flip_regions}{Should regions on negative strand be flipped?
+                      Default: \code{FALSE}.}
 }
 \describe{
   \item{}{\code{mg$export(bam_file, region, file)}}
@@ -119,6 +132,12 @@ metagene plots on the data (or a subset of the data).
   \item{bam_file}{The name of the bam file to export.}
   \item{bin_size}{The size of the bin to produce before creating heatmap. It
                      must be a positive integer. Default: 10.}
+}
+\describe{
+  \item{}{\code{mg$flip_regions()}}
+}
+\describe{
+  \item{}{\code{mg$unflip_regions()}}
 }
 }
 \examples{

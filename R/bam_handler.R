@@ -39,12 +39,25 @@
 #'   \item{}{\code{bh$get_bam_files()}}
 #' }
 #' \describe{
+#'   \item{}{\code{bh$get_coverage(bam_file, regions)
+#'				              force_seqlevels = FALSE)}}
+#'   \item{bam_file}{The name of the BAM file.}
+#'   \item{regions}{A not empty \code{GRanges} object.}
+#'   \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found in
+#'                          bam file header. Default: \code{FALSE}.}
+#' }
+#' \describe{
 #'   \item{}{\code{bh$get_normalized_coverage(bam_file, regions)
 #'				              force_seqlevels = FALSE)}}
 #'   \item{bam_file}{The name of the BAM file.}
 #'   \item{regions}{A not empty \code{GRanges} object.}
 #'   \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found in
 #'                          bam file header. Default: \code{FALSE}.}
+#' }
+#' \describe{
+#'   \item{}{\code{bh$get_noise_ratio(chip_bam_file, input_bam_file)}}
+#'   \item{chip_bam_file}{The path to the chip bam file.}
+#'   \item{input_bam_file}{The path to the input (control) bam file.}
 #' }
 #' @examples
 #'  bh <- metagene:::Bam_Handler$new(bam_files=get_demo_bam_files())
@@ -76,44 +89,44 @@ Bam_Handler <- R6Class("Bam_Handler",
         
         # Core must be a positive integer or a BiocParallelParam instance
         isBiocParallel = is(cores, "BiocParallelParam")
-        isInteger = ((is.numeric(cores) || is.integer(cores)) && 
+        isInteger = ((is.numeric(cores) || is.integer(cores)) &&
                          cores > 0 &&  as.integer(cores) == cores)
         if (!isBiocParallel && !isInteger) {
-            stop(paste0("cores must be a positive numeric or ", 
+            stop(paste0("cores must be a positive numeric or ",
                         "BiocParallelParam instance"))
         }
 
         # Initialize the Bam_Handler object
         private$parallel_job <- Parallel_Job$new(cores)
         self$parameters[["cores"]] <- private$parallel_job$get_core_count()
-        private$bam_files <- data.frame(bam = bam_files, 
+        private$bam_files <- data.frame(bam = bam_files,
                                         stringsAsFactors = FALSE)
         if (is.null(names(bam_files))) {
-            rownames(private$bam_files) <- 
+            rownames(private$bam_files) <-
                 file_path_sans_ext(basename(bam_files))
         }
         private$bam_files[["aligned_count"]] <-
             sapply(private$bam_files[["bam"]], private$get_file_count)
 
 	# Check the seqnames
-	get_seqnames <- function(bam_file) {
-	    bam_file <- Rsamtools::BamFile(bam_file)
-            GenomeInfoDb::seqnames(GenomeInfoDb::seqinfo(bam_file))
-	}
-	bam_seqnames <- lapply(private$bam_files$bam, get_seqnames)
-	all_seqnames <- unlist(bam_seqnames)
-	if (!all(table(all_seqnames) == length(bam_seqnames))) {
-	    msg <- "\n\n  Some bam files have discrepancies in their seqnames."
+	    get_seqnames <- function(bam_file) {
+	        bam_file <- Rsamtools::BamFile(bam_file)
+                GenomeInfoDb::seqnames(GenomeInfoDb::seqinfo(bam_file))
+	    }
+	    bam_seqnames <- lapply(private$bam_files$bam, get_seqnames)
+	    all_seqnames <- unlist(bam_seqnames)
+	    if (!all(table(all_seqnames) == length(bam_seqnames))) {
+            msg <- "\n\n  Some bam files have discrepancies in their seqnames."
             msg <- paste0(msg, "\n\n")
-	    msg <- paste0(msg, "  This could be caused by chromosome names ")
-	    mgs <- paste0(msg, "present only in a subset of the bam files ")
-	    msg <- paste0(msg, "(i.e.: chrY in some bam files, but absent in ")
-	    msg <- paste0(msg, "others.\n\n")
-	    msg <- paste0(msg, "  This could also be caused by discrepancies ")
-	    msg <- paste0(msg, "in the seqlevels style (i.e.: UCSC:chr1 ")
-	    msg <- paste0(msg, "versus NCBI:1)\n\n")
-	    warning(msg)
-	}
+            msg <- paste0(msg, "  This could be caused by chromosome names ")
+            mgs <- paste0(msg, "present only in a subset of the bam files ")
+            msg <- paste0(msg, "(i.e.: chrY in some bam files, but absent in ")
+            msg <- paste0(msg, "others.\n\n")
+            msg <- paste0(msg, "  This could also be caused by discrepancies ")
+            msg <- paste0(msg, "in the seqlevels style (i.e.: UCSC:chr1 ")
+            msg <- paste0(msg, "versus NCBI:1)\n\n")
+	        warning(msg)
+	    }
     },
     get_aligned_count = function(bam_file) {
         # Check prerequisites
@@ -132,31 +145,23 @@ Bam_Handler <- R6Class("Bam_Handler",
     get_bam_files = function() {
         private$bam_files
     },
+    get_coverage = function(bam_file, regions, force_seqlevels = FALSE) {
+        private$check_bam_file(bam_file)
+        regions <- private$prepare_regions(regions, bam_file, force_seqlevels)
+        private$extract_coverage_by_regions(regions, bam_file)
+    },
     get_normalized_coverage = function(bam_file, regions,
 				       force_seqlevels = FALSE) {
-        ## Check prerequisites
-        # The bam file must be in the list of bam files used for initialization
         private$check_bam_file(bam_file)
-
-        # The regions must be a GRanges object
-        if (class(regions) != "GRanges") {
-            stop("Parameter regions must be a GRanges object.")
-        }
-
-        # The seqlevels of regions must all be present in bam_file
-        regions <- private$check_bam_levels(bam_file, regions,
-					    force = force_seqlevels)
-
-        # The regions must not be empty
-        if (length(regions) == 0) {
-            stop("Parameter regions must not be an empty GRanges object")
-        }
-
-        # The regions must not be overlapping
-        regions <- reduce(regions)
-
+        regions <- private$prepare_regions(regions, bam_file, force_seqlevels)
         count <- self$get_aligned_count(bam_file)
         private$extract_coverage_by_regions(regions, bam_file, count)
+    },
+    get_noise_ratio = function(chip_bam_files, input_bam_files) {
+        lapply(c(chip_bam_files, input_bam_files), private$check_bam_file)
+        chip.pos <- private$read_bam_files(chip_bam_files)
+        input.pos <- private$read_bam_files(input_bam_files)
+        DBChIP:::NCIS.internal(chip.pos, input.pos)$est
     }
   ),
   private = list(
@@ -198,6 +203,27 @@ Bam_Handler <- R6Class("Bam_Handler",
         }
         bam_file
     },
+    read_bam_files = function(bam_files) {
+        if (length(bam_files) > 1) {
+            pos <- lapply(bam_files, read.BAM)
+            names <- unique(unlist(lapply(pos, names), use.names = FALSE))
+            res <- list()
+            fetch_pos <- function(name) {
+                res[["-"]] <- lapply(pos, function(x) x[[name]][["-"]])
+                res[["+"]] <- lapply(pos, function(x) x[[name]][["+"]])
+                res[["-"]] <- do.call("c", res[["-"]])
+                res[["+"]] <- do.call("c", res[["+"]])
+                res[["-"]] <- res[["-"]][order(res[["-"]])]
+                res[["+"]] <- res[["+"]][order(res[["+"]])]
+                res
+            }
+            result <- lapply(names, fetch_pos)
+            names(result) <- names
+            result
+        } else {
+            read.BAM(bam_files)
+        }
+    },
     get_file_count = function(bam_file) {
         param <- ScanBamParam(flag = scanBamFlag(isUnmappedQuery=FALSE))
         # To speed up analysis we split the file by chromosome
@@ -211,6 +237,24 @@ Bam_Handler <- R6Class("Bam_Handler",
                               countBam(bam_file, param = param)$records;
                             }))
 
+    },
+    prepare_regions = function(regions, bam_file, force_seqlevels) {
+        # The regions must be a GRanges object
+        if (class(regions) != "GRanges") {
+            stop("Parameter regions must be a GRanges object.")
+        }
+
+        # The seqlevels of regions must all be present in bam_file
+        regions <- private$check_bam_levels(bam_file, regions,
+					    force = force_seqlevels)
+
+        # The regions must not be empty
+        if (length(regions) == 0) {
+            stop("Parameter regions must not be an empty GRanges object")
+        }
+
+        # The regions must not be overlapping
+        reduce(regions)
     },
     extract_coverage_by_regions = function(regions, bam_file, count=NULL) {
         param <- Rsamtools:::ScanBamParam(which=reduce(regions))
