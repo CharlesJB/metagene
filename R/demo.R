@@ -23,6 +23,18 @@ get_demo_regions <- function() {
         system.file("extdata/list2.bed", package="metagene"))
 }
 
+#' Get a demo metagene object
+#'
+#' @return A metagene object
+#'
+#' @examples
+#' mg <- get_demo_metagene()
+get_demo_metagene <- function() {
+    regions <- get_demo_regions()
+    bam_files <- get_demo_bam_files()
+    metagene$new(regions = regions, bam_files = bam_files)
+}
+
 get_not_indexed_bam_file <- function() {
     system.file("extdata/not_indexed.bam", package = "metagene")
 }
