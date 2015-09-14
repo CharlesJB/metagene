@@ -35,6 +35,17 @@ get_demo_metagene <- function() {
     metagene$new(regions = regions, bam_files = bam_files)
 }
 
+#' Get a demo design object
+#'
+#' @return A \code{data.frame} corresponding to a valid design.
+#'
+#' @examples
+#' mg <- get_demo_design()
+get_demo_design <- function() {
+    file_design <- system.file("extdata/design.txt", package = "metagene")
+    read.table(file_design, header = TRUE, stringsAsFactors = FALSE)
+}
+
 get_not_indexed_bam_file <- function() {
     system.file("extdata/not_indexed.bam", package = "metagene")
 }
