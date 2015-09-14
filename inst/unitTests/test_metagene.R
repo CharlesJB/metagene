@@ -18,6 +18,7 @@ design <- data.frame(Samples = c("align1_rep1.bam", "align1_rep2.bam",
                      align1 = c(1,1,0,0,2), align2 = c(0,0,1,1,2))
 design$Samples <- paste0(system.file("extdata", package="metagene"), "/",
                          design$Samples)
+demo_mg <- metagene$new(regions = get_demo_regions(), bam_files = get_demo_bam_files())
 
 ###################################################
 ## Test the metagene$new() function (initialize)
@@ -227,7 +228,7 @@ base_msg <- "metagene plot - "
 
 ## Valid bin_size
 test.metagene_plot_valid_bin_size <- function() {
-  mg <- metagene$new(regions = regions, bam_files = bam_files)
+  mg <- demo_mg$clone()
   pdf(NULL)
   res <- tryCatch(mg$plot(bin_size = 100), error = conditionMessage)
   dev.off()
@@ -245,7 +246,7 @@ base_msg <- "metagene heatmap - "
 
 # Invalid negative bin_size
 test.metagene_heatmap_negative_bin_size <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     obs <- tryCatch(mg$heatmap(bin_size=-2), 
                     error=conditionMessage)
     exp <- "bin_size must be a positive integer"
@@ -256,7 +257,7 @@ test.metagene_heatmap_negative_bin_size <- function() {
 
 # Invalid zero bin_size
 test.metagene_heatmap_zero_bin_size <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     obs <- tryCatch(mg$heatmap(bin_size=0), 
                     error=conditionMessage)
     exp <- "bin_size must be a positive integer"
@@ -267,7 +268,7 @@ test.metagene_heatmap_zero_bin_size <- function() {
 
 # Invalid numerical bin_size
 test.metagene_heatmap_decimal_bin_size <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     obs <- tryCatch(mg$heatmap(bin_size=2.3), 
                     error=conditionMessage)
     exp <- "bin_size must be a positive integer"
@@ -282,7 +283,7 @@ test.metagene_heatmap_decimal_bin_size <- function() {
 #base_msg <- "metagene produce_matrices - "
 
 test.metagene_produce_matrices_valid_default <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     checkIdentical("bin_size" %in% mg$params, FALSE)
     checkIdentical("bin_count" %in% mg$params, FALSE)
     mg$produce_matrices()
@@ -325,7 +326,7 @@ test.metagene_produce_matrices_valid_default <- function() {
 }
 
 test.metagene_produce_matrices_valid_design <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     checkIdentical("bin_size" %in% mg$params, FALSE)
     checkIdentical("bin_count" %in% mg$params, FALSE)
     mg$produce_matrices(design = design)
@@ -359,7 +360,7 @@ test.metagene_produce_matrices_valid_design <- function() {
 
 test.metagene_produce_matrices_valid_select_region <- function() {
     select_regions <- "list1"
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     checkIdentical("bin_size" %in% mg$params, FALSE)
     checkIdentical("bin_count" %in% mg$params, FALSE)
     mg$produce_matrices(select_regions = select_regions)
@@ -387,7 +388,7 @@ test.metagene_produce_matrices_valid_select_region <- function() {
 }
 
 test.metagene_produce_matrices_valid_bin_count <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     checkIdentical("bin_size" %in% mg$params, FALSE)
     checkIdentical("bin_count" %in% mg$params, FALSE)
     mg$produce_matrices(bin_count = 200)
@@ -426,7 +427,7 @@ test.metagene_produce_matrices_valid_bin_count <- function() {
 }
 
 test.metagene_produce_matrices_valid_bin_size <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     checkIdentical("bin_size" %in% mg$params, FALSE)
     checkIdentical("bin_count" %in% mg$params, FALSE)
     mg$produce_matrices(bin_size = 10)
@@ -466,7 +467,7 @@ test.metagene_produce_matrices_valid_bin_size <- function() {
 
 # Not valid design object
 test.metagene_produce_matrices_invalid_design <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     obs <- tryCatch(mg$produce_matrices(design=c(1,2)), 
                     error=conditionMessage)
     exp <- "design must be a data.frame object"
@@ -477,7 +478,7 @@ test.metagene_produce_matrices_invalid_design <- function() {
 
 # Design data.frame with not enough columns
 test.metagene_produce_matrices_invalid_design_data_frame <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     obs <- tryCatch(mg$produce_matrices(design=data.frame(a=c("ZOMBIE_ONE", "ZOMBIE_TWO"))), 
                     error=conditionMessage)
     exp <- "design must have at least 2 columns"
@@ -488,7 +489,7 @@ test.metagene_produce_matrices_invalid_design_data_frame <- function() {
 
 # Design data.frame with invalid first column
 test.metagene_produce_matrices_invalid_design_first_column <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     obs <- tryCatch(mg$produce_matrices(design=data.frame(a=c(1,3), 
                 zombies=c("ZOMBIE_ONE", "ZOMBIE_TWO"))), 
                 error=conditionMessage)
@@ -500,7 +501,7 @@ test.metagene_produce_matrices_invalid_design_first_column <- function() {
 
 # Design data.frame with invalid second column
 test.metagene_produce_matrices_invalid_design_second_column <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     designTemp<-data.frame(a=named_bam_files, 
                            zombies=rep("ZOMBIE_ONE", length(named_bam_files)))
     obs <- tryCatch(mg$produce_matrices(design=designTemp), error=conditionMessage)
@@ -513,7 +514,7 @@ test.metagene_produce_matrices_invalid_design_second_column <- function() {
 
 # Design data.frame with invalid second column
 test.metagene_produce_matrices_invalid_design_not_defined_file <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     designNew<-data.frame(a=c(named_bam_files, "I am not a file"), 
                           b=rep(1, length(named_bam_files) + 1))
     obs <- tryCatch(mg$produce_matrices(design=designNew), 
@@ -526,7 +527,7 @@ test.metagene_produce_matrices_invalid_design_not_defined_file <- function() {
 
 # Design using zero file (0 in all rows of the design object)
 test.metagene_produce_matrices_design_using_no_file <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     designNew<-data.frame(a=named_bam_files, 
                           b=rep(0, length(named_bam_files)))
     obs <- tryCatch(mg$produce_matrices(design=designNew), 
@@ -539,7 +540,7 @@ test.metagene_produce_matrices_design_using_no_file <- function() {
 
 # Invalid select_regions class
 test.metagene_produce_matrices_invalid_select_regions_class <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     obs <- tryCatch(mg$produce_matrices(select_regions=array(NA, dim = c(2,2,2))), 
                     error=conditionMessage)
     exp <- "select_regions must be a character vector."
@@ -551,7 +552,7 @@ test.metagene_produce_matrices_invalid_select_regions_class <- function() {
 
 # Invalid select_regions content
 test.metagene_produce_matrices_invalid_select_regions_content <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     obs <- tryCatch(mg$produce_matrices(select_regions=c(regions, "Hello Word!")), 
                     error=conditionMessage)
     exp <- paste0("All elements in select_regions should be regions ",
@@ -563,7 +564,7 @@ test.metagene_produce_matrices_invalid_select_regions_content <- function() {
 
 # Invalid bin_count class
 test.metagene_produce_matrices_invalid_bin_count_class <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
    obs <- tryCatch(mg$produce_matrices(bin_count = "a"), error = conditionMessage)
    exp <- "bin_count must be NULL or a positive integer"
    msg <- paste0(base_msg, "Invalid bin_count class did not generate the ")
@@ -573,7 +574,7 @@ test.metagene_produce_matrices_invalid_bin_count_class <- function() {
 
 # Invalid bin_count negative value
 test.metagene_produce_matrices_invalid_bin_count_negative_value <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
    obs <- tryCatch(mg$produce_matrices(bin_count = -1), error = conditionMessage)
    exp <- "bin_count must be NULL or a positive integer"
    msg <- paste0(base_msg, "Invalid bin_count negative value did not generate ")
@@ -583,7 +584,7 @@ test.metagene_produce_matrices_invalid_bin_count_negative_value <- function() {
 
 # Invalid bin_count decimals
 test.metagene_produce_matrices_invalid_bin_count_decimals <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
    obs <- tryCatch(mg$produce_matrices(bin_count = 1.2), error = conditionMessage)
    exp <- "bin_count must be NULL or a positive integer"
    msg <- paste0(base_msg, "Invalid bin_count decimals did not generate ")
@@ -593,7 +594,7 @@ test.metagene_produce_matrices_invalid_bin_count_decimals <- function() {
 
 # Invalid bin_size class
 test.metagene_produce_matrices_invalid_bin_size_class <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- demo_mg$clone()
     obs <- tryCatch(mg$produce_matrices(bin_size = "a"), error = conditionMessage)
     exp <- "bin_size must be NULL or a positive integer"
     msg <- paste0(base_msg, "Invalid bin_size class did not generate the ")
@@ -603,7 +604,7 @@ test.metagene_produce_matrices_invalid_bin_size_class <- function() {
 
 # Invalid bin_size negative value
 test.metagene_produce_matrices_invalid_bin_size_negative_value <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   mg <- demo_mg$clone()
    obs <- tryCatch(mg$produce_matrices(bin_size = -1), error = conditionMessage)
    exp <- "bin_size must be NULL or a positive integer"
    msg <- paste0(base_msg, "Invalid bin_size negative value did not generate ")
@@ -613,7 +614,7 @@ test.metagene_produce_matrices_invalid_bin_size_negative_value <- function() {
 
 # Invalid bin_size decimals
 test.metagene_produce_matrices_invalid_bin_size_decimals <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   mg <- demo_mg$clone()
    obs <- tryCatch(mg$produce_matrices(bin_size = 1.2), error = conditionMessage)
    exp <- "bin_size must be NULL or a positive integer"
    msg <- paste0(base_msg, "Invalid bin_size decimals did not generate ")
@@ -623,7 +624,7 @@ test.metagene_produce_matrices_invalid_bin_size_decimals <- function() {
 
 # Invalid bin_size regions widths
 test.metagene_produce_matrices_invalid_bin_size_regions_width <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   mg <- demo_mg$clone()
    region <- lapply(regions[1:2], rtracklayer::import)
    width(region[[1]]) <- 1000
    mg <- metagene$new(bam_files=bam_files, regions=region)
@@ -637,7 +638,7 @@ test.metagene_produce_matrices_invalid_bin_size_regions_width <- function() {
 
 # Warning width not multiple of bin_size
 test.metagene_produce_matrices_invalid_bin_size_regions_width_not_multiple <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   mg <- demo_mg$clone()
    bin_size <- 1234
    width <- 2000
    obs <- tryCatch(mg$produce_matrices(bin_size = 1234), warning = conditionMessage)
