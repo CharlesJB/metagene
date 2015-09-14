@@ -134,6 +134,29 @@ metagene plots on the data (or a subset of the data).
                      must be a positive integer. Default: 10.}
 }
 \describe{
+  \item{}{\code{mg$add_design(design = NULL)}}
+  \item{design}{A \code{data.frame} that describe to experiment to plot. The
+                first column must be the existing BAM filenames. The other
+                columns (at least one is required) represent how the files
+                should be grouped. All those colums should be in numeric
+                format. All the files in the same group will be
+                combined before doing the statistical analysis. For each
+                column, there will be one line with its ribon in
+                the metagene plot. At least one file should be selected (not
+                zero). If \code{NULL}, all BAM files passed as argument
+                during \code{metagene} object creation will be used to
+                create a default design.
+                Default = \code{NULL}.
+
+                0: Do not use file.
+                1: File is input.
+                2: File is control.}
+}
+\describe{
+  \item{}{\code{mg$unflip_regions()}}
+}
+
+\describe{
   \item{}{\code{mg$flip_regions()}}
 }
 \describe{
