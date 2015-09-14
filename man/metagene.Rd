@@ -83,7 +83,7 @@ metagene plots on the data (or a subset of the data).
                       Default: 1000.}
   \item{title}{A title to add to the graph. If \code{NULL}, will be
                       automatically created. Default: NULL}
-  \item{flip_regions}{Should regions on negative strand be flipped?
+  \item{flip_regions}{Should regions on negative strand be flip_regions?
                       Default: \code{FALSE}.}
 }
 \describe{
@@ -117,7 +117,7 @@ metagene plots on the data (or a subset of the data).
                        default, value is \code{NULL}. Use \code{NA} keep
                        previous \code{normalization} value (i.e. if
                        \code{produce_matrices} was called before).}
-  \item{flip_regions}{Should regions on negative strand be flipped?
+  \item{flip_regions}{Should regions on negative strand be flip_regions?
                       Default: \code{FALSE}.}
 }
 \describe{
