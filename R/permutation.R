@@ -8,8 +8,8 @@
 #' of each columns will be calculated to produce the vectors that will be sent
 #' \code{FUN}.
 #' 
-#' @param x matrix1 The first matrix.
-#' @param x matrix2 The second matrix.
+#' @param matrix1 The first matrix.
+#' @param matrix2 The second matrix.
 #' @param sample_size The number of element to draw for each matrix.
 #' @param sample_count The number of permutations.
 #' @param FUN The function to use to compare the 2 matrices. First two params
@@ -22,14 +22,13 @@
 #'
 #' @examples
 #' # Get some matrices
-#' regions <- get_demo_regions()
-#' bam_files <- get_demo_bam_files()
-#' mg <- metagene$new(regions = regions, bam_files = bam_files)
+#' mg <- get_demo_metagene()
+#' mg$produce_matrices()
 #' m1 <- mg$matrices$list1$align1_rep1$input
 #' m2 <- mg$matrices$list1$align2_rep1$input
 #'
 #' # Perform permutation test
-#' sample_size <- min(c(nrow(m1), nrow(m2)))
+#' sample_size <- min(nrow(m1), nrow(m2))
 #' FUN = function(a, b) { mean(a) - mean(b) } # Dummy function for demo purpose
 #' permutation_results <- permutation_test(m1, m2, sample_size = sample_size,
 #'                                         sample_count = 1000, FUN = FUN)
