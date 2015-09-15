@@ -226,6 +226,32 @@ test.metagene_initialize_all_extra_seqnames_force_seqlevels <- function() {
     checkIdentical(obs, exp, msg)
 }
 
+# Valid regions narrowPeak
+test.metagene_initialize_valid_narrowpeak <- function() {
+    region <- metagene:::get_narrowpeak_region()
+    mg <- metagene$new(regions = region, bam_files = get_demo_bam_files()[1])
+    obs <- mg$regions$list1
+    extraCols <- c(signalValue = "numeric", pValue = "numeric",
+		   qValue = "numeric", peak = "integer")
+    exp <- rtracklayer::import(region, format = "BED", extraCols = extraCols)
+    msg <- paste(base_msg, "Valid narrowPeak file did not generate the")
+    mgs <- paste(msg, "expected regions.")
+    checkIdentical(obs, exp, msg)
+}
+
+# Valid regions broadPeak
+test.metagene_initialize_valid_broadpeak <- function() {
+    region <- metagene:::get_broadpeak_region()
+    mg <- metagene$new(regions = region, bam_files = get_demo_bam_files()[1])
+    obs <- mg$regions$list1
+    extraCols <- c(signalValue = "numeric", pValue = "numeric",
+		   qValue = "numeric")
+    exp <- rtracklayer::import(region, format = "BED", extraCols = extraCols)
+    msg <- paste(base_msg, "Valid broadPeak file did not generate the")
+    mgs <- paste(msg, "expected regions.")
+    checkIdentical(obs, exp, msg)
+}
+
 ###################################################
 ## Test the metagene$plot() function 
 ###################################################

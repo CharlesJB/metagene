@@ -9,8 +9,9 @@
 #'   \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
 #'                              cores = SerialParam(), verbose = FALSE,
 #'                              force_seqlevels = FALSE)}}
-#'   \item{regions}{Either a \code{vector} of BED filenames, a \code{GRanges}
-#'                  object or a \code{GRangesList} object.}
+#'   \item{regions}{Either a \code{vector} of BED, narrowPeak or broadPeak
+#'                  filenames, a \code{GRanges} object or a \code{GRangesList}
+#'                  object.}
 #'   \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be 
 #'                    indexed. i.e.: if a file is named file.bam, there must be 
 #'                    a file named file.bam.bai in the same directory.}
@@ -580,10 +581,26 @@ metagene <- R6Class("metagene",
     },
     prepare_regions = function(regions) {
         if (class(regions) == "character") {
-            names <- sapply(regions,
-                            function(x) file_path_sans_ext(basename(x)))
+            names <- sapply(regions, function(x)
+			    file_path_sans_ext(basename(x)))
+            import_file <- function(region) {
+		ext <- tolower(tools::file_ext(region))
+                if (ext == "narrowpeak") {
+                    extraCols <- c(signalValue = "numeric", pValue = "numeric",
+                                   qValue = "numeric", peak = "integer")
+                    rtracklayer::import(region, format = "BED",
+                                        extraCols = extraCols)
+	        } else if (ext == "broadpeak") {
+                    extraCols <- c(signalValue = "numeric", pValue = "numeric",
+                                   qValue = "numeric")
+                    rtracklayer::import(region, format = "BED",
+                                        extraCols = extraCols)
+                } else {
+                    rtracklayer::import(region)
+                }
+            }
             regions <- private$parallel_job$launch_job(data = regions,
-                                                        FUN = import)
+                                                       FUN = import_file)
             names(regions) <- names
         } else if (class(regions) == "GRanges") {
             regions <- GRangesList("regions" = regions)

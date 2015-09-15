@@ -23,8 +23,9 @@ metagene plots on the data (or a subset of the data).
   \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
                              cores = SerialParam(), verbose = FALSE,
                              force_seqlevels = FALSE)}}
-  \item{regions}{Either a \code{vector} of BED filenames, a \code{GRanges}
-                 object or a \code{GRangesList} object.}
+  \item{regions}{Either a \code{vector} of BED, narrowPeak or broadPeak
+                 filenames, a \code{GRanges} object or a \code{GRangesList}
+                 object.}
   \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
                    indexed. i.e.: if a file is named file.bam, there must be
                    a file named file.bam.bai in the same directory.}

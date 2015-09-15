@@ -61,3 +61,11 @@ get_coverage_bam_file <- function() {
 get_coverage_region <- function() {
     system.file("extdata/list_coverage.bed", package = "metagene")
 }
+
+get_narrowpeak_region <- function() {
+    system.file("extdata/list1.narrowPeak", package = "metagene")
+}
+
+get_broadpeak_region <- function() {
+    system.file("extdata/list1.broadPeak", package = "metagene")
+}
