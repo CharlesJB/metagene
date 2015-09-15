@@ -40,6 +40,10 @@ files/data.
   \item{bam_file}{The name of the BAM file.}
 }
 \describe{
+  \item{}{\code{bg$get_bam_name(bam_file)}}
+  \item{bam_file}{The name of the BAM file.}
+}
+\describe{
   \item{}{\code{bh$get_rpm_coefficient(bam_file)}}
   \item{bam_file}{The name of the BAM file.}
 }

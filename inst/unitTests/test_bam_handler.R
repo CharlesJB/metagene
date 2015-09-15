@@ -644,3 +644,40 @@ test.bam_handler_get_noise_ratio_invalid_input_bam_file <- function() {
                 "does not give the expected error message")
   checkEquals(obs, exp, msg = msg)
 }
+
+###################################################
+## Test the bam_handler$get_bam_name()
+###################################################
+
+base_msg <- "Bam_Handler get_bam_name -"
+
+## Valid bam file
+test.bam_handler_get_bam_name_valid_bam_file <- function() {
+    bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+    obs <- bam_handler$get_bam_name(bam_files[1])
+    exp <- tools::file_path_sans_ext(basename(bam_files[1]))
+    msg <- paste(base_msg, "Valid bam file did not generate the expected")
+    msg <- paste(msg, "bam name")
+    checkIdentical(obs, exp, msg)
+}
+
+## Valid bam name
+test.bam_handler_get_bam_name_valid_bam_name <- function() {
+    bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+    bam_name <- tools::file_path_sans_ext(basename(bam_files[1]))
+    obs <- bam_handler$get_bam_name(bam_name)
+    exp <- bam_name
+    msg <- paste(base_msg, "Valid bam name did not generate the expected")
+    msg <- paste(msg, "bam name")
+    checkIdentical(obs, exp, msg)
+}
+
+## Invalid name
+test.bam_handler_get_bam_name_invalid_bam_name <- function() {
+    bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+    obs <- bam_handler$get_bam_name("invalid_bam_name")
+    exp <- NULL
+    msg <- paste(base_msg, "Invalid bam name did not generate the expected")
+    msg <- paste(msg, "bam name")
+    checkIdentical(obs, exp, msg)
+}

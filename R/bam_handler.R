@@ -28,6 +28,10 @@
 #'   \item{bam_file}{The name of the BAM file.}
 #' }
 #' \describe{
+#'   \item{}{\code{bg$get_bam_name(bam_file)}}
+#'   \item{bam_file}{The name of the BAM file.}
+#' }
+#' \describe{
 #'   \item{}{\code{bh$get_rpm_coefficient(bam_file)}}
 #'   \item{bam_file}{The name of the BAM file.}
 #' }
@@ -86,6 +90,14 @@ Bam_Handler <- R6Class("Bam_Handler",
         if (!all(sapply(paste0(bam_files, ".bai"), file.exists))) {
           stop("All BAM files must be indexed")
         }
+
+        # All BAM names must be unique
+	if (is.null(names(bam_files))) {
+	    bam_names <- tools::file_path_sans_ext(basename(bam_files))
+	    if (length(bam_names) != length(unique(bam_names))) {
+                stop("All BAM names must be unique")
+	    }
+	}
         
         # Core must be a positive integer or a BiocParallelParam instance
         isBiocParallel = is(cores, "BiocParallelParam")
@@ -128,12 +140,28 @@ Bam_Handler <- R6Class("Bam_Handler",
 	        warning(msg)
 	    }
     },
+    get_bam_name = function(bam_file) {
+	bam <- private$bam_files[["bam"]]
+        row_names <- rownames(private$bam_files)
+        if (bam_file %in% bam) {
+	    i <- bam == bam_file
+	    stopifnot(sum(i) == 1)
+	    row_names[i]
+	} else if (tools::file_path_sans_ext(bam_file) %in% bam) {
+	    i <- bam == tools::file_path_sans_ext(bam_file)
+	    stopifnot(sum(i) == 1)
+	    row_names[i]
+	} else if (bam_file %in% row_names) {
+	    bam_file
+        } else {
+	    NULL
+	}
+    },
     get_aligned_count = function(bam_file) {
         # Check prerequisites
         # The bam file must be in the list of bam files used for initialization
-        private$check_bam_file(bam_file)
-
-        i <- private$bam_files[["bam"]] == bam_file
+        bam_name <- private$check_bam_file(bam_file)
+        i <- rownames(private$bam_files) == bam_name
         private$bam_files[["aligned_count"]][i]
     },
     get_rpm_coefficient = function(bam_file) {
@@ -174,9 +202,11 @@ Bam_Handler <- R6Class("Bam_Handler",
         if (length(bam_file) != 1) {
             stop("bam_file should contain exactly 1 bam filename")
         }
-        if (! bam_file %in% private$bam_files[["bam"]]) {
+	bam_name <- self$get_bam_name(bam_file)
+	if (is.null(bam_name)) {
             stop(paste0("Bam file ", bam_file, " not found."))
         }
+	invisible(bam_name)
     },
     check_bam_levels = function(bam_file, regions, force) {
       bam_levels <- names(scanBamHeader(bam_file)[[1]]$targets)

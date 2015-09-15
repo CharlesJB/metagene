@@ -52,10 +52,11 @@ metagene plots on the data (or a subset of the data).
               bin_size = 100, alpha = 0.05, sample_count = 1000,
               title = NULL, flip_regions)}}
   \item{design}{A \code{data.frame} that describe to experiment to plot. The
-                first column must be the existing BAM filenames. The other
-                columns (at least one is required) represent how the files
-                should be grouped. All those colums should be in numeric
-                format. All the files in the same group will be
+                first column must be the existing BAM filenames or the BAM
+                name that was used when creating the metagene object. The
+                other columns (at least one is required) represent how the
+                files should be grouped. All those colums should be in
+                numeric format. All the files in the same group will be
                 combined before doing the statistical analysis. For each
                 column, there will be one line with its ribon in
                 the metagene plot. At least one file should be selected (not
@@ -136,22 +137,9 @@ metagene plots on the data (or a subset of the data).
 }
 \describe{
   \item{}{\code{mg$add_design(design = NULL)}}
-  \item{design}{A \code{data.frame} that describe to experiment to plot. The
-                first column must be the existing BAM filenames. The other
-                columns (at least one is required) represent how the files
-                should be grouped. All those colums should be in numeric
-                format. All the files in the same group will be
-                combined before doing the statistical analysis. For each
-                column, there will be one line with its ribon in
-                the metagene plot. At least one file should be selected (not
-                zero). If \code{NULL}, all BAM files passed as argument
-                during \code{metagene} object creation will be used to
-                create a default design.
-                Default = \code{NULL}.
-
-                0: Do not use file.
-                1: File is input.
-                2: File is control.}
+  \item{design}{A \code{data.frame} that describe to experiment to plot. See
+                \code{new} function for more details. \code{NA} can be used
+                keep previous design value. Default: \code{NA}.}
 }
 \describe{
   \item{}{\code{mg$unflip_regions()}}

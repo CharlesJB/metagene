@@ -11,6 +11,7 @@ if(FALSE) {
 
 bam_files <- get_demo_bam_files()
 named_bam_files <- bam_files
+names(named_bam_files) <- letters[1:(length(named_bam_files))]
 not_indexed_bam_file <- metagene:::get_not_indexed_bam_file()
 regions <- metagene:::get_demo_regions()
 design <- data.frame(Samples = c("align1_rep1.bam", "align1_rep2.bam",
@@ -165,8 +166,8 @@ test.metagene_initialize_multiple_bam_file_one_not_indexed <- function() {
 
 # Not valid object in region value 
 test.metagene_initialize_invalid_array_region_value <- function() {
-    obs <- tryCatch(metagene:::metagene$new(bam_files=named_bam_files, 
-            region=array(data = NA, dim = c(2,2,2))), 
+    obs <- tryCatch(metagene:::metagene$new(bam_files=bam_files,
+            region=array(data = NA, dim = c(2,2,2))),
             error=conditionMessage)
     exp <- paste0("regions must be either a vector of BED filenames, a ",
             "GRanges object or a GrangesList object")
@@ -180,7 +181,7 @@ test.metagene_initialize_valid_regions_supplementary_seqlevels <- function() {
     region <- rtracklayer::import(regions[1])
     GenomeInfoDb::seqlevels(region) <- c(GenomeInfoDb::seqlevels(region),
 				      "extra_seqlevels")
-    mg <- tryCatch(metagene$new(regions = region, bam_files = named_bam_files),
+    mg <- tryCatch(metagene$new(regions = region, bam_files = bam_files),
 		   error = conditionMessage)
     msg <- paste0(base_msg, "Valid regions with extra seqlevels did not ")
     msg <- paste0(msg, "return a valid metagene object.")
@@ -191,7 +192,7 @@ test.metagene_initialize_valid_regions_supplementary_seqlevels <- function() {
 test.metagene_initialize_invalid_extra_seqnames <- function() {
     region <- rtracklayer::import(regions[1])
     GenomeInfoDb::seqlevels(region) <- "extra_seqlevels"
-    obs <- tryCatch(metagene$new(regions = region, bam_files = named_bam_files),
+    obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files),
 		   error = conditionMessage)
     exp <- "Some seqnames of regions are absent in bam_file header"
     msg <- paste(base_msg, "Invalid regions seqnames did not give the expected")
@@ -249,6 +250,37 @@ test.metagene_initialize_valid_broadpeak <- function() {
     exp <- rtracklayer::import(region, format = "BED", extraCols = extraCols)
     msg <- paste(base_msg, "Valid broadPeak file did not generate the")
     mgs <- paste(msg, "expected regions.")
+    checkIdentical(obs, exp, msg)
+}
+
+# Valid named bam files
+test.metagene_initialize_valid_named_bam_files <- function() {
+    mg <- metagene$new(regions = regions[1], bam_files = named_bam_files[1])
+    obs <- mg$params[["bam_files"]]
+    exp <- named_bam_files[1]
+    msg <- paste(base_msg, "Valid named bam files did not generate the")
+    mgs <- paste(msg, "expected bam_files")
+    checkIdentical(obs, exp, msg)
+    obs <- names(mg$coverages)
+    exp <- names(named_bam_files)[1]
+    msg <- paste(base_msg, "Valid named bam files did not generate the")
+    mgs <- paste(msg, "expected coverages")
+    checkIdentical(obs, exp, msg)
+}
+
+# Valid unnamed bam files
+test.metagene_initialize_valid_unnamed_bam_files <- function() {
+    mg <- metagene$new(regions = regions[1], bam_files = bam_files[1])
+    obs <- mg$params[["bam_files"]]
+    exp <- bam_files[1]
+    names(exp) <- tools::file_path_sans_ext(basename(bam_files[1]))
+    msg <- paste(base_msg, "Valid unnamed bam files did not generate the")
+    mgs <- paste(msg, "expected results")
+    checkIdentical(obs, exp, msg)
+    obs <- names(mg$coverages)
+    exp <- tools::file_path_sans_ext(basename(bam_files[1]))
+    msg <- paste(base_msg, "Valid named bam files did not generate the")
+    mgs <- paste(msg, "expected coverages")
     checkIdentical(obs, exp, msg)
 }
 
@@ -495,7 +527,7 @@ test.metagene_produce_matrices_invalid_design <- function() {
     mg <- demo_mg$clone()
     obs <- tryCatch(mg$produce_matrices(design=c(1,2)), 
                     error=conditionMessage)
-    exp <- "design must be a data.frame object"
+    exp <- "design must be a data.frame object, NULL or NA"
     msg <- paste0(base_msg, "A vector design object ",
                   "did not generate an exception with expected message." )
     checkIdentical(obs, exp, msg)
@@ -540,8 +572,8 @@ test.metagene_produce_matrices_invalid_design_second_column <- function() {
 # Design data.frame with invalid second column
 test.metagene_produce_matrices_invalid_design_not_defined_file <- function() {
     mg <- demo_mg$clone()
-    designNew<-data.frame(a=c(named_bam_files, "I am not a file"), 
-                          b=rep(1, length(named_bam_files) + 1))
+    designNew<-data.frame(a=c(bam_files, "I am not a file"),
+                          b=rep(1, length(bam_files) + 1))
     obs <- tryCatch(mg$produce_matrices(design=designNew), 
                         error=conditionMessage)
     exp <- "At least one BAM file does not exist"
@@ -553,8 +585,8 @@ test.metagene_produce_matrices_invalid_design_not_defined_file <- function() {
 # Design using zero file (0 in all rows of the design object)
 test.metagene_produce_matrices_design_using_no_file <- function() {
     mg <- demo_mg$clone()
-    designNew<-data.frame(a=named_bam_files, 
-                          b=rep(0, length(named_bam_files)))
+    designNew<-data.frame(a=bam_files,
+                          b=rep(0, length(bam_files)))
     obs <- tryCatch(mg$produce_matrices(design=designNew), 
                     error=conditionMessage)
     exp <- "At least one BAM file must be used in the design"
@@ -677,7 +709,7 @@ test.metagene_produce_matrices_invalid_bin_size_regions_width_not_multiple <- fu
 
 # Invalid noise_rate class
 test.metagene_produce_matrices_invalid_noise_removal_class <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
     obs <- tryCatch(mg$produce_matrices(noise_removal = 1234),
                     error = conditionMessage)
     exp <- "noise_removal must be NA, NULL, \"NCIS\" or \"RPM\"."
@@ -688,7 +720,7 @@ test.metagene_produce_matrices_invalid_noise_removal_class <- function() {
 
 # Invalid noise_rate value
 test.metagene_produce_matrices_invalid_noise_removal_value <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
     obs <- tryCatch(mg$produce_matrices(noise_removal = "CSI"),
                     error = conditionMessage)
     exp <- "noise_removal must be NA, NULL, \"NCIS\" or \"RPM\"."
@@ -699,7 +731,7 @@ test.metagene_produce_matrices_invalid_noise_removal_value <- function() {
 
 # Valid noise_removal NCIS
 test.metagene_produce_matrices_valid_noise_removal_ncis <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
     mg$produce_matrices(noise_removal = "NCIS", design = design)
     checkIdentical(mg$params[["bin_count"]], 100)
     checkIdentical(mg$params[["noise_removal"]], "NCIS")
@@ -719,7 +751,7 @@ test.metagene_produce_matrices_valid_noise_removal_ncis <- function() {
 
 # Invalid normalization class
 test.metagene_produce_matrices_invalid_normalization_class <- function() {
-   mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
    obs <- tryCatch(mg$produce_matrices(normalization = 1234),
                    error = conditionMessage)
    exp <- "normalization must be NA, NULL or \"RPM\"."
@@ -730,7 +762,7 @@ test.metagene_produce_matrices_invalid_normalization_class <- function() {
 
 # Invalid normalization value
 test.metagene_produce_matrices_invalid_normalization_value <- function() {
-   mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+   mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
    obs <- tryCatch(mg$produce_matrices(normalization = "CSI"),
                    error = conditionMessage)
    exp <- "normalization must be NA, NULL or \"RPM\"."
@@ -741,7 +773,7 @@ test.metagene_produce_matrices_invalid_normalization_value <- function() {
 
 # Valid normalization RPM
 test.metagene_produce_matrices_valid_normalization_rpm <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
     mg$produce_matrices(normalization = "RPM")
     checkIdentical(mg$params[["bin_count"]], 100)
     checkIdentical(mg$params[["normalization"]], "RPM")
@@ -779,7 +811,7 @@ test.metagene_produce_matrices_valid_normalization_rpm <- function() {
 
 # Invalid flip_regions class
 test.metagene_produce_matrices_invalid_flip_regions_class <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
    obs <- tryCatch(mg$produce_matrices(flip_regions = 1234),
                    error = conditionMessage)
    exp <- "flip_regions must be a logical."
@@ -790,7 +822,7 @@ test.metagene_produce_matrices_invalid_flip_regions_class <- function() {
 
 # Valid flip_regions true
 test.metagene_produce_matrices_valid_flip_regions_true <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
     checkIdentical(mg$params[["flip_regions"]], FALSE)
     mg$produce_matrices(flip_regions = TRUE)
     checkIdentical(mg$params[["bin_count"]], 100)
@@ -829,7 +861,7 @@ test.metagene_produce_matrices_valid_flip_regions_true <- function() {
 
 # Valid flip_regions false
 test.metagene_produce_matrices_valid_flip_regions_false <- function() {
-    mg <- metagene:::metagene$new(bam_files=named_bam_files, regions=regions)
+    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
     checkIdentical(mg$params[["flip_regions"]], FALSE)
     mg$produce_matrices(flip_regions = FALSE)
     checkIdentical(mg$params[["bin_count"]], 100)

@@ -40,16 +40,17 @@
 #'               bin_size = 100, alpha = 0.05, sample_count = 1000,
 #'               title = NULL, flip_regions)}}
 #'   \item{design}{A \code{data.frame} that describe to experiment to plot. The
-#'                 first column must be the existing BAM filenames. The other 
-#'                 columns (at least one is required) represent how the files 
-#'                 should be grouped. All those colums should be in numeric 
-#'                 format. All the files in the same group will be 
-#'                 combined before doing the statistical analysis. For each 
-#'                 column, there will be one line with its ribon in 
+#'                 first column must be the existing BAM filenames or the BAM
+#'                 name that was used when creating the metagene object. The
+#'                 other columns (at least one is required) represent how the
+#'                 files should be grouped. All those colums should be in
+#'                 numeric format. All the files in the same group will be
+#'                 combined before doing the statistical analysis. For each
+#'                 column, there will be one line with its ribon in
 #'                 the metagene plot. At least one file should be selected (not
-#'                 zero). If \code{NULL}, all BAM files passed as argument 
-#'                 during \code{metagene} object creation will be used to 
-#'                 create a default design. 
+#'                 zero). If \code{NULL}, all BAM files passed as argument
+#'                 during \code{metagene} object creation will be used to
+#'                 create a default design.
 #'                 Default = \code{NULL}.
 #'
 #'                 0: Do not use file.
@@ -126,22 +127,9 @@
 #' }
 #' \describe{
 #'   \item{}{\code{mg$add_design(design = NULL)}}
-#'   \item{design}{A \code{data.frame} that describe to experiment to plot. The
-#'                 first column must be the existing BAM filenames. The other 
-#'                 columns (at least one is required) represent how the files 
-#'                 should be grouped. All those colums should be in numeric 
-#'                 format. All the files in the same group will be 
-#'                 combined before doing the statistical analysis. For each 
-#'                 column, there will be one line with its ribon in 
-#'                 the metagene plot. At least one file should be selected (not
-#'                 zero). If \code{NULL}, all BAM files passed as argument 
-#'                 during \code{metagene} object creation will be used to 
-#'                 create a default design. 
-#'                 Default = \code{NULL}.
-#'
-#'                 0: Do not use file.
-#'                 1: File is input.
-#'                 2: File is control.}
+#'   \item{design}{A \code{data.frame} that describe to experiment to plot. See
+#'                 \code{new} function for more details. \code{NA} can be used
+#'                 keep previous design value. Default: \code{NA}.}
 #' }
 #' \describe{
 #'   \item{}{\code{mg$unflip_regions()}}
@@ -187,6 +175,9 @@ metagene <- R6Class("metagene",
         private$parallel_job <- Parallel_Job$new(cores)
         self$params[["padding_size"]] <- padding_size
         self$params[["verbose"]] <- verbose
+	if (is.null(names(bam_files))) {
+	    names(bam_files) <- tools::file_path_sans_ext(basename(bam_files))
+	}
         self$params[["bam_files"]] <- bam_files
         self$params[["force_seqlevels"]] <- force_seqlevels
         self$params[["flip_regions"]] <- FALSE
@@ -421,20 +412,20 @@ metagene <- R6Class("metagene",
     check_design = function(design) {
         if(!is.null(design) && !is.data.frame(design) &&
            !identical(design, NA)) {
-            stop("design must be a data.frame object")
+            stop("design must be a data.frame object, NULL or NA")
         }
-        if(is.data.frame(design) && ncol(design) < 2) {
-            stop("design must have at least 2 columns")
-        }
-        if (is.data.frame(design) && !(is.character(design[,1]) ||
-                                    is.factor(design[,1]))) {
-            stop("The first column of design must be BAM filenames")
-        }
-        if (is.data.frame(design) && !all(apply(design[, -1, drop=FALSE],
-                                        MARGIN=2, is.numeric))) {
-            stop(paste0("All design column, except the first one, must be in ",
-                            "numeric format"))
-        }
+        if (is.data.frame(design)) {
+            if(ncol(design) < 2) {
+                stop("design must have at least 2 columns")
+            }
+            if (!(is.character(design[,1]) || is.factor(design[,1]))) {
+                stop("The first column of design must be BAM filenames")
+            }
+            if (!all(apply(design[, -1, drop=FALSE], MARGIN=2, is.numeric))) {
+                stop(paste0("All design column, except the first one, must be ",
+                                "in numeric format"))
+            }
+	}
     },
     check_produce_matrices_params = function(select_regions, bin_count,
                                              bin_size, design, noise_removal,
@@ -462,7 +453,8 @@ metagene <- R6Class("metagene",
         if (!identical(design, NA)) {
             if(!is.null(design) &&
                 !all(apply(design[rowSums(design[ , -1, drop=FALSE]) > 0, 1,
-                                drop=FALSE], MARGIN = 2, FUN=file.exists))) {
+                                drop=FALSE], MARGIN = 2,
+		                FUN=private$check_bam_files))) {
                 stop("At least one BAM file does not exist")
             }
         }
@@ -626,14 +618,13 @@ metagene <- R6Class("metagene",
         }))
     },
     produce_coverages = function() {
-	# TODO: add support for named bam files
 	regions <- GenomicRanges::reduce(BiocGenerics::unlist(self$regions))
         res <- private$parallel_job$launch_job(
 	                data = self$params[["bam_files"]],
 		            FUN = private$bam_handler$get_coverage,
 		            regions = regions,
 		            force_seqlevels= self$params[["force_seqlevels"]])
-        names(res) <- self$params[["bam_files"]]
+        names(res) <- names(self$params[["bam_files"]])
         lapply(res, GenomeInfoDb::sortSeqlevels)
     },
     # Produce a plot with based on a data.frame
@@ -673,7 +664,7 @@ metagene <- R6Class("metagene",
     get_design = function(design) {
         private$check_design(design = design)
         get_complete_design <- function() {
-            bam_files <- self$params[["bam_files"]]
+            bam_files <- names(self$params[["bam_files"]])
             design <- data.frame(bam_files = bam_files)
             for (bam_file in names(self$coverages)) {
                 colname <- file_path_sans_ext(basename(bam_file))
@@ -700,14 +691,16 @@ metagene <- R6Class("metagene",
         for (design_name in colnames(design)[-1]) {
             i <- design[[design_name]] == 1
             j <- design[[design_name]] == 2
-            chip_bam_files <- as.character(design[,1][i])
+	    chip_bam_files <- as.character(design[,1][i])
+	    chip_bam_names <- private$get_bam_names(chip_bam_files)
             input_bam_files <- as.character(design[,1][j])
-            chip_coverages <- coverages[chip_bam_files]
+	    input_bam_names <- private$get_bam_names(input_bam_files)
+            chip_coverages <- coverages[chip_bam_names]
             chip_coverages <- Reduce("+", chip_coverages)
             if (length(input_bam_files) > 0) {
                 noise_ratio <- private$bam_handler$get_noise_ratio(chip_bam_files,
                                                                    input_bam_files)
-                input_coverages <- coverages[input_bam_files]
+                input_coverages <- coverages[input_bam_names]
                 input_coverages <- noise_ratio * Reduce("+", input_coverages)
                 results[design_name] <- chip_coverages - input_coverages
                 i <- results[[design_name]] < 0
@@ -733,7 +726,8 @@ metagene <- R6Class("metagene",
         for (design_name in colnames(design)[-1]) {
             i <- design[[design_name]] == 1
             bam_files <- as.character(design[,1][i])
-            cov <- coverages[bam_files]
+	    bam_names <- private$get_bam_names(bam_files)
+            cov <- coverages[bam_names]
             result[[design_name]] <- Reduce("+", cov)
         }
         result
@@ -750,6 +744,19 @@ metagene <- R6Class("metagene",
             m <- lapply(m, lapply, flip)
             self$matrices[[region_name]] <- m
         }
+    },
+    get_bam_names = function(filenames) {
+	stopifnot(private$check_bam_files(filenames))
+        vapply(filenames,
+	       private$bam_handler$get_bam_name,
+	       character(1))
+    },
+    check_bam_files = function(bam_files) {
+        all(vapply(bam_files,
+        function(x) {
+            !is.null((private$bam_handler$get_bam_name(x)))
+        },
+        logical(1)))
     }
   )
 )
