@@ -291,18 +291,71 @@ test.metagene_initialize_valid_unnamed_bam_files <- function() {
 ## Test the metagene$plot() function 
 ###################################################
 
-
-## Valid stat default
-test.metagene_plot_valid_stat_default <- function() {
+## Valid default
+test.metagene_plot_default <- function() {
   base_msg <- "metagene plot - "
   mg <- demo_mg_min$clone()
   pdf(NULL)
   res <- mg$plot()
   dev.off()
-  msg <- paste0(base_msg, "Valid stat did not return the expected class.")
+  msg <- paste0(base_msg, "Valid default did not return the expected class.")
   checkTrue(class(res) == "list", msg)
-  msg <- paste0(base_msg, "Valid stat did not return the expected content.")
-  checkIdentical(names(res), c("DF", "friedman_test", "graph"))
+  msg <- paste0(base_msg, "Valid default did not return the expected content.")
+  checkIdentical(names(res), c("DF", "graph"))
+}
+
+## Valid show_friedman false
+test.metagene_plot_valid_show_friedman_false <- function() {
+  base_msg <- "metagene plot - "
+  mg <- demo_mg_min$clone()
+  pdf(NULL)
+  res <- mg$plot(show_friedman = FALSE)
+  dev.off()
+  msg <- paste0(base_msg, "Valid show_friedman false did not return the")
+  msg <- paste(msg, "expected class.")
+  checkTrue(class(res) == "list", msg)
+  msg <- paste0(base_msg, "Valid show_friedman false did not return the")
+  msg <- paste(msg, "expected content.")
+  checkIdentical(names(res), c("DF", "graph"))
+}
+
+## Valid show_friedman true
+test.metagene_plot_valid_show_friedman_true <- function() {
+  base_msg <- "metagene plot - "
+  mg <- demo_mg_min$clone()
+  pdf(NULL)
+  res <- mg$plot(show_friedman = TRUE)
+  dev.off()
+  msg <- paste0(base_msg, "Valid show_friedman true did not return the")
+  msg <- paste(msg, "expected class.")
+  checkTrue(class(res) == "list", msg)
+  msg <- paste0(base_msg, "Valid show_friedman true did not return the")
+  msg <- paste(msg, "expected content.")
+  checkIdentical(names(res), c("DF", "graph"))
+}
+
+## Invalid show_friedman class
+test.metagene_plot_invalid_show_friedman_class <- function() {
+  base_msg <- "metagene plot - "
+  mg <- demo_mg_min$clone()
+  obs <- tryCatch(mg$plot(show_friedman = 1),
+                  error=conditionMessage)
+  exp <- "is.logical(show_friedman) is not TRUE"
+  msg <- paste0(base_msg, "Invalid show_friedman class did not return the")
+  msg <- paste(msg, "expected error")
+  checkIdentical(obs, exp, msg)
+}
+
+## Invalid show_friedman length
+test.metagene_plot_invalid_show_friedman_length <- function() {
+  base_msg <- "metagene plot - "
+  mg <- demo_mg_min$clone()
+  obs <- tryCatch(mg$plot(show_friedman = c(TRUE, FALSE)),
+                  error=conditionMessage)
+  exp <- "length(show_friedman) == 1 is not TRUE"
+  msg <- paste0(base_msg, "Invalid show_friedman length did not return the")
+  msg <- paste(msg, "expected error")
+  checkIdentical(obs, exp, msg)
 }
 
 ## Valid stat bootstrap
@@ -315,7 +368,7 @@ test.metagene_plot_valid_stat_bootstrap <- function() {
   msg <- paste0(base_msg, "Valid stat bootstrap did not return the expected class.")
   checkTrue(class(res) == "list", msg)
   msg <- paste0(base_msg, "Valid stat bootstrap did not return the expected content.")
-  checkIdentical(names(res), c("DF", "friedman_test", "graph"))
+  checkIdentical(names(res), c("DF", "graph"))
 }
 
 ## Valid stat basic
@@ -328,7 +381,7 @@ test.metagene_plot_valid_stat_basic <- function() {
   msg <- paste0(base_msg, "Valid stat basic did not return the expected class.")
   checkTrue(class(res) == "list", msg)
   msg <- paste0(base_msg, "Valid stat basic did not return the expected content.")
-  checkIdentical(names(res), c("DF", "friedman_test", "graph"))
+  checkIdentical(names(res), c("DF", "graph"))
 }
 
 ## Invalid stat class
@@ -386,7 +439,7 @@ test.metagene_plot_valid_bin_size <- function() {
   msg <- paste0(base_msg, "Valid bin_size did not return the expected class.")
   checkTrue(class(res) == "list", msg)
   msg <- paste0(base_msg, "Valid bin_size did not return the expected content.")
-  checkIdentical(names(res), c("DF", "friedman_test", "graph"))
+  checkIdentical(names(res), c("DF", "graph"))
 }
 
 ###################################################

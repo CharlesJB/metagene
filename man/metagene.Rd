@@ -88,6 +88,7 @@ metagene plots on the data (or a subset of the data).
                       automatically created. Default: NULL}
   \item{flip_regions}{Should regions on negative strand be flip_regions?
                       Default: \code{FALSE}.}
+  \item{show_friedman}{Show result of Friedman statistic. Default: FALSE}
   \item{stat}{The stat to use to calculate the values of the ribbon in the
               metagene plot. Must be "bootstrap" or "basic". "bootstrap"
               will estimate the range of average ("mean" or "median") that

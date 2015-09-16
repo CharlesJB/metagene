@@ -76,6 +76,7 @@
 #'                       automatically created. Default: NULL}
 #'   \item{flip_regions}{Should regions on negative strand be flip_regions?
 #'                       Default: \code{FALSE}.}
+#'   \item{show_friedman}{Show result of Friedman statistic. Default: FALSE}
 #'   \item{stat}{The stat to use to calculate the values of the ribbon in the
 #'               metagene plot. Must be "bootstrap" or "basic". "bootstrap"
 #'               will estimate the range of average ("mean" or "median") that
@@ -333,10 +334,13 @@ metagene <- R6Class("metagene",
     },
     plot = function(design = NULL, regions_group = NULL, bin_count = 100,
                     bin_size = NULL, range = c(-1,1), title = NULL,
-                    flip_regions = FALSE, stat = "bootstrap", ...) {
+                    flip_regions = FALSE, show_friedman = FALSE,
+                    stat = "bootstrap", ...) {
 	    self$design <- private$get_design(design)
         stopifnot(length(stat) == 1)
         stopifnot(stat %in% c("bootstrap", "basic"))
+        stopifnot(is.logical(show_friedman))
+        stopifnot(length(show_friedman) == 1)
         sample_size = NULL
 
         # 1. Get the correctly formatted matrices
@@ -352,6 +356,7 @@ metagene <- R6Class("metagene",
             stat <- Basic_Stat
         }
 
+        res <- list()
         # 2. Calculate means and confidence intervals
         DF <- data.frame(group = character(), position = numeric(),
                        value = numeric(), qinf = numeric(), qsup = numeric())
@@ -380,6 +385,7 @@ metagene <- R6Class("metagene",
                 DF <- rbind(DF, current_DF)
             }
         }
+        res$DF <- DF
         
         #
         # 3. Test de Friedman
@@ -387,9 +393,12 @@ metagene <- R6Class("metagene",
         # Friedman only done when more than 1 curve is present
         # 
         friedman <- NULL
-        if (length(unique(DF[["group"]])) > 1) {
-            friedman <- mu.friedman.test(DF[["value"]], group=DF[["group"]], 
-                             block=DF[["position"]])
+        if (show_friedman == TRUE) {
+            if (length(unique(DF[["group"]])) > 1) {
+                friedman <- mu.friedman.test(DF[["value"]], group=DF[["group"]],
+                                 block=DF[["position"]])
+            }
+            res$friedman_test <- friedman
         }
         
         # 4. Produce the graph
@@ -401,7 +410,8 @@ metagene <- R6Class("metagene",
         p <- private$plot_graphic(DF, title = title,
                                 binSize = 1, friedman=friedman)
         print(p)
-        return(list(DF = DF, friedman_test = friedman, graph = p))
+        res$graph <- p
+        return(res)
     },
     export = function(bam_file, region, file) {
         region <- tools::file_path_sans_ext(basename(region))
