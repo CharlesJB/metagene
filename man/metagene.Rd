@@ -123,6 +123,22 @@ metagene plots on the data (or a subset of the data).
                       Default: \code{FALSE}.}
 }
 \describe{
+  \item{}{get_raw_coverages = function(filenames)}
+  \item{filenames}{The name of the file to extract raw coverages. Can be the
+                   filename with the extension of the name of the bam file
+                   (if a named bam files was used during the creation of the
+                   metagene object). If \code{NULL}, returns the coverage
+                   every bam files. Default: \code{NULL}.}
+}
+\describe{
+  \item{}{get_normalized_coverages = function(filenames)}
+  \item{filenames}{The name of the file to extract normalized coverages (in
+                   RPM). Can be the filename with the extension of the name
+                   of the bam file (if a named bam files was used during the
+                   creation of the metagene object). If \code{NULL}, returns
+                   the coverage every bam files. Default: \code{NULL}.}
+}
+\describe{
   \item{}{\code{mg$export(bam_file, region, file)}}
   \item{bam_file}{The name of the bam file to export.}
   \item{region}{The name of the region to export.}

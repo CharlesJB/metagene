@@ -113,6 +113,22 @@
 #'                       Default: \code{FALSE}.}
 #' }
 #' \describe{
+#'   \item{}{get_raw_coverages = function(filenames)}
+#'   \item{filenames}{The name of the file to extract raw coverages. Can be the
+#'                    filename with the extension of the name of the bam file
+#'                    (if a named bam files was used during the creation of the
+#'                    metagene object). If \code{NULL}, returns the coverage
+#'                    every bam files. Default: \code{NULL}.}
+#' }
+#' \describe{
+#'   \item{}{get_normalized_coverages = function(filenames)}
+#'   \item{filenames}{The name of the file to extract normalized coverages (in
+#'                    RPM). Can be the filename with the extension of the name
+#'                    of the bam file (if a named bam files was used during the
+#'                    creation of the metagene object). If \code{NULL}, returns
+#'                    the coverage every bam files. Default: \code{NULL}.}
+#' }
+#' \describe{
 #'   \item{}{\code{mg$export(bam_file, region, file)}}
 #'   \item{bam_file}{The name of the bam file to export.}
 #'   \item{region}{The name of the region to export.}
@@ -158,7 +174,6 @@ metagene <- R6Class("metagene",
     # Public members
     params = list(),
     regions = GRangesList(),
-    coverages = list(),
     matrices = list(),
     design = data.frame(),
     
@@ -193,7 +208,7 @@ metagene <- R6Class("metagene",
         # Parse bam files
         private$print_verbose("Parse bam files...\n")
         private$print_verbose("  coverages...\n")
-        self$coverages <- private$produce_coverages()
+        private$coverages <- private$produce_coverages()
 
         # Produce matrices
         #self$produce_matrices()
@@ -201,6 +216,30 @@ metagene <- R6Class("metagene",
     get_bam_count = function(filename) {
         # Parameters validation are done by Bam_Handler object
         private$bam_handler$get_aligned_count(filename)
+    },
+    get_raw_coverages = function(filenames = NULL) {
+        if (is.null(filenames)) {
+	    private$coverages
+	} else {
+	    stopifnot(is.character(filenames))
+	    stopifnot(length(filenames) > 0)
+	    bam_names <- private$get_bam_names(filenames)
+	    stopifnot(length(bam_names) == length(filenames))
+	    private$coverages[bam_names]
+	}
+    },
+    get_normalized_coverages = function(filenames = NULL) {
+        normalize_coverage <- function(filename) {
+	    count <- private$bam_handler$get_aligned_count(filename)
+            weight <- 1 / (count / 1000000)
+            coverages[[filename]] <- coverages[[filename]] * weight
+	}
+	coverages <- self$get_raw_coverages(filenames)
+        coverage_names <- names(coverages)
+        coverages <- private$parallel_job$launch_job(data = coverage_names,
+						     FUN = normalize_coverage)
+	names(coverages) <- coverage_names
+	coverages
     },
     add_design = function(design) {
         self$design = private$get_design(design)
@@ -234,7 +273,7 @@ metagene <- R6Class("metagene",
                     width <- width(self$regions[[1]][1])
                     bin_count <- floor(width / bin_size)
                 }
-                coverages <- self$coverages
+                coverages <- private$coverages
                 if (!is.null(noise_removal)) {
                   coverages <- private$remove_controls(coverages, design)
                 } else {
@@ -335,6 +374,7 @@ metagene <- R6Class("metagene",
                                                             param = param)
         weight <- 1 - private$bam_handler$get_rpm_coefficient(bam_file)
         seqlevels(alignments) <- seqlevels(region)
+        # TODO: don't use the weight param of coverage
         coverage <- GenomicAlignments::coverage(alignments, weight=weight)
         rtracklayer::export(coverage, file, "BED")
         invisible(coverage)
@@ -347,7 +387,7 @@ metagene <- R6Class("metagene",
         }
         
         region <- tools::file_path_sans_ext(basename(region))
-        data <- private$get_matrix(self$coverages, region, bam_file, bin_size)
+        data <- private$get_matrix(private$coverages, region, bam_file, bin_size)
         heatmap.2(log2(data+1), dendrogram = "none", trace = "none",
                 labCol = NA, labRow = NA, margins = c(2,2),
                 xlab = "position", ylab = "log2(coverages)")
@@ -368,6 +408,7 @@ metagene <- R6Class("metagene",
     }
   ),
   private = list(
+    coverages = list(),
     bam_handler = "",
     parallel_job = "",
     check_param = function(regions, bam_files, padding_size,
@@ -666,7 +707,7 @@ metagene <- R6Class("metagene",
         get_complete_design <- function() {
             bam_files <- names(self$params[["bam_files"]])
             design <- data.frame(bam_files = bam_files)
-            for (bam_file in names(self$coverages)) {
+            for (bam_file in names(private$coverages)) {
                 colname <- file_path_sans_ext(basename(bam_file))
                 design[[colname]] <- rep(0, length(bam_files))
                 i <- bam_files == bam_file

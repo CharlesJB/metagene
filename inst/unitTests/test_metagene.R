@@ -259,12 +259,12 @@ test.metagene_initialize_valid_named_bam_files <- function() {
     obs <- mg$params[["bam_files"]]
     exp <- named_bam_files[1]
     msg <- paste(base_msg, "Valid named bam files did not generate the")
-    mgs <- paste(msg, "expected bam_files")
+    msg <- paste(msg, "expected bam_files")
     checkIdentical(obs, exp, msg)
-    obs <- names(mg$coverages)
+    obs <- names(mg$get_raw_coverages())
     exp <- names(named_bam_files)[1]
     msg <- paste(base_msg, "Valid named bam files did not generate the")
-    mgs <- paste(msg, "expected coverages")
+    msg <- paste(msg, "expected coverages")
     checkIdentical(obs, exp, msg)
 }
 
@@ -277,7 +277,7 @@ test.metagene_initialize_valid_unnamed_bam_files <- function() {
     msg <- paste(base_msg, "Valid unnamed bam files did not generate the")
     mgs <- paste(msg, "expected results")
     checkIdentical(obs, exp, msg)
-    obs <- names(mg$coverages)
+    obs <- names(mg$get_raw_coverages())
     exp <- tools::file_path_sans_ext(basename(bam_files[1]))
     msg <- paste(base_msg, "Valid named bam files did not generate the")
     mgs <- paste(msg, "expected coverages")
@@ -340,6 +340,153 @@ test.metagene_heatmap_decimal_bin_size <- function() {
     msg <- paste0(base_msg, "A decimal bin_size ",
                   "did not generate an exception with expected message." )
     checkIdentical(obs, exp, msg)
+}
+
+##################################################
+# Test the metagene$get_raw_coverages() function
+##################################################
+
+base_msg <- "metagene get_raw_coverages - "
+
+exp_raw <- GenomicAlignments::readGAlignments(bam_files[1])
+exp_raw <- GenomicAlignments::coverage(exp_raw)
+
+## Default filenames
+test.metagene_get_raw_coverages_default_filenames <- function() {
+    mg <- demo_mg$clone()
+    obs <- mg$get_raw_coverages()[[1]]
+    checkTrue(all(vapply(1:length(obs), function(i)
+			 identical(obs[[i]], exp_raw[[i]]), logical(1))))
+}
+
+## NULL filenames
+test.metagene_get_raw_coverages_null_filenames <- function() {
+    mg <- demo_mg$clone()
+    obs <- mg$get_raw_coverages(filenames = NULL)[[1]]
+    checkTrue(all(vapply(1:length(obs), function(i)
+			 identical(obs[[i]], exp_raw[[i]]), logical(1))))
+}
+
+## One filename
+test.metagene_get_raw_coverages_one_filename <- function() {
+    mg <- demo_mg$clone()
+    obs <- mg$get_raw_coverages(filenames = bam_files[1])[[1]]
+    checkTrue(all(vapply(1:length(obs), function(i)
+			 identical(obs[[i]], exp_raw[[i]]), logical(1))))
+}
+
+## All filenames
+test.metagene_get_raw_coverages_all_filename <- function() {
+    mg <- demo_mg$clone()
+    obs <- mg$get_raw_coverages(filenames = bam_files)[[1]]
+    checkTrue(all(vapply(1:length(obs), function(i)
+			 identical(obs[[i]], exp_raw[[i]]), logical(1))))
+}
+
+## Invalid filenames class
+test.metagene_get_raw_coverages_invalid_filenames_class <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$get_raw_coverages(filenames = 1), error = conditionMessage)
+    exp <- "is.character(filenames) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid empty filename
+test.metagene_get_raw_coverages_invalid_empty_filename <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$get_raw_coverages(filenames = ""), error = conditionMessage)
+    exp <- "private$check_bam_files(filenames) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid filename alone
+test.metagene_get_raw_coverages_invalid_filename_alone <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$get_raw_coverages(filenames = "asdf"), error = conditionMessage)
+    exp <- "private$check_bam_files(filenames) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid filename among valid
+test.metagene_get_raw_coverages_invalid_filename_among_valid <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$get_raw_coverages(filenames = c("asdf", bam_files)), error = conditionMessage)
+    exp <- "private$check_bam_files(filenames) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+##################################################
+# Test the metagene$get_normalized_coverages() function
+##################################################
+
+base_msg <- "metagene get_normalized_coverages - "
+
+count <- Rsamtools::countBam(bam_files[1])$records
+weight <- 1 / (count / 1000000)
+exp_norm <- exp_raw * weight
+
+## Default filenames
+test.metagene_get_normalized_coverages_default_filenames <- function() {
+    mg <- demo_mg$clone()
+    obs <- mg$get_normalized_coverages()[[1]]
+    checkTrue(all(vapply(1:length(obs), function(i)
+			 identical(obs[[i]], exp_norm[[i]]), logical(1))))
+}
+
+## NULL filenames
+test.metagene_get_normalized_coverages_null_filenames <- function() {
+    mg <- demo_mg$clone()
+    obs <- mg$get_normalized_coverages(filenames = NULL)[[1]]
+    checkTrue(all(vapply(1:length(obs), function(i)
+			 identical(obs[[i]], exp_norm[[i]]), logical(1))))
+}
+
+## One filename
+test.metagene_get_normalized_coverages_one_filename <- function() {
+    mg <- demo_mg$clone()
+    obs <- mg$get_normalized_coverages(filenames = bam_files[1])[[1]]
+    checkTrue(all(vapply(1:length(obs), function(i)
+			 identical(obs[[i]], exp_norm[[i]]), logical(1))))
+}
+
+## All filenames
+test.metagene_get_normalized_coverages_all_filename <- function() {
+    mg <- demo_mg$clone()
+    obs <- mg$get_normalized_coverages(filenames = bam_files)[[1]]
+    checkTrue(all(vapply(1:length(obs), function(i)
+			 identical(obs[[i]], exp_norm[[i]]), logical(1))))
+}
+
+## Invalid filenames class
+test.metagene_get_normalized_coverages_invalid_filenames_class <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$get_normalized_coverages(filenames = 1), error = conditionMessage)
+    exp <- "is.character(filenames) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid empty filename
+test.metagene_get_normalized_coverages_invalid_empty_filename <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$get_normalized_coverages(filenames = ""), error = conditionMessage)
+    exp <- "private$check_bam_files(filenames) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid filename alone
+test.metagene_get_normalized_coverages_invalid_filename_alone <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$get_normalized_coverages(filenames = "asdf"), error = conditionMessage)
+    exp <- "private$check_bam_files(filenames) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid filename among valid
+test.metagene_get_normalized_coverages_invalid_filename_among_valid <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$get_normalized_coverages(filenames = c("asdf", bam_files)), error = conditionMessage)
+    exp <- "private$check_bam_files(filenames) is not TRUE"
+    checkIdentical(obs, exp)
 }
 
 ##################################################
