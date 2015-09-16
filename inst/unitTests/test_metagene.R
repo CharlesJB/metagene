@@ -27,6 +27,9 @@ index_strand <- sample(1:length(regions_strand[[1]]),
 regions_strand <- lapply(regions_strand,
                          function(x) { strand(x[index_strand]) <- "-"; x })
 demo_mg <- metagene$new(regions = get_demo_regions(), bam_files = get_demo_bam_files())
+region <- regions[1]
+bam_file <- bam_files[1]
+demo_mg_min <- metagene$new(regions = region, bam_files = bam_file)
 
 ###################################################
 ## Test the metagene$new() function (initialize)
@@ -288,12 +291,95 @@ test.metagene_initialize_valid_unnamed_bam_files <- function() {
 ## Test the metagene$plot() function 
 ###################################################
 
-base_msg <- "metagene plot - "
 
+## Valid stat default
+test.metagene_plot_valid_stat_default <- function() {
+  base_msg <- "metagene plot - "
+  mg <- demo_mg_min$clone()
+  pdf(NULL)
+  res <- mg$plot()
+  dev.off()
+  msg <- paste0(base_msg, "Valid stat did not return the expected class.")
+  checkTrue(class(res) == "list", msg)
+  msg <- paste0(base_msg, "Valid stat did not return the expected content.")
+  checkIdentical(names(res), c("DF", "friedman_test", "graph"))
+}
+
+## Valid stat bootstrap
+test.metagene_plot_valid_stat_bootstrap <- function() {
+  base_msg <- "metagene plot - "
+  mg <- demo_mg_min$clone()
+  pdf(NULL)
+  res <- mg$plot(stat = "bootstrap")
+  dev.off()
+  msg <- paste0(base_msg, "Valid stat bootstrap did not return the expected class.")
+  checkTrue(class(res) == "list", msg)
+  msg <- paste0(base_msg, "Valid stat bootstrap did not return the expected content.")
+  checkIdentical(names(res), c("DF", "friedman_test", "graph"))
+}
+
+## Valid stat basic
+test.metagene_plot_valid_stat_basic <- function() {
+  base_msg <- "metagene plot - "
+  mg <- demo_mg_min$clone()
+  pdf(NULL)
+  res <- mg$plot(stat = "basic")
+  dev.off()
+  msg <- paste0(base_msg, "Valid stat basic did not return the expected class.")
+  checkTrue(class(res) == "list", msg)
+  msg <- paste0(base_msg, "Valid stat basic did not return the expected content.")
+  checkIdentical(names(res), c("DF", "friedman_test", "graph"))
+}
+
+## Invalid stat class
+test.metagene_plot_invalid_stat_class <- function() {
+  base_msg <- "metagene plot - "
+  mg <- demo_mg_min$clone()
+  obs <- tryCatch(mg$plot(stat = 1),
+                  error=conditionMessage)
+  exp <- "stat %in% c(\"bootstrap\", \"basic\") is not TRUE"
+  msg <- paste0(base_msg, "Invalid stat class did not return the expected error")
+  checkIdentical(obs, exp, msg)
+}
+
+## Invalid stat empty
+test.metagene_plot_invalid_stat_empty <- function() {
+  base_msg <- "metagene plot - "
+  mg <- demo_mg_min$clone()
+  obs <- tryCatch(mg$plot(stat = ""),
+                  error=conditionMessage)
+  exp <- "stat %in% c(\"bootstrap\", \"basic\") is not TRUE"
+  msg <- paste0(base_msg, "Invalid stat empty did not return the expected error")
+  checkIdentical(obs, exp, msg)
+}
+
+## Invalid stat length greater than one
+test.metagene_plot_invalid_stat_empty <- function() {
+  base_msg <- "metagene plot - "
+  mg <- demo_mg_min$clone()
+  obs <- tryCatch(mg$plot(stat = c("bootstrap", "basic")),
+                  error=conditionMessage)
+  exp <- "length(stat) == 1 is not TRUE"
+  msg <- paste0(base_msg, "Invalid stat empty did not return the expected error")
+  checkIdentical(obs, exp, msg)
+}
+
+
+## Invalid stat value
+test.metagene_plot_invalid_stat_value <- function() {
+  base_msg <- "metagene plot - "
+  mg <- demo_mg_min$clone()
+  obs <- tryCatch(mg$plot(stat = "invalid_stat_value"),
+                  error=conditionMessage)
+  exp <- "stat %in% c(\"bootstrap\", \"basic\") is not TRUE"
+  msg <- paste0(base_msg, "Invalid stat value did not return the expected error")
+  checkIdentical(obs, exp, msg)
+}
 
 ## Valid bin_size
 test.metagene_plot_valid_bin_size <- function() {
-  mg <- demo_mg$clone()
+  base_msg <- "metagene plot - "
+  mg <- demo_mg_min$clone()
   pdf(NULL)
   res <- mg$plot(bin_size = 100)
   dev.off()

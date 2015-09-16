@@ -37,8 +37,8 @@
 #' @section Methods:
 #' \describe{
 #'   \item{}{\code{df <- mg$plot(design = NULL, regions_group = NULL,
-#'               bin_size = 100, alpha = 0.05, sample_count = 1000,
-#'               title = NULL, flip_regions)}}
+#'               bin_count = 100, bin_size = NULL, range = c(-1,1),
+#'               title = NULL, flip_regions = FALSE, stat = c("bootstrap", "basic", ...))}}
 #'   \item{design}{A \code{data.frame} that describe to experiment to plot. The
 #'                 first column must be the existing BAM filenames or the BAM
 #'                 name that was used when creating the metagene object. The
@@ -61,20 +61,40 @@
 #'                      regions used when creating the
 #'                      \code{metagene} object will be used.
 #'                      Default: \code{NULL}}
-#'   \item{bin_size}{The size of bin to use before calculating the statistics.
-#'                   larger \code{bin_size} will reduce the calculation time
-#'                   and produce smoother curves. It must be a positive 
-#'                   integer. Default = 100.}
-#'   \item{alpha}{The condifence interval (CI) to represent with a ribbon. Must
-#'                be a value between 0 and 1. With a value of 0.05, the ribbon
-#'                will represent 95% of the estimated values of the means.
-#'                Default = 0.05.}
-#'   \item{sample_count}{The number of draw to do during bootstrap analysis.
-#'                       Default: 1000.}
+#'   \item{bin_count}{The number of bin to create. \code{NA} can be used to
+#'                    keep previous bin_count value. If both bin_count and
+#'                    bin_size are \code{NA}, a bin_count value of 100 will be
+#'                    used. Default: \code{NA}.}
+#'   \item{bin_size}{The size of bin to create. Can only be used if all the
+#'                   regions have the same size. \code{NA} can be used to keep
+#'                   previous bin_size value. If both bin_count and bin_size
+#'                   are \code{NA}, a bin_count value of 100 will be used.
+#'                   Default: \code{NA}.}
+#'   \item{range}{The values for the x axis. Must be a numeric vector of size
+#'                2. Default: \code{c(-1, 1)}.}
 #'   \item{title}{A title to add to the graph. If \code{NULL}, will be
 #'                       automatically created. Default: NULL}
 #'   \item{flip_regions}{Should regions on negative strand be flip_regions?
 #'                       Default: \code{FALSE}.}
+#'   \item{stat}{The stat to use to calculate the values of the ribbon in the
+#'               metagene plot. Must be "bootstrap" or "basic". "bootstrap"
+#'               will estimate the range of average ("mean" or "median") that
+#'               could have produce the observed distribution of values for
+#'               each bin. With the "basic" approach, the ribbon will represent
+#'               the range of the values between \code{1 - alpha / 2} and
+#'               \code{alpha / 2} (see \code{...} param.}
+#'   \item{...}{Extra params for the calculation of the ribbon values. See
+#'              following param descriptions.}
+#'   \item{alpha}{The range of the estimation to be shown with the ribbon.
+#'                \code{1 - alpha / 2} and \code{alpha / 2} will be used.
+#'                Default: 0.05.}
+#'   \item{average}{The function to use to summarize the values of each
+#'                  bins. "mean" or "median". Default: "mean".}
+#'   \item{sample_count}{With "bootstrap" only. The number of draw to do
+#'                       in the bootstrap calculation. Default: 1000.}
+#'   \item{sample_size}{The number of element to select for each draws.
+#'                      Default: the smallest number of row of the matrices
+#'                      produced.}
 #' }
 #' \describe{
 #'   \item{}{\code{mg$produce_matrices(select_regions, design, bin_count,
@@ -87,7 +107,7 @@
 #'                         select_regions values. \code{NULL} can be used to
 #'                         keep all regions. Default: \code{NA}.}
 #'   \item{design}{A \code{data.frame} that describe to experiment to plot. See
-#'                 \code{new} function for more details. \code{NA} can be used
+#'                 \code{plot} function for more details. \code{NA} can be used
 #'                 keep previous design value. Default: \code{NA}.}
 #'   \item{bin_count}{The number of bin to create. \code{NA} can be used to
 #'                    keep previous bin_count value. If both bin_count and
@@ -144,7 +164,7 @@
 #' \describe{
 #'   \item{}{\code{mg$add_design(design = NULL)}}
 #'   \item{design}{A \code{data.frame} that describe to experiment to plot. See
-#'                 \code{new} function for more details. \code{NA} can be used
+#'                 \code{plot} function for more details. \code{NA} can be used
 #'                 keep previous design value. Default: \code{NA}.}
 #' }
 #' \describe{
@@ -312,18 +332,27 @@ metagene <- R6Class("metagene",
         invisible(self)
     },
     plot = function(design = NULL, regions_group = NULL, bin_count = 100,
-                    bin_size = NULL, alpha = 0.05, sample_count = 1000,
-		            range = c(-1,1), title = NULL, flip_regions = FALSE) {
-	self$design <- private$get_design(design)
+                    bin_size = NULL, range = c(-1,1), title = NULL,
+                    flip_regions = FALSE, stat = "bootstrap", ...) {
+	    self$design <- private$get_design(design)
+        stopifnot(length(stat) == 1)
+        stopifnot(stat %in% c("bootstrap", "basic"))
+        sample_size = NULL
 
         # 1. Get the correctly formatted matrices
         self$produce_matrices(select_regions = regions_group,
                               design = self$design, bin_count = bin_count,
                               bin_size = bin_size, flip_regions = flip_regions)
 
+        if (stat == "bootstrap") {
+            stat <- Bootstrap_Stat
+            sample_size <- as.integer(min(unlist(sapply(self$matrices, sapply,
+                                                  sapply, nrow))))
+        } else {
+            stat <- Basic_Stat
+        }
+
         # 2. Calculate means and confidence intervals
-        sample_size <- as.integer(min(unlist(sapply(self$matrices, sapply,
-                                              sapply, nrow))))
         DF <- data.frame(group = character(), position = numeric(),
                        value = numeric(), qinf = numeric(), qsup = numeric())
         for (region in names(self$matrices)) {
@@ -332,11 +361,19 @@ metagene <- R6Class("metagene",
                 print(group_name)
                 data <- self$matrices[[region]][[bam_file]][["input"]]
                 ctrl <- self$matrices[[region]][[bam_file]][["ctrl"]]
-                bootstrap_stat <- Bootstrap_Stat$new(data = data, ctrl = ctrl,
-                                                sample_size = sample_size, 
-                                                sample_count = sample_count,
-                                                range = range)
-                current_DF <- bootstrap_stat$get_statistics()
+                current_stat <- ""
+                cores <- private$parallel_job$get_core_count()
+                if (! is.null(sample_size)) {
+                    current_stat <- stat$new(data = data, ctrl = ctrl,
+                                                    sample_size = sample_size,
+                                                    range = range,
+                                                    cores = cores, ...)
+                } else {
+                    current_stat <- stat$new(data = data, ctrl = ctrl,
+                                                    range = range,
+                                                    cores = cores, ...)
+                }
+                current_DF <- current_stat$get_statistics()
                 current_DF <- cbind(rep(group_name, nrow(current_DF)), 
                                     current_DF)
                 colnames(current_DF)[1] <- "group"
