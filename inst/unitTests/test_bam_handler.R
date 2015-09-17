@@ -18,6 +18,9 @@ not_indexed_bam_file <- metagene:::get_not_indexed_bam_file()
 different_seqnames <- c(bam_files[1], metagene:::get_different_seqnames_bam_file())
 regions <- lapply(metagene:::get_demo_regions(), rtracklayer::import)
 
+demo_bh <- metagene:::Bam_Handler$new(bam_files)
+demo_bh_one <- metagene:::Bam_Handler$new(bam_files[1])
+
 ###################################################
 ## Test the Bam_Handler$new() function (initialize)
 ###################################################
@@ -26,7 +29,7 @@ base_msg <- "Bam_Handler initialize - "
 
 ## Single valid bam file
 test.bam_handler_single_valid_file <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files[1])
+  bam_handler <- demo_bh_one$clone()
   msg <- paste0(base_msg,  
         "Valid initialize call with one bam file did not return correct class")
   checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")), msg = msg)
@@ -34,7 +37,7 @@ test.bam_handler_single_valid_file <- function() {
 
 ## Different seqnames bam file warning
 test.bam_handler_different_seqnames_bam_file_warning <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files[1])
+  bam_handler <- demo_bh_one$clone()
   exp <- "\n\n  Some bam files have discrepancies in their seqnames."
   exp <- paste0(exp, "\n\n")
   exp <- paste0(exp, "  This could be caused by chromosome names ")
@@ -72,15 +75,7 @@ test.bam_handler_multiple_bam_file_one_not_indexed <- function() {
   checkIdentical(obs, exp, msg)
 }
 
-## Multiple valid bam files, no cores
-test.bam_handler_valid_files_no_cores <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
-  msg <- paste0(base_msg, "Valid initialize call with multiple bam files ", 
-                    "did not return correct class")
-  checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")), msg = msg)
-}
-
-## Unamed bam files
+## Unnamed bam files
 test.bam_handler_unamed_bam_files <- function() {
   bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
   obs <- rownames(bam_handler$get_bam_files())
@@ -102,7 +97,7 @@ test.bam_handler_named_bam_files <- function() {
 
 ## Valid bam files, numeric cores
 test.bam_handler_valid_files_numeric_cores <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files, cores = 2)
+  bam_handler <- metagene:::demo_bh_multicore$clone()
   msg <- paste0(base_msg, " Valid initialize call with multiple bam files and ", 
                "numeric cores did not return correct class")
   checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")), msg = msg)
@@ -110,7 +105,7 @@ test.bam_handler_valid_files_numeric_cores <- function() {
 
 ## Valid bam files, bpparam cores
 test.bam_handler_valid_files_bpparam_cores <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files, 
+  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files[1],
                                     cores = BiocParallel::SnowParam(workers = 2))
   checkTrue(all(class(bam_handler) == c("Bam_Handler", "R6")),
             msg = paste0(base_msg, "Valid initialize call with multiple bam ",
@@ -192,7 +187,7 @@ test.bam_handler_get_aligned_count_valid_case <- function() {
   # Note, count were obtained with "samtools view -c -F0x4 ${file}"
   exp <- list(4635, 1896, 956, 1999, 6025)
   names(exp) <- bam_files
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   obs <- lapply(bam_files, bam_handler$get_aligned_count)
   names(obs) <- bam_files
   msg <- paste0(base_msg, "Bam_Handler get_aligned_count valid case does ", 
@@ -205,7 +200,7 @@ test.bam_handler_get_aligned_count_valid_case_multicore <- function() {
   # Note, count were obtained with "samtools view -c -F0x4 ${file}"
   exp <- list(4635, 1896, 956, 1999, 6025)
   names(exp) <- bam_files
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files, cores = 2)
+  bam_handler <- metagene:::demo_bh_multicore$clone()
   obs <- lapply(bam_files, bam_handler$get_aligned_count)
   names(obs) <- bam_files
   msg <- paste0(base_msg, "Bam_Handler get_aligned_count valid case does ", 
@@ -215,7 +210,7 @@ test.bam_handler_get_aligned_count_valid_case_multicore <- function() {
 
 ## Invalid bam file
 test.bam_handler_get_aligned_count_invalid_bam_file <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   obs <- tryCatch(bam_handler$get_aligned_count(bam_file = 
                             "not_a_valid_bam_file"), error=conditionMessage)
   exp <- "Bam file not_a_valid_bam_file not found."
@@ -233,7 +228,7 @@ test.bam_handler_get_rpm_coefficient_valid_case <- function() {
   # Note, count were obtained with "samtools view -c -F0x4 ${file}"
   exp <- list(4635/1000000, 1896/1000000, 956/1000000, 1999/1000000, 6025/1000000)
   names(exp) <- bam_files
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   obs <- lapply(bam_files, bam_handler$get_rpm_coefficient)
   names(obs) <- bam_files
   checkTrue(all(mapply("==", obs, exp)),
@@ -245,7 +240,7 @@ test.bam_handler_get_rpm_coefficient_valid_case_multicore <- function() {
   # Note, count were obtained with "samtools view -c -F0x4 ${file}"
   exp <- list(4635/1000000, 1896/1000000, 956/1000000, 1999/1000000, 6025/1000000)
   names(exp) <- bam_files
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files, cores = 2)
+  bam_handler <- metagene:::demo_bh_multicore$clone()
   obs <- lapply(bam_files, bam_handler$get_rpm_coefficient)
   names(obs) <- bam_files
   checkTrue(all(mapply("==", obs, exp)),
@@ -254,7 +249,7 @@ test.bam_handler_get_rpm_coefficient_valid_case_multicore <- function() {
 
 ## Invalid bam file
 test.bam_handler_get_rpm_coefficient_invalid_bam_file <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   obs <- tryCatch(bam_handler$get_rpm_coefficient(bam_file = "not_a_valid_bam_file"), error=conditionMessage)
   exp <- "Bam file not_a_valid_bam_file not found."
   checkEquals(obs, exp,
@@ -269,7 +264,7 @@ base_msg <- "Bam_Handler get_coverage -"
 
 ## Valid use
 test.bam_handler_get_coverage_valid_use <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   region <- regions[[1]][1]
   bam_file <- bam_files[1]
   obs <- bam_handler$get_coverage(bam_file, region)
@@ -282,7 +277,7 @@ test.bam_handler_get_coverage_valid_use <- function() {
 test.bam_handler_get_coverage_multicore <- function() {
   bam_file <- bam_files[1]
   region <- regions[[1]]
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_file, cores = 2)
+  bam_handler <- metagene:::demo_bh_multicore$clone()
   coverages <- bam_handler$get_coverage(bam_file, region)
   msg <- paste(base_msg, "Multicore call did not return the correct number of chromosomes")
   checkEquals(length(coverages), 22, msg)
@@ -296,7 +291,7 @@ test.bam_handler_get_coverage_multiple_chromosomes <- function() {
     exp <- GenomicAlignments::readGAlignments(bam_file, param = param)
     count <- Rsamtools::countBam(bam_file)$records
     exp <- GenomicAlignments::coverage(exp)
-    bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_file)
+    bam_handler <- metagene:::Bam_Handler$new(bam_file)
     obs <- bam_handler$get_coverage(bam_file, region)
     msg <- paste(base_msg, "Coverage is different that what was expected.")
     checkTrue(all(sum(exp - obs) == 0), msg)
@@ -305,7 +300,7 @@ test.bam_handler_get_coverage_multiple_chromosomes <- function() {
 
 ## Duplicated regions
 test.bam_handler_get_coverage_duplicated_regions <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   region <- regions[[1]]
   bam_file <- bam_files[1]
   obs <- bam_handler$get_coverage(bam_file, region)
@@ -322,23 +317,23 @@ test.bam_handler_get_coverage_duplicated_regions <- function() {
 
 ## Negative coverage
 test.bam_handler_get_coverage_negative_coverage <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   region <- regions[[1]][1]
   bam_file <- bam_files[4]
   obs <- bam_handler$get_coverage(bam_file, region)
   msg <- paste(base_msg, "Negative coverage returns some negative values")
-  checkTrue(all(sapply(obs, function(x) all(as.numeric(x) >= 0))), msg = msg)
+  checkTrue(all(vapply(obs, function(x) all(runValue(x) >= 0), logical(1))), msg = msg)
   # Sanity check
   weight <- 1 / (bam_handler$get_aligned_count(bam_file) / 1000000)
   sane <- GenomicAlignments::coverage(GenomicAlignments::readGAlignments(bam_file, param = Rsamtools::ScanBamParam(which = reduce(region))), weight = weight)
   msg <- paste(base_msg, "Negative coverage did not pass sanity test")
-  checkTrue(!all(sapply(sane, function(x) all(as.numeric(x) >= 0))), msg = msg)
+  checkTrue(!all(sapply(sane, function(x) all(runValue(x) >= 0))), msg = msg)
 }
 
 ## Invalid bam file
 test.bam_handler_get_coverage_invalid_bam_file <- function() {
   region <- regions[1]
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   obs <- tryCatch(bam_handler$get_coverage(bam_file = "not_a_valid_bam_file", regions = region), error = conditionMessage)
   exp <- "Bam file not_a_valid_bam_file not found."
   msg <- paste(base_msg, "Invalid bam file did not give the expected error message.")
@@ -347,7 +342,7 @@ test.bam_handler_get_coverage_invalid_bam_file <- function() {
 
 ## Invalid regions class
 test.bam_handler_get_coverage_invalid_regions_class <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file, regions = "not_a_valid_region"), error = conditionMessage)
   exp <- "Parameter regions must be a GRanges object."
@@ -357,7 +352,7 @@ test.bam_handler_get_coverage_invalid_regions_class <- function() {
 
 ## Invalid regions length
 test.bam_handler_get_coverage_invalid_regions_length <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file, regions = GenomicRanges::GRanges()), error = conditionMessage)
   exp <- "Parameter regions must not be an empty GRanges object"
@@ -367,7 +362,7 @@ test.bam_handler_get_coverage_invalid_regions_length <- function() {
 
 ## All seqnames not in bam
 test.bam_handler_get_coverage_invalid_regions_all_seqnames_not_in_bam <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   region <- regions[[1]]
   # All seqlevels
@@ -380,7 +375,7 @@ test.bam_handler_get_coverage_invalid_regions_all_seqnames_not_in_bam <- functio
 
 ## All seqnames not in bam force seqlevels
 test.bam_handler_get_coverage_invalid_regions_all_seqnames_not_in_bam_force_seqlevels<- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   region <- regions[[1]]
   # All seqlevels
@@ -397,7 +392,7 @@ test.bam_handler_get_coverage_invalid_regions_all_seqnames_not_in_bam_force_seql
 
 ## One Seqnames not in bam
 test.bam_handler_get_coverage_invalid_regions_one_seqnames_not_in_bam <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   region <- regions[[1]]
   seqlevels(region) <- c(seqlevels(region), "invalid_level")
@@ -410,7 +405,7 @@ test.bam_handler_get_coverage_invalid_regions_one_seqnames_not_in_bam <- functio
 
 ## Valid regions seqlevels not in bam
 test.bam_handler_get_coverage_valid_regions_seqlevels_not_in_bam_force <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   region <- regions[[1]]
   seqlevels(region) <- c(seqlevels(region), "invalid_level")
@@ -421,7 +416,7 @@ test.bam_handler_get_coverage_valid_regions_seqlevels_not_in_bam_force <- functi
 
 ## Seqnames not in bam force seqlevels
 test.bam_handler_get_coverage_seqnames_not_in_bam_force <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   region <- regions[[1]]
   seqlevels(region) <- c(seqlevels(region), "invalid_level")
@@ -439,7 +434,7 @@ base_msg <- "Bam_Handler get_normalized_coverage -"
 
 ## Valid use
 test.bam_handler_get_normalized_coverage_valid_use <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   region <- regions[[1]][1]
   bam_file <- bam_files[1]
   obs <- bam_handler$get_normalized_coverage(bam_file, region)
@@ -453,7 +448,7 @@ test.bam_handler_get_normalized_coverage_valid_use <- function() {
 test.bam_handler_get_normalized_coverage_multicore <- function() {
   bam_file <- bam_files[1]
   region <- regions[[1]]
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_file, cores = 2)
+  bam_handler <- metagene:::demo_bh_multicore$clone()
   coverages <- bam_handler$get_normalized_coverage(bam_file, region)
   msg <- paste(base_msg, "Multicore call did not return the correct number of chromosomes")
   checkEquals(length(coverages), 22, msg)
@@ -468,7 +463,7 @@ test.bam_handler_get_normalized_coverage_multiple_chromosomes <- function() {
     count <- Rsamtools::countBam(bam_file)$records
     weight <- weight <- 1 / (count / 1000000)
     exp <- GenomicAlignments::coverage(exp) * weight
-    bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_file)
+    bam_handler <- metagene:::Bam_Handler$new(bam_file)
     obs <- bam_handler$get_normalized_coverage(bam_file, region)
     msg <- paste(base_msg, "Coverage is different that what was expected.")
     checkTrue(all(sum(exp - obs) == 0), msg)
@@ -477,7 +472,7 @@ test.bam_handler_get_normalized_coverage_multiple_chromosomes <- function() {
 
 ## Duplicated regions
 test.bam_handler_get_normalized_coverage_duplicated_regions <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   region <- regions[[1]]
   bam_file <- bam_files[1]
   obs <- bam_handler$get_normalized_coverage(bam_file, region)
@@ -495,18 +490,18 @@ test.bam_handler_get_normalized_coverage_duplicated_regions <- function() {
 
 ## Negative coverage
 test.bam_handler_get_normalized_coverage_negative_coverage <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   region <- regions[[1]][1]
   bam_file <- bam_files[4]
   obs <- bam_handler$get_normalized_coverage(bam_file, region)
   msg <- paste(base_msg, "Negative coverage returns some negative values")
-  checkTrue(all(sapply(obs, function(x) all(as.numeric(x) >= 0))), msg = msg)
+  checkTrue(all(sapply(obs, function(x) all(runValue(x) >= 0))), msg = msg)
 }
 
 ## Invalid bam file
 test.bam_handler_get_normalized_coverage_invalid_bam_file <- function() {
   region <- regions[1]
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = "not_a_valid_bam_file", regions = region), error = conditionMessage)
   exp <- "Bam file not_a_valid_bam_file not found."
   msg <- paste(base_msg, "Invalid bam file did not give the expected error message.")
@@ -515,7 +510,7 @@ test.bam_handler_get_normalized_coverage_invalid_bam_file <- function() {
 
 ## Invalid regions class
 test.bam_handler_get_normalized_coverage_invalid_regions_class <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file, regions = "not_a_valid_region"), error = conditionMessage)
   exp <- "Parameter regions must be a GRanges object."
@@ -525,7 +520,7 @@ test.bam_handler_get_normalized_coverage_invalid_regions_class <- function() {
 
 ## Invalid regions length
 test.bam_handler_get_normalized_coverage_invalid_regions_length <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file, regions = GenomicRanges::GRanges()), error = conditionMessage)
   exp <- "Parameter regions must not be an empty GRanges object"
@@ -535,7 +530,7 @@ test.bam_handler_get_normalized_coverage_invalid_regions_length <- function() {
 
 ## All seqnames not in bam
 test.bam_handler_get_normalized_coverage_invalid_regions_all_seqnames_not_in_bam <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   region <- regions[[1]]
   # All seqlevels
@@ -548,7 +543,7 @@ test.bam_handler_get_normalized_coverage_invalid_regions_all_seqnames_not_in_bam
 
 ## All seqnames not in bam force seqlevels
 test.bam_handler_get_normalized_coverage_invalid_regions_all_seqnames_not_in_bam_force_seqlevels<- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   region <- regions[[1]]
   # All seqlevels
@@ -565,7 +560,7 @@ test.bam_handler_get_normalized_coverage_invalid_regions_all_seqnames_not_in_bam
 
 ## One Seqnames not in bam
 test.bam_handler_get_normalized_coverage_invalid_regions_one_seqnames_not_in_bam <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   region <- regions[[1]]
   seqlevels(region) <- c(seqlevels(region), "invalid_level")
@@ -578,7 +573,7 @@ test.bam_handler_get_normalized_coverage_invalid_regions_one_seqnames_not_in_bam
 
 ## Valid regions seqlevels not in bam
 test.bam_handler_get_normalized_coverage_valid_regions_seqlevels_not_in_bam_force <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   region <- regions[[1]]
   seqlevels(region) <- c(seqlevels(region), "invalid_level")
@@ -589,7 +584,7 @@ test.bam_handler_get_normalized_coverage_valid_regions_seqlevels_not_in_bam_forc
 
 ## Seqnames not in bam force seqlevels
 test.bam_handler_get_normalized_coverage_seqnames_not_in_bam_force <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   bam_file <- bam_files[1]
   region <- regions[[1]]
   seqlevels(region) <- c(seqlevels(region), "invalid_level")
@@ -608,13 +603,15 @@ base_msg <- "Bam_Handler get_noise_ratio -"
 chip.bed <- system.file("extdata/align1_rep1.bed", package="metagene")
 input.bed <- system.file("extdata/ctrl.bed", package="metagene")
 chip.bam <- system.file("extdata/align1_rep1.bam", package="metagene")
+chip.bam <- basename(tools::file_path_sans_ext(chip.bam))
 input.bam <- system.file("extdata/ctrl.bam", package="metagene")
+input.bam <- basename(tools::file_path_sans_ext(input.bam))
 
 ## Valid use
 test.bam_handler_get_noise_ratio_valid_use <- function() {
   exp <- DBChIP:::NCIS(chip.bed, input.bed, "BED")$est
 
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+  bam_handler <- demo_bh$clone()
   obs <- bam_handler$get_noise_ratio(chip.bam, input.bam)
 
   msg <- paste(base_msg, "Valid case did not give the expected results.")
@@ -623,9 +620,9 @@ test.bam_handler_get_noise_ratio_valid_use <- function() {
 
 ## Invalid chip_bam_file
 test.bam_handler_get_noise_ratio_invalid_chip_bam_file <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
-  obs <- tryCatch(bam_handler$get_noise_ratio(chip_bam_file =
-                    "not_a_valid_bam_file", input_bam_file = input.bam),
+  bam_handler <- demo_bh$clone()
+  obs <- tryCatch(bam_handler$get_noise_ratio(chip_bam_names =
+                    "not_a_valid_bam_file", input_bam_names = input.bam),
 		  error=conditionMessage)
   exp <- "Bam file not_a_valid_bam_file not found."
   msg <- paste0(base_msg, "Invalid chip_bam_file file ",
@@ -635,9 +632,9 @@ test.bam_handler_get_noise_ratio_invalid_chip_bam_file <- function() {
 
 ## Invalid input_bam_file
 test.bam_handler_get_noise_ratio_invalid_input_bam_file <- function() {
-  bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
-  obs <- tryCatch(bam_handler$get_noise_ratio(chip_bam_file = chip.bam,
-                    input_bam_file = "not_a_valid_bam_file"),
+  bam_handler <- demo_bh$clone()
+  obs <- tryCatch(bam_handler$get_noise_ratio(chip_bam_names = chip.bam,
+                    input_bam_names = "not_a_valid_bam_file"),
 		  error=conditionMessage)
   exp <- "Bam file not_a_valid_bam_file not found."
   msg <- paste0(base_msg, "Invalid input_bam_file file ",
@@ -653,7 +650,7 @@ base_msg <- "Bam_Handler get_bam_name -"
 
 ## Valid bam file
 test.bam_handler_get_bam_name_valid_bam_file <- function() {
-    bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+    bam_handler <- demo_bh$clone()
     obs <- bam_handler$get_bam_name(bam_files[1])
     exp <- tools::file_path_sans_ext(basename(bam_files[1]))
     msg <- paste(base_msg, "Valid bam file did not generate the expected")
@@ -663,7 +660,7 @@ test.bam_handler_get_bam_name_valid_bam_file <- function() {
 
 ## Valid bam name
 test.bam_handler_get_bam_name_valid_bam_name <- function() {
-    bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+    bam_handler <- demo_bh$clone()
     bam_name <- tools::file_path_sans_ext(basename(bam_files[1]))
     obs <- bam_handler$get_bam_name(bam_name)
     exp <- bam_name
@@ -674,7 +671,7 @@ test.bam_handler_get_bam_name_valid_bam_name <- function() {
 
 ## Invalid name
 test.bam_handler_get_bam_name_invalid_bam_name <- function() {
-    bam_handler <- metagene:::Bam_Handler$new(bam_files = bam_files)
+    bam_handler <- demo_bh$clone()
     obs <- bam_handler$get_bam_name("invalid_bam_name")
     exp <- NULL
     msg <- paste(base_msg, "Invalid bam name did not generate the expected")

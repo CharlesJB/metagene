@@ -64,8 +64,9 @@
 #'   \item{input_bam_file}{The path to the input (control) bam file.}
 #' }
 #' @examples
-#'  bh <- metagene:::Bam_Handler$new(bam_files=get_demo_bam_files())
-#'  bh$get_aligned_count(metagene:::get_demo_bam_files()[1])
+#'  bam_file <- get_demo_bam_files()[1]
+#'  bh <- metagene:::Bam_Handler$new(bam_files = bam_file)
+#'  bh$get_aligned_count(bam_file)
 #'
 #' @importFrom R6 R6Class
 #' @export
@@ -141,21 +142,22 @@ Bam_Handler <- R6Class("Bam_Handler",
 	    }
     },
     get_bam_name = function(bam_file) {
-	bam <- private$bam_files[["bam"]]
+        bam <- private$bam_files[["bam"]]
         row_names <- rownames(private$bam_files)
+        bam_name <- basename(tools::file_path_sans_ext(bam_file))
         if (bam_file %in% bam) {
-	    i <- bam == bam_file
-	    stopifnot(sum(i) == 1)
-	    row_names[i]
-	} else if (tools::file_path_sans_ext(bam_file) %in% bam) {
-	    i <- bam == tools::file_path_sans_ext(bam_file)
-	    stopifnot(sum(i) == 1)
-	    row_names[i]
-	} else if (bam_file %in% row_names) {
-	    bam_file
+	        i <- bam == bam_file
+	        stopifnot(sum(i) == 1)
+	        row_names[i]
+	    } else if (basename(bam_file) %in% bam) {
+	        i <- bam == tools::file_path_sans_ext(bam_file)
+	        stopifnot(sum(i) == 1)
+	        row_names[i]
+	    } else if (bam_name %in% row_names) {
+	        bam_name
         } else {
-	    NULL
-	}
+	        NULL
+	    }
     },
     get_aligned_count = function(bam_file) {
         # Check prerequisites
@@ -185,7 +187,12 @@ Bam_Handler <- R6Class("Bam_Handler",
         count <- self$get_aligned_count(bam_file)
         private$extract_coverage_by_regions(regions, bam_file, count)
     },
-    get_noise_ratio = function(chip_bam_files, input_bam_files) {
+    get_noise_ratio = function(chip_bam_names, input_bam_names) {
+        lapply(c(chip_bam_names, input_bam_names), private$check_bam_file)
+        i <- rownames(private$bam_files) %in% chip_bam_names
+        chip_bam_files <- private$bam_files$bam[i]
+        i <- rownames(private$bam_files) %in% input_bam_names
+        input_bam_files <- private$bam_files$bam[i]
         lapply(c(chip_bam_files, input_bam_files), private$check_bam_file)
         chip.pos <- private$read_bam_files(chip_bam_files)
         input.pos <- private$read_bam_files(input_bam_files)

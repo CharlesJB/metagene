@@ -77,8 +77,9 @@ files/data.
 }
 }
 \examples{
-bh <- metagene:::Bam_Handler$new(bam_files=get_demo_bam_files())
- bh$get_aligned_count(metagene:::get_demo_bam_files()[1])
+bam_file <- get_demo_bam_files()[1]
+ bh <- metagene:::Bam_Handler$new(bam_files = bam_file)
+ bh$get_aligned_count(bam_file)
 }
 \keyword{datasets}
 
