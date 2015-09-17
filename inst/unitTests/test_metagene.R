@@ -184,7 +184,7 @@ test.metagene_initialize_valid_regions_supplementary_seqlevels <- function() {
     region <- rtracklayer::import(regions[1])
     GenomeInfoDb::seqlevels(region) <- c(GenomeInfoDb::seqlevels(region),
 				      "extra_seqlevels")
-    mg <- tryCatch(metagene$new(regions = region, bam_files = bam_files),
+    mg <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1]),
 		   error = conditionMessage)
     msg <- paste0(base_msg, "Valid regions with extra seqlevels did not ")
     msg <- paste0(msg, "return a valid metagene object.")
@@ -195,7 +195,7 @@ test.metagene_initialize_valid_regions_supplementary_seqlevels <- function() {
 test.metagene_initialize_invalid_extra_seqnames <- function() {
     region <- rtracklayer::import(regions[1])
     GenomeInfoDb::seqlevels(region) <- "extra_seqlevels"
-    obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files),
+    obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1]),
 		   error = conditionMessage)
     exp <- "Some seqnames of regions are absent in bam_file header"
     msg <- paste(base_msg, "Invalid regions seqnames did not give the expected")
@@ -209,7 +209,7 @@ test.metagene_initialize_one_extra_seqnames_force_seqlevels <- function() {
     GenomeInfoDb::seqlevels(region) <- c(GenomeInfoDb::seqlevels(region),
 					 "extra_seqlevels")
     GenomeInfoDb::seqnames(region)[1] <- "extra_seqlevels"
-    mg <- tryCatch(metagene$new(regions = region, bam_files = bam_files,
+    mg <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1],
 				 force_seqlevels = TRUE),
 		   error = conditionMessage)
     msg <- paste(base_msg, "Supplementary seqnames should not have raised an")
@@ -221,7 +221,7 @@ test.metagene_initialize_one_extra_seqnames_force_seqlevels <- function() {
 test.metagene_initialize_all_extra_seqnames_force_seqlevels <- function() {
     region <- rtracklayer::import(regions[1])
     GenomeInfoDb::seqlevels(region) <- "extra_seqlevels"
-    obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files,
+    obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1],
 				 force_seqlevels = TRUE),
 		   error = conditionMessage)
     exp <- "Parameter regions must not be an empty GRanges object"
@@ -233,7 +233,7 @@ test.metagene_initialize_all_extra_seqnames_force_seqlevels <- function() {
 # Valid regions narrowPeak
 test.metagene_initialize_valid_narrowpeak <- function() {
     region <- metagene:::get_narrowpeak_region()
-    mg <- metagene$new(regions = region, bam_files = get_demo_bam_files()[1])
+    mg <- metagene$new(regions = region, bam_files = bam_files[1])
     obs <- mg$regions$list1
     extraCols <- c(signalValue = "numeric", pValue = "numeric",
 		   qValue = "numeric", peak = "integer")
@@ -246,7 +246,7 @@ test.metagene_initialize_valid_narrowpeak <- function() {
 # Valid regions broadPeak
 test.metagene_initialize_valid_broadpeak <- function() {
     region <- metagene:::get_broadpeak_region()
-    mg <- metagene$new(regions = region, bam_files = get_demo_bam_files()[1])
+    mg <- metagene$new(regions = region, bam_files = bam_files[1])
     obs <- mg$regions$list1
     extraCols <- c(signalValue = "numeric", pValue = "numeric",
 		   qValue = "numeric")
@@ -296,7 +296,7 @@ test.metagene_plot_default <- function() {
   base_msg <- "metagene plot - "
   mg <- demo_mg_min$clone()
   pdf(NULL)
-  res <- mg$plot()
+  res <- mg$plot(sample_count = 10)
   dev.off()
   msg <- paste0(base_msg, "Valid default did not return the expected class.")
   checkTrue(class(res) == "list", msg)
@@ -309,7 +309,7 @@ test.metagene_plot_valid_show_friedman_false <- function() {
   base_msg <- "metagene plot - "
   mg <- demo_mg_min$clone()
   pdf(NULL)
-  res <- mg$plot(show_friedman = FALSE)
+  res <- mg$plot(show_friedman = FALSE, sample_count = 10)
   dev.off()
   msg <- paste0(base_msg, "Valid show_friedman false did not return the")
   msg <- paste(msg, "expected class.")
@@ -324,7 +324,7 @@ test.metagene_plot_valid_show_friedman_true <- function() {
   base_msg <- "metagene plot - "
   mg <- demo_mg_min$clone()
   pdf(NULL)
-  res <- mg$plot(show_friedman = TRUE)
+  res <- mg$plot(show_friedman = TRUE, sample_count = 10)
   dev.off()
   msg <- paste0(base_msg, "Valid show_friedman true did not return the")
   msg <- paste(msg, "expected class.")
@@ -363,7 +363,7 @@ test.metagene_plot_valid_stat_bootstrap <- function() {
   base_msg <- "metagene plot - "
   mg <- demo_mg_min$clone()
   pdf(NULL)
-  res <- mg$plot(stat = "bootstrap")
+  res <- mg$plot(stat = "bootstrap", sample_count = 10)
   dev.off()
   msg <- paste0(base_msg, "Valid stat bootstrap did not return the expected class.")
   checkTrue(class(res) == "list", msg)
@@ -970,7 +970,7 @@ test.metagene_produce_matrices_invalid_bin_size_regions_width <- function() {
    mg <- demo_mg$clone()
    region <- lapply(regions[1:2], rtracklayer::import)
    width(region[[1]]) <- 1000
-   mg <- metagene$new(bam_files=bam_files, regions=region)
+   mg <- metagene$new(bam_files=bam_files[1], regions=region)
    obs <- tryCatch(mg$produce_matrices(bin_size = 100), error = conditionMessage)
    exp <- "bin_size can only be used if all selected regions have"
    exp <- paste(exp, "same width")
@@ -995,7 +995,7 @@ test.metagene_produce_matrices_invalid_bin_size_regions_width_not_multiple <- fu
 
 # Invalid noise_rate class
 test.metagene_produce_matrices_invalid_noise_removal_class <- function() {
-    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
+    mg <- demo_mg$clone()
     obs <- tryCatch(mg$produce_matrices(noise_removal = 1234),
                     error = conditionMessage)
     exp <- "noise_removal must be NA, NULL, \"NCIS\" or \"RPM\"."
@@ -1006,7 +1006,7 @@ test.metagene_produce_matrices_invalid_noise_removal_class <- function() {
 
 # Invalid noise_rate value
 test.metagene_produce_matrices_invalid_noise_removal_value <- function() {
-    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
+    mg <- demo_mg$clone()
     obs <- tryCatch(mg$produce_matrices(noise_removal = "CSI"),
                     error = conditionMessage)
     exp <- "noise_removal must be NA, NULL, \"NCIS\" or \"RPM\"."
@@ -1017,27 +1017,23 @@ test.metagene_produce_matrices_invalid_noise_removal_value <- function() {
 
 # Valid noise_removal NCIS
 test.metagene_produce_matrices_valid_noise_removal_ncis <- function() {
-    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
+    mg <- demo_mg$clone()
+    design <- get_demo_design()[,1:2]
+    design[,2][2] <- 0
     mg$produce_matrices(noise_removal = "NCIS", design = design)
     checkIdentical(mg$params[["bin_count"]], 100)
     checkIdentical(mg$params[["noise_removal"]], "NCIS")
     checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
     checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
     checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
     checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
     checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
     checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,100)), TRUE)
 }
 
 # Invalid normalization class
 test.metagene_produce_matrices_invalid_normalization_class <- function() {
-   mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
+   mg <- demo_mg$clone()
    obs <- tryCatch(mg$produce_matrices(normalization = 1234),
                    error = conditionMessage)
    exp <- "normalization must be NA, NULL or \"RPM\"."
@@ -1048,7 +1044,7 @@ test.metagene_produce_matrices_invalid_normalization_class <- function() {
 
 # Invalid normalization value
 test.metagene_produce_matrices_invalid_normalization_value <- function() {
-   mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
+   mg <- demo_mg$clone()
    obs <- tryCatch(mg$produce_matrices(normalization = "CSI"),
                    error = conditionMessage)
    exp <- "normalization must be NA, NULL or \"RPM\"."
@@ -1059,7 +1055,7 @@ test.metagene_produce_matrices_invalid_normalization_value <- function() {
 
 # Valid normalization RPM
 test.metagene_produce_matrices_valid_normalization_rpm <- function() {
-    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
+    mg <- demo_mg$clone()
     mg$produce_matrices(normalization = "RPM")
     checkIdentical(mg$params[["bin_count"]], 100)
     checkIdentical(mg$params[["normalization"]], "RPM")
@@ -1097,7 +1093,7 @@ test.metagene_produce_matrices_valid_normalization_rpm <- function() {
 
 # Invalid flip_regions class
 test.metagene_produce_matrices_invalid_flip_regions_class <- function() {
-    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
+   mg <- demo_mg$clone()
    obs <- tryCatch(mg$produce_matrices(flip_regions = 1234),
                    error = conditionMessage)
    exp <- "flip_regions must be a logical."
@@ -1108,7 +1104,7 @@ test.metagene_produce_matrices_invalid_flip_regions_class <- function() {
 
 # Valid flip_regions true
 test.metagene_produce_matrices_valid_flip_regions_true <- function() {
-    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
+    mg <- demo_mg$clone()
     checkIdentical(mg$params[["flip_regions"]], FALSE)
     mg$produce_matrices(flip_regions = TRUE)
     checkIdentical(mg$params[["bin_count"]], 100)
@@ -1147,7 +1143,7 @@ test.metagene_produce_matrices_valid_flip_regions_true <- function() {
 
 # Valid flip_regions false
 test.metagene_produce_matrices_valid_flip_regions_false <- function() {
-    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions)
+    mg <- demo_mg$clone()
     checkIdentical(mg$params[["flip_regions"]], FALSE)
     mg$produce_matrices(flip_regions = FALSE)
     checkIdentical(mg$params[["bin_count"]], 100)
@@ -1191,7 +1187,7 @@ test.metagene_produce_matrices_valid_flip_regions_false <- function() {
 
 # Valid case not previously flipped
 test.metagene_flip_regions_not_previously_flipped <- function() {
-    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions_strand)
+    mg <- metagene:::metagene$new(bam_files=bam_files[1], regions=regions_strand)
     checkIdentical(mg$params[["flip_regions"]], FALSE)
     mg$produce_matrices()
     m1 <- mg$matrices[[1]][[1]][[1]]
@@ -1212,7 +1208,7 @@ test.metagene_flip_regions_not_previously_flipped <- function() {
 
 # Valid case previously flipped
 test.metagene_flip_regions_previously_flipped <- function() {
-    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions_strand)
+    mg <- metagene:::metagene$new(bam_files=bam_files[1], regions=regions_strand)
     checkIdentical(mg$params[["flip_regions"]], FALSE)
     mg$produce_matrices(flip_regions = TRUE)
     m1 <- mg$matrices[[1]][[1]][[1]]
@@ -1231,7 +1227,7 @@ test.metagene_flip_regions_previously_flipped <- function() {
 
 # Valid case not previously flipped
 test.metagene_unflip_regions_not_previously_flipped <- function() {
-    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions_strand)
+    mg <- metagene:::metagene$new(bam_files=bam_files[1], regions=regions_strand)
     checkIdentical(mg$params[["flip_regions"]], FALSE)
     mg$produce_matrices()
     m1 <- mg$matrices[[1]][[1]][[1]]
@@ -1245,7 +1241,7 @@ test.metagene_unflip_regions_not_previously_flipped <- function() {
 
 # Valid case previously flipped
 test.metagene_unflip_regions_previously_flipped <- function() {
-    mg <- metagene:::metagene$new(bam_files=bam_files, regions=regions_strand)
+    mg <- metagene:::metagene$new(bam_files=bam_files[1], regions=regions_strand)
     checkIdentical(mg$params[["flip_regions"]], FALSE)
     mg$produce_matrices(flip_regions = TRUE)
     m1 <- mg$matrices[[1]][[1]][[1]]

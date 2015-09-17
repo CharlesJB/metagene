@@ -180,11 +180,12 @@
 #' }
 #'
 #' @examples
-#'  regions <- get_demo_regions()
-#'  bam_files <- get_demo_bam_files()
-#'  mg <- metagene$new(regions, bam_files)
+#'  region <- get_demo_regions()[1]
+#'  bam_file <- get_demo_bam_files()[1]
+#'  mg <- metagene$new(regions = region, bam_files = bam_file)
 #'  \dontrun{
-#'  df <- metagene$plot()}
+#'    df <- metagene$plot()
+#'  }
 #'
 #' @importFrom R6 R6Class
 #' @export
@@ -786,8 +787,8 @@ metagene <- R6Class("metagene",
             chip_coverages <- coverages[chip_bam_names]
             chip_coverages <- Reduce("+", chip_coverages)
             if (length(input_bam_files) > 0) {
-                noise_ratio <- private$bam_handler$get_noise_ratio(chip_bam_files,
-                                                                   input_bam_files)
+                noise_ratio <- private$bam_handler$get_noise_ratio(chip_bam_names,
+                                                                   input_bam_names)
                 input_coverages <- coverages[input_bam_names]
                 input_coverages <- noise_ratio * Reduce("+", input_coverages)
                 results[design_name] <- chip_coverages - input_coverages

@@ -190,11 +190,12 @@ metagene plots on the data (or a subset of the data).
 }
 }
 \examples{
-regions <- get_demo_regions()
- bam_files <- get_demo_bam_files()
- mg <- metagene$new(regions, bam_files)
+region <- get_demo_regions()[1]
+ bam_file <- get_demo_bam_files()[1]
+ mg <- metagene$new(regions = region, bam_files = bam_file)
  \dontrun{
- df <- metagene$plot()}
+   df <- metagene$plot()
+ }
 }
 \keyword{datasets}
 
