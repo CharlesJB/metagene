@@ -70,6 +70,23 @@ The name of the files (without the extension) will be used to name each groups.
 As an alternative to a list of bed files, GRanges or GRangesList objects can 
 be used.
 
+#### Available datasets
+
+Some common datasets are already available with the `metagene` package:
+
+* `promoters_hg19`
+* `promoters_hg18`
+* `promoters_mm10`
+* `promoters_mm9`
+
+```{r showDatasets}
+data(promoters_hg19)
+promoters_hg19
+```
+
+For more details about each datasets, please refer to their documentation (i.e.:
+`?promoters_hg19`).
+
 ### Design groups (facultative)
 
 A design group contains a set of BAM files that, when pull together, represent 
