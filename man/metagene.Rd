@@ -166,13 +166,6 @@ metagene plots on the data (or a subset of the data).
   \item{file}{The name of the ouput file.}
 }
 \describe{
-  \item{}{\code{mg$heatmap(region, bam_file, bin_size)}}
-  \item{region}{The name of the region to export.}
-  \item{bam_file}{The name of the bam file to export.}
-  \item{bin_size}{The size of the bin to produce before creating heatmap. It
-                     must be a positive integer. Default: 10.}
-}
-\describe{
   \item{}{\code{mg$add_design(design = NULL)}}
   \item{design}{A \code{data.frame} that describe to experiment to plot. See
                 \code{plot} function for more details. \code{NA} can be used

@@ -156,13 +156,6 @@
 #'   \item{file}{The name of the ouput file.}
 #' }
 #' \describe{
-#'   \item{}{\code{mg$heatmap(region, bam_file, bin_size)}}
-#'   \item{region}{The name of the region to export.}
-#'   \item{bam_file}{The name of the bam file to export.}
-#'   \item{bin_size}{The size of the bin to produce before creating heatmap. It
-#'                      must be a positive integer. Default: 10.}
-#' }
-#' \describe{
 #'   \item{}{\code{mg$add_design(design = NULL)}}
 #'   \item{design}{A \code{data.frame} that describe to experiment to plot. See
 #'                 \code{plot} function for more details. \code{NA} can be used
@@ -426,19 +419,6 @@ metagene <- R6Class("metagene",
         coverage <- GenomicAlignments::coverage(alignments, weight=weight)
         rtracklayer::export(coverage, file, "BED")
         invisible(coverage)
-    },
-    heatmap = function(region, bam_file, bin_size = 10) {
-        # Check that bin_size is a positive integer
-        if (!((is.numeric(bin_size) || is.integer(bin_size)) && 
-                bin_size > 0 &&  as.integer(bin_size) == bin_size)) {
-            stop("bin_size must be a positive integer")
-        }
-        
-        region <- tools::file_path_sans_ext(basename(region))
-        data <- private$get_matrix(private$coverages, region, bam_file, bin_size)
-        heatmap.2(log2(data+1), dendrogram = "none", trace = "none",
-                labCol = NA, labRow = NA, margins = c(2,2),
-                xlab = "position", ylab = "log2(coverages)")
     },
     flip_regions = function() {
         if (self$params[["flip_regions"]] == FALSE) {
