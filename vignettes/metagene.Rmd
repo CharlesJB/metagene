@@ -185,12 +185,21 @@ A typical metagene analysis will consist steps:
 * Generation of the metagene plot.
 
 To facilitate the analysis, all those steps managed by a metagene object. A
-typical analysis will require 2 steps:
+typical analysis will require 3 steps:
 
-* Initialization of the metagene object: during this step, the metagene object
+1. Initialization of the metagene object: during this step, the metagene object
 will produce the coverages for every regions specified and for every
 BAM files.
-* Plotting: during this step, the metagene object will perform
+2. Production of the matrices: To produce the metagene plot, the normalized
+coverages must be converted in a matrix where the columns represent the
+positions and the rows the regions. With simple experimental design (i.e.: no
+control and no replicate), this step can be ignored since the `plot` function is
+able to produce the matrices with default param if no matrices are found (see
+the `Plotting results` section below for a concrete example). During this step:
+  * The background is removed
+  * The replicates are merged
+  * The matrices are created.
+3. Plotting: during this step, the metagene object will perform
 the statistical analysis necessary to obtain a robust estimate of the mean
 and its confidence interval for every group of regions and will show the
 results in a metagene plot.
@@ -223,24 +232,22 @@ files and `r length(regions)` regions, which gives us
 
 We can limit the number of curve produced with the `produce_matrices` function.
 If we want to concentrate on one or more specific groups, there is the
-`regions_group` param:
-
+`select_regions` param:
 ```{r showSelectRegions}
 region_names <- names(mg$regions)
-results <- mg$plot(regions_group = region_names[1],
-                   title = "Show regions_groups")
+mg$produce_matrices(select_regions = region_names[1])
+results <- mg$plot(range = c(-1000,1000), title = "Show select_regions")
 ```
 
 We can also use the design we produced earlier to remove background signal and
 combine replicates:
-
 ```{r produceMatricesDesign}
-results <- mg$plot(design = design, title = "Show design")
+mg$produce_matrices(design = design)
+results <- mg$plot(range = c(-1000,1000), title = "Show design")
 ```
 
 The `plot` function returns a `list` containing the `data.frame` used by
 `ggplot2` to produce the results:
-
 ```{r showDataFrame, collapse=TRUE}
 class(results)
 names(results)

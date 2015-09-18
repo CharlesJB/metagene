@@ -417,7 +417,6 @@ test.metagene_plot_invalid_stat_empty <- function() {
   checkIdentical(obs, exp, msg)
 }
 
-
 ## Invalid stat value
 test.metagene_plot_invalid_stat_value <- function() {
   base_msg <- "metagene plot - "
@@ -427,19 +426,6 @@ test.metagene_plot_invalid_stat_value <- function() {
   exp <- "stat %in% c(\"bootstrap\", \"basic\") is not TRUE"
   msg <- paste0(base_msg, "Invalid stat value did not return the expected error")
   checkIdentical(obs, exp, msg)
-}
-
-## Valid bin_size
-test.metagene_plot_valid_bin_size <- function() {
-  base_msg <- "metagene plot - "
-  mg <- demo_mg_min$clone()
-  pdf(NULL)
-  res <- mg$plot(bin_size = 100)
-  dev.off()
-  msg <- paste0(base_msg, "Valid bin_size did not return the expected class.")
-  checkTrue(class(res) == "list", msg)
-  msg <- paste0(base_msg, "Valid bin_size did not return the expected content.")
-  checkIdentical(names(res), c("DF", "graph"))
 }
 
 ##################################################

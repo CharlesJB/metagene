@@ -36,46 +36,12 @@
 #'
 #' @section Methods:
 #' \describe{
-#'   \item{}{\code{df <- mg$plot(design = NULL, regions_group = NULL,
-#'               bin_count = 100, bin_size = NULL, range = c(-1,1),
-#'               title = NULL, flip_regions = FALSE, stat = c("bootstrap", "basic", ...))}}
-#'   \item{design}{A \code{data.frame} that describe to experiment to plot. The
-#'                 first column must be the existing BAM filenames or the BAM
-#'                 name that was used when creating the metagene object. The
-#'                 other columns (at least one is required) represent how the
-#'                 files should be grouped. All those colums should be in
-#'                 numeric format. All the files in the same group will be
-#'                 combined before doing the statistical analysis. For each
-#'                 column, there will be one line with its ribon in
-#'                 the metagene plot. At least one file should be selected (not
-#'                 zero). If \code{NULL}, all BAM files passed as argument
-#'                 during \code{metagene} object creation will be used to
-#'                 create a default design.
-#'                 Default = \code{NULL}.
-#'
-#'                 0: Do not use file.
-#'                 1: File is input.
-#'                 2: File is control.}
-#'   \item{regions_group}{A \code{list} or a \code{vector} of region names to
-#'                      include in the analysis. If \code{NULL}, all the
-#'                      regions used when creating the
-#'                      \code{metagene} object will be used.
-#'                      Default: \code{NULL}}
-#'   \item{bin_count}{The number of bin to create. \code{NA} can be used to
-#'                    keep previous bin_count value. If both bin_count and
-#'                    bin_size are \code{NA}, a bin_count value of 100 will be
-#'                    used. Default: \code{NA}.}
-#'   \item{bin_size}{The size of bin to create. Can only be used if all the
-#'                   regions have the same size. \code{NA} can be used to keep
-#'                   previous bin_size value. If both bin_count and bin_size
-#'                   are \code{NA}, a bin_count value of 100 will be used.
-#'                   Default: \code{NA}.}
+#'   \item{}{\code{df <- mg$plot(range = c(-1,1), title = NULL,
+#'                 stat = c("bootstrap", "basic", ...))}}
 #'   \item{range}{The values for the x axis. Must be a numeric vector of size
 #'                2. Default: \code{c(-1, 1)}.}
 #'   \item{title}{A title to add to the graph. If \code{NULL}, will be
 #'                       automatically created. Default: NULL}
-#'   \item{flip_regions}{Should regions on negative strand be flip_regions?
-#'                       Default: \code{FALSE}.}
 #'   \item{show_friedman}{Show result of Friedman statistic. Default: FALSE}
 #'   \item{stat}{The stat to use to calculate the values of the ribbon in the
 #'               metagene plot. Must be "bootstrap" or "basic". "bootstrap"
@@ -326,11 +292,8 @@ metagene <- R6Class("metagene",
         }
         invisible(self)
     },
-    plot = function(design = NULL, regions_group = NULL, bin_count = 100,
-                    bin_size = NULL, range = c(-1,1), title = NULL,
-                    flip_regions = FALSE, show_friedman = FALSE,
+    plot = function(range = c(-1,1), title = NULL, show_friedman = FALSE,
                     stat = "bootstrap", ...) {
-	    self$design <- private$get_design(design)
         stopifnot(length(stat) == 1)
         stopifnot(stat %in% c("bootstrap", "basic"))
         stopifnot(is.logical(show_friedman))
@@ -338,9 +301,9 @@ metagene <- R6Class("metagene",
         sample_size = NULL
 
         # 1. Get the correctly formatted matrices
-        self$produce_matrices(select_regions = regions_group,
-                              design = self$design, bin_count = bin_count,
-                              bin_size = bin_size, flip_regions = flip_regions)
+        if (length(self$matrices) == 0) {
+            self$produce_matrices()
+        }
 
         if (stat == "bootstrap") {
             stat <- Bootstrap_Stat
