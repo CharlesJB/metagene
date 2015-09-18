@@ -11,7 +11,7 @@ Author@R: c(person("Charles", "Joly Beauparlant",
     email="charles.joly-beauparlant@crchul.ulaval.ca"), person("Fabien Claude",
     "Lamaze", email="fabien.lamaze.1@ulaval.ca"), person("Rawane", "Samb",
     email="rawane.samb.1@ulaval.ca"), person("Astrid Louise","Deschenes",
-    email="Astrid-Louise.Deschenes@crchudequebec.ulaval.ca") person("Arnaud",
+    email="Astrid-Louise.Deschenes@crchudequebec.ulaval.ca"), person("Arnaud",
     "Droit", email="arnaud.droit@crchuq.ulaval.ca"))
 Maintainer: Charles Joly Beauparlant <charles.joly-beauparlant@crchul.ulaval.ca>
 Description: This package produces metagene plots to compare the behavior of
