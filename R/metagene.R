@@ -122,10 +122,13 @@
 #'   \item{file}{The name of the ouput file.}
 #' }
 #' \describe{
-#'   \item{}{\code{mg$add_design(design = NULL)}}
+#'   \item{}{\code{mg$add_design(design = NULL, check_bam_files = FALSE)}}
 #'   \item{design}{A \code{data.frame} that describe to experiment to plot. See
 #'                 \code{plot} function for more details. \code{NA} can be used
 #'                 keep previous design value. Default: \code{NA}.}
+#'   \item{check_bam_files}{Force check that all the bam files from the first
+#'                          columns of the design are present in current
+#'                          metagene object. Default: \code{FALSE}}
 #' }
 #' \describe{
 #'   \item{}{\code{mg$unflip_regions()}}
@@ -222,8 +225,8 @@ metagene <- R6Class("metagene",
 	names(coverages) <- coverage_names
 	coverages
     },
-    add_design = function(design) {
-        self$design = private$get_design(design)
+    add_design = function(design, check_bam_files = FALSE) {
+        self$design = private$get_design(design, check_bam_files)
     },
     produce_matrices = function(select_regions = NA, design = NA, bin_count = NA,
                                 bin_size = NA, noise_removal = NA,
@@ -441,7 +444,8 @@ metagene <- R6Class("metagene",
             stop("regions must be a list of existing BED files")
         }
     },
-    check_design = function(design) {
+    check_design = function(design, check_bam_files = FALSE) {
+        stopifnot(is.logical(check_bam_files))
         if(!is.null(design) && !is.data.frame(design) &&
            !identical(design, NA)) {
             stop("design must be a data.frame object, NULL or NA")
@@ -457,7 +461,12 @@ metagene <- R6Class("metagene",
                 stop(paste0("All design column, except the first one, must be ",
                                 "in numeric format"))
             }
-	}
+            if (check_bam_files == TRUE) {
+                if (!all(private$check_bam_files(design[,1]))) {
+                    stop("Design contains bam files absent from metagene.")
+                }
+            }
+        }
     },
     check_produce_matrices_params = function(select_regions, bin_count,
                                              bin_size, design, noise_removal,
@@ -693,8 +702,8 @@ metagene <- R6Class("metagene",
             ggtitle(title)
         p
     },
-    get_design = function(design) {
-        private$check_design(design = design)
+    get_design = function(design, check_bam_files = FALSE) {
+        private$check_design(design = design, check_bam_files)
         get_complete_design <- function() {
             bam_files <- names(self$params[["bam_files"]])
             design <- data.frame(bam_files = bam_files)

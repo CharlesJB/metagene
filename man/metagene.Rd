@@ -132,10 +132,13 @@ metagene plots on the data (or a subset of the data).
   \item{file}{The name of the ouput file.}
 }
 \describe{
-  \item{}{\code{mg$add_design(design = NULL)}}
+  \item{}{\code{mg$add_design(design = NULL, check_bam_files = FALSE)}}
   \item{design}{A \code{data.frame} that describe to experiment to plot. See
                 \code{plot} function for more details. \code{NA} can be used
                 keep previous design value. Default: \code{NA}.}
+  \item{check_bam_files}{Force check that all the bam files from the first
+                         columns of the design are present in current
+                         metagene object. Default: \code{FALSE}}
 }
 \describe{
   \item{}{\code{mg$unflip_regions()}}

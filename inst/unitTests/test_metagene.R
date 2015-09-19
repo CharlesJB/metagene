@@ -576,6 +576,139 @@ test.metagene_get_normalized_coverages_invalid_filename_among_valid <- function(
 }
 
 ##################################################
+# Test the metagene$add_design() function
+##################################################
+
+## Valid design data frame
+test.metagene_add_design_valid_design_data_frame <- function() {
+    mg <- demo_mg$clone()
+    mg$add_design(get_demo_design())
+    checkIdentical(mg$design, get_demo_design())
+}
+
+## Valid design NULL
+test.metagene_add_design_valid_design_null <- function() {
+    mg <- demo_mg$clone()
+    mg$add_design(design = NULL)
+    checkIdentical(colnames(mg$design)[-1], names(mg$params[["bam_files"]]))
+    checkTrue(all(apply(mg$design[,-1], 2, sum) == 1))
+}
+
+## Valid design NA, NA first
+test.metagene_add_design_valid_design_na_na_first <- function() {
+    mg <- demo_mg$clone()
+    mg$add_design(design = NA)
+    checkIdentical(colnames(mg$design)[-1], names(mg$params[["bam_files"]]))
+    checkTrue(all(apply(mg$design[,-1], 2, sum) == 1))
+}
+
+## Valid design NA, NULL first
+test.metagene_add_design_valid_design_na_null_first <- function() {
+    mg <- demo_mg$clone()
+    mg$add_design(design = NULL)
+    mg$add_design(design = NA)
+    checkIdentical(colnames(mg$design)[-1], names(mg$params[["bam_files"]]))
+    checkTrue(all(apply(mg$design[,-1], 2, sum) == 1))
+}
+
+## Valid design NA, design first
+test.metagene_add_design_valid_design_na_design_first <- function() {
+    mg <- demo_mg$clone()
+    mg$add_design(design = get_demo_design())
+    checkIdentical(mg$design, get_demo_design())
+}
+
+## Valid check_bam_files TRUE NA design
+test.metagene_add_design_valid_check_bam_files_true_na_design <- function() {
+    mg <- demo_mg$clone()
+    mg$add_design(design = NA, check_bam_files = TRUE)
+    checkIdentical(colnames(mg$design)[-1], names(mg$params[["bam_files"]]))
+    checkTrue(all(apply(mg$design[,-1], 2, sum) == 1))
+}
+
+## Valid check_bam_files TRUE NULL design
+test.metagene_add_design_valid_check_bam_files_true_null_design <- function() {
+    mg <- demo_mg$clone()
+    mg$add_design(design = NA, check_bam_files = TRUE)
+    checkIdentical(colnames(mg$design)[-1], names(mg$params[["bam_files"]]))
+    checkTrue(all(apply(mg$design[,-1], 2, sum) == 1))
+}
+
+## Valid check_bam_files TRUE design design
+test.metagene_add_design_valid_check_bam_files_true_design_design <- function()
+{
+    mg <- demo_mg$clone()
+    mg$add_design(design = get_demo_design(), check_bam_files = TRUE)
+    checkIdentical(mg$design, get_demo_design())
+}
+
+## Invalid design class
+test.metagene_add_design_invalid_design_class <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$add_design(design = 1), error=conditionMessage)
+    exp <- "design must be a data.frame object, NULL or NA"
+    checkIdentical(obs, exp)
+}
+
+## Invalid design column
+test.metagene_add_design_invalid_design_column <- function() {
+    mg <- demo_mg$clone()
+    design <- get_demo_design()
+    design <- design[, 1, drop = FALSE]
+    obs <- tryCatch(mg$add_design(design = design), error=conditionMessage)
+    exp <- "design must have at least 2 columns"
+    checkIdentical(obs, exp)
+}
+
+## Invalid design column one class
+test.metagene_add_design_invalid_design_column_one_class <- function() {
+    mg <- demo_mg$clone()
+    design <- get_demo_design()
+    design[,1] <- seq_along(design[,1])
+    obs <- tryCatch(mg$add_design(design = design), error=conditionMessage)
+    exp <- "The first column of design must be BAM filenames"
+    checkIdentical(obs, exp)
+}
+
+## Invalid design column two plus class
+test.metagene_add_design_invalid_design_columns_two_plus_class <- function() {
+    mg <- demo_mg$clone()
+    design <- get_demo_design()
+    design[,2] <- letters[seq_along(design[,2])]
+    obs <- tryCatch(mg$add_design(design = design), error=conditionMessage)
+    exp <- "All design column, except the first one, must be in numeric format"
+    checkIdentical(obs, exp)
+}
+
+## Invalid check_bam_files class
+test.metagene_add_design_invalid_check_bam_files_class <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$add_design(check_bam_files = 1), error=conditionMessage)
+    exp <- "is.logical(check_bam_files) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid bam file check_bam_files TRUE
+test.metagene_add_design_invalid_bam_file_check_bam_files_true <- function() {
+    mg <- demo_mg$clone()
+    design <- get_demo_design()
+    design[1,1] <- "not_a_valid_bam_file"
+    obs <- tryCatch(mg$add_design(design = design, check_bam_files = TRUE),
+                    error=conditionMessage)
+    exp <- "Design contains bam files absent from metagene."
+    checkIdentical(obs, exp)
+}
+
+## Invalid bam file check_bam_files FALSE
+test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
+    mg <- demo_mg$clone()
+    design <- get_demo_design()
+    design[1,1] <- "not_a_valid_bam_file"
+    obs <- mg$add_design(design = design, check_bam_files = FALSE)
+    checkIdentical(design, mg$design)
+}
+
+##################################################
 # Test the metagene$produce_matrices() function 
 ##################################################
 #base_msg <- "metagene produce_matrices - "
