@@ -24,8 +24,8 @@
 #' # Get some matrices
 #' mg <- get_demo_metagene()
 #' mg$produce_matrices()
-#' m1 <- mg$matrices$list1$align1_rep1$input
-#' m2 <- mg$matrices$list1$align2_rep1$input
+#' m1 <- mg$get_matrices()$list1$align1_rep1$input
+#' m2 <- mg$get_matrices()$list1$align2_rep1$input
 #'
 #' # Perform permutation test
 #' sample_size <- min(nrow(m1), nrow(m2))

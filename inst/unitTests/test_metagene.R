@@ -234,7 +234,7 @@ test.metagene_initialize_all_extra_seqnames_force_seqlevels <- function() {
 test.metagene_initialize_valid_narrowpeak <- function() {
     region <- metagene:::get_narrowpeak_region()
     mg <- metagene$new(regions = region, bam_files = bam_files[1])
-    obs <- mg$regions$list1
+    obs <- mg$get_regions()$list1
     extraCols <- c(signalValue = "numeric", pValue = "numeric",
 		   qValue = "numeric", peak = "integer")
     exp <- rtracklayer::import(region, format = "BED", extraCols = extraCols)
@@ -247,7 +247,7 @@ test.metagene_initialize_valid_narrowpeak <- function() {
 test.metagene_initialize_valid_broadpeak <- function() {
     region <- metagene:::get_broadpeak_region()
     mg <- metagene$new(regions = region, bam_files = bam_files[1])
-    obs <- mg$regions$list1
+    obs <- mg$get_regions()$list1
     extraCols <- c(signalValue = "numeric", pValue = "numeric",
 		   qValue = "numeric")
     exp <- rtracklayer::import(region, format = "BED", extraCols = extraCols)
@@ -259,7 +259,7 @@ test.metagene_initialize_valid_broadpeak <- function() {
 # Valid named bam files
 test.metagene_initialize_valid_named_bam_files <- function() {
     mg <- metagene$new(regions = regions[1], bam_files = named_bam_files[1])
-    obs <- mg$params[["bam_files"]]
+    obs <- mg$get_params()[["bam_files"]]
     exp <- named_bam_files[1]
     msg <- paste(base_msg, "Valid named bam files did not generate the")
     msg <- paste(msg, "expected bam_files")
@@ -274,7 +274,7 @@ test.metagene_initialize_valid_named_bam_files <- function() {
 # Valid unnamed bam files
 test.metagene_initialize_valid_unnamed_bam_files <- function() {
     mg <- metagene$new(regions = regions[1], bam_files = bam_files[1])
-    obs <- mg$params[["bam_files"]]
+    obs <- mg$get_params()[["bam_files"]]
     exp <- bam_files[1]
     names(exp) <- tools::file_path_sans_ext(basename(bam_files[1]))
     msg <- paste(base_msg, "Valid unnamed bam files did not generate the")
@@ -426,6 +426,177 @@ test.metagene_plot_invalid_stat_value <- function() {
   exp <- "stat %in% c(\"bootstrap\", \"basic\") is not TRUE"
   msg <- paste0(base_msg, "Invalid stat value did not return the expected error")
   checkIdentical(obs, exp, msg)
+}
+
+##################################################
+# Test the metagene$get_params() function
+##################################################
+
+## Valid usage
+test.metagene_get_params_valid_usage <- function() {
+    mg <- demo_mg$clone()
+    params <- mg$get_params()
+    checkIdentical(unname(params[["bam_files"]]), get_demo_bam_files())
+    checkIdentical(params[["padding_size"]], 0)
+    checkIdentical(params[["verbose"]], FALSE)
+    checkIdentical(params[["force_seqlevels"]], FALSE)
+    checkIdentical(params[["flip_regions"]], FALSE)
+}
+
+##################################################
+# Test the metagene$get_design() function
+##################################################
+
+## Valid usage
+test.metagene_get_design_valid_usage <- function() {
+    mg <- demo_mg$clone()
+    mg$add_design(get_demo_design())
+    design <- mg$get_design()
+    checkIdentical(design, get_demo_design())
+}
+
+##################################################
+# Test the metagene$get_regions() function
+##################################################
+
+## Valid usage default
+test.metagene_get_regions_valid_usage_default <- function() {
+    mg <- demo_mg$clone()
+    regions <- mg$get_regions()
+    exp <- get_demo_regions()
+    exp <- tools::file_path_sans_ext(basename(exp))
+    checkIdentical(names(regions), exp)
+}
+
+## Valid usage subset
+test.metagene_get_regions_valid_usage_subset <- function() {
+    mg <- demo_mg$clone()
+    regions <- mg$get_regions(get_demo_regions()[1])
+    exp <- get_demo_regions()[1]
+    exp <- tools::file_path_sans_ext(basename(exp))
+    checkIdentical(names(regions), exp)
+}
+
+## Invalid usage region_names class
+test.metagene_get_regions_invalid_usage_region_names_class <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$get_regions(1), error = conditionMessage)
+    exp <- "a character vector argument expected"
+    checkIdentical(obs, exp)
+}
+
+## Invalid usage region_names empty
+test.metagene_get_regions_invalid_usage_region_names_empty <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$get_regions(""), error = conditionMessage)
+    exp <- "all(region_names %in% names(private$regions)) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid usage region_names absent
+test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
+    mg <- demo_mg$clone()
+    obs <- tryCatch(mg$get_regions("not_valid_name"), error = conditionMessage)
+    exp <- "all(region_names %in% names(private$regions)) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+
+##################################################
+# Test the metagene$get_matrices() function
+##################################################
+
+## Valid usage default
+test.metagene_get_matrices_valid_usage_default <- function() {
+    mg <- demo_mg$clone()
+    mg$produce_matrices()
+    matrices <- mg$get_matrices()
+    exp_regions <- tools::file_path_sans_ext(basename(get_demo_regions()))
+    checkIdentical(names(matrices), exp_regions)
+    exp_bam <- tools::file_path_sans_ext(basename(get_demo_bam_files()))
+    checkIdentical(names(matrices[[1]]), exp_bam)
+    checkTrue(is.matrix(matrices[[1]][[1]][["input"]]))
+    checkTrue(length(matrices) == 2)
+    checkTrue(length(matrices[[1]]) == 5)
+}
+
+## Valid usage subset
+test.metagene_get_matrices_valid_usage_subset <- function() {
+    mg <- demo_mg$clone()
+    mg$produce_matrices()
+    matrices <- mg$get_matrices(get_demo_regions()[1],
+                                get_demo_bam_files()[1:2])
+    exp_regions <- tools::file_path_sans_ext(basename(get_demo_regions()[1]))
+    checkIdentical(names(matrices), exp_regions)
+    exp_bam <- tools::file_path_sans_ext(basename(get_demo_bam_files()[1:2]))
+    checkIdentical(names(matrices[[1]]), exp_bam)
+    checkTrue(is.matrix(matrices[[1]][[1]][["input"]]))
+    checkTrue(length(matrices) == 1)
+    checkTrue(length(matrices[[1]]) == 2)
+}
+
+## Valid usage no matrices
+test.metagene_get_matrices_valid_usage_no_matrices <- function() {
+    mg <- demo_mg$clone()
+    matrices <- mg$get_matrices()
+    checkTrue(is.null(matrices))
+    matrices_subset <- mg$get_matrices(get_demo_regions()[1],
+                                get_demo_bam_files()[1:2])
+    checkTrue(is.null(matrices_subset))
+}
+
+## Invalid usage region_names class
+test.metagene_get_matrices_invalid_usage_region_names_class <- function() {
+    mg <- demo_mg$clone()$produce_matrices()
+    obs <- tryCatch(mg$get_matrices(region_names = 1),
+                    error = conditionMessage)
+    exp <- "is.character(region_names) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid usage region_names empty
+test.metagene_get_matrices_invalid_usage_region_names_empty <- function() {
+    mg <- demo_mg$clone()$produce_matrices()
+    obs <- tryCatch(mg$get_matrices(region_names = ""),
+                    error = conditionMessage)
+    exp <- "all(region_names %in% names(private$matrices)) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid usage region_names absent
+test.metagene_get_matrices_invalid_usage_region_names_absent <- function() {
+    mg <- demo_mg$clone()$produce_matrices()
+    obs <- tryCatch(mg$get_matrices(region_names = "not_valid_name"),
+                    error = conditionMessage)
+    exp <- "all(region_names %in% names(private$matrices)) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid usage exp_names class
+test.metagene_get_matrices_invalid_usage_exp_names_class <- function() {
+    mg <- demo_mg$clone()$produce_matrices()
+    obs <- tryCatch(mg$get_matrices(exp_names = 1),
+                    error = conditionMessage)
+    exp <- "is.character(exp_names) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid usage exp_names empty
+test.metagene_get_matrices_invalid_usage_exp_names_empty <- function() {
+    mg <- demo_mg$clone()$produce_matrices()
+    obs <- tryCatch(mg$get_matrices(exp_names = ""),
+                    error = conditionMessage)
+    exp <- "private$check_bam_files(filenames) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid usage exp_names absent
+test.metagene_get_matrices_invalid_usage_exp_names_absent <- function() {
+    mg <- demo_mg$clone()$produce_matrices()
+    obs <- tryCatch(mg$get_matrices(exp_names = "not_valid_name"),
+                    error = conditionMessage)
+    exp <- "private$check_bam_files(filenames) is not TRUE"
+    checkIdentical(obs, exp)
 }
 
 ##################################################
@@ -583,23 +754,23 @@ test.metagene_get_normalized_coverages_invalid_filename_among_valid <- function(
 test.metagene_add_design_valid_design_data_frame <- function() {
     mg <- demo_mg$clone()
     mg$add_design(get_demo_design())
-    checkIdentical(mg$design, get_demo_design())
+    checkIdentical(mg$get_design(), get_demo_design())
 }
 
 ## Valid design NULL
 test.metagene_add_design_valid_design_null <- function() {
     mg <- demo_mg$clone()
     mg$add_design(design = NULL)
-    checkIdentical(colnames(mg$design)[-1], names(mg$params[["bam_files"]]))
-    checkTrue(all(apply(mg$design[,-1], 2, sum) == 1))
+    checkIdentical(colnames(mg$get_design())[-1], names(mg$get_params()[["bam_files"]]))
+    checkTrue(all(apply(mg$get_design()[,-1], 2, sum) == 1))
 }
 
 ## Valid design NA, NA first
 test.metagene_add_design_valid_design_na_na_first <- function() {
     mg <- demo_mg$clone()
     mg$add_design(design = NA)
-    checkIdentical(colnames(mg$design)[-1], names(mg$params[["bam_files"]]))
-    checkTrue(all(apply(mg$design[,-1], 2, sum) == 1))
+    checkIdentical(colnames(mg$get_design())[-1], names(mg$get_params()[["bam_files"]]))
+    checkTrue(all(apply(mg$get_design()[,-1], 2, sum) == 1))
 }
 
 ## Valid design NA, NULL first
@@ -607,31 +778,31 @@ test.metagene_add_design_valid_design_na_null_first <- function() {
     mg <- demo_mg$clone()
     mg$add_design(design = NULL)
     mg$add_design(design = NA)
-    checkIdentical(colnames(mg$design)[-1], names(mg$params[["bam_files"]]))
-    checkTrue(all(apply(mg$design[,-1], 2, sum) == 1))
+    checkIdentical(colnames(mg$get_design())[-1], names(mg$get_params()[["bam_files"]]))
+    checkTrue(all(apply(mg$get_design()[,-1], 2, sum) == 1))
 }
 
 ## Valid design NA, design first
 test.metagene_add_design_valid_design_na_design_first <- function() {
     mg <- demo_mg$clone()
     mg$add_design(design = get_demo_design())
-    checkIdentical(mg$design, get_demo_design())
+    checkIdentical(mg$get_design(), get_demo_design())
 }
 
 ## Valid check_bam_files TRUE NA design
 test.metagene_add_design_valid_check_bam_files_true_na_design <- function() {
     mg <- demo_mg$clone()
     mg$add_design(design = NA, check_bam_files = TRUE)
-    checkIdentical(colnames(mg$design)[-1], names(mg$params[["bam_files"]]))
-    checkTrue(all(apply(mg$design[,-1], 2, sum) == 1))
+    checkIdentical(colnames(mg$get_design())[-1], names(mg$get_params()[["bam_files"]]))
+    checkTrue(all(apply(mg$get_design()[,-1], 2, sum) == 1))
 }
 
 ## Valid check_bam_files TRUE NULL design
 test.metagene_add_design_valid_check_bam_files_true_null_design <- function() {
     mg <- demo_mg$clone()
     mg$add_design(design = NA, check_bam_files = TRUE)
-    checkIdentical(colnames(mg$design)[-1], names(mg$params[["bam_files"]]))
-    checkTrue(all(apply(mg$design[,-1], 2, sum) == 1))
+    checkIdentical(colnames(mg$get_design())[-1], names(mg$get_params()[["bam_files"]]))
+    checkTrue(all(apply(mg$get_design()[,-1], 2, sum) == 1))
 }
 
 ## Valid check_bam_files TRUE design design
@@ -639,7 +810,7 @@ test.metagene_add_design_valid_check_bam_files_true_design_design <- function()
 {
     mg <- demo_mg$clone()
     mg$add_design(design = get_demo_design(), check_bam_files = TRUE)
-    checkIdentical(mg$design, get_demo_design())
+    checkIdentical(mg$get_design(), get_demo_design())
 }
 
 ## Invalid design class
@@ -705,7 +876,7 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
     design <- get_demo_design()
     design[1,1] <- "not_a_valid_bam_file"
     obs <- mg$add_design(design = design, check_bam_files = FALSE)
-    checkIdentical(design, mg$design)
+    checkIdentical(design, mg$get_design())
 }
 
 ##################################################
@@ -715,177 +886,177 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 
 test.metagene_produce_matrices_valid_default <- function() {
     mg <- demo_mg$clone()
-    checkIdentical("bin_size" %in% mg$params, FALSE)
-    checkIdentical("bin_count" %in% mg$params, FALSE)
+    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
+    checkIdentical("bin_count" %in% mg$get_params(), FALSE)
     mg$produce_matrices()
-    checkIdentical(mg$params[["bin_size"]], NULL)
-    checkIdentical(mg$params[["bin_count"]], 100)
-    checkIdentical(is.list(mg$matrices), TRUE)
-    checkIdentical(length(mg$matrices) == 2, TRUE)
-    checkIdentical(all(sapply(mg$matrices, class) == c("list", "list")), TRUE)
-    checkIdentical(all(sapply(mg$matrices, length) == c(5,5)), TRUE)
-    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(mg$get_params()[["bin_size"]], NULL)
+    checkIdentical(mg$get_params()[["bin_count"]], 100)
+    checkIdentical(is.list(mg$get_matrices()), TRUE)
+    checkIdentical(length(mg$get_matrices()) == 2, TRUE)
+    checkIdentical(all(sapply(mg$get_matrices(), class) == c("list", "list")), TRUE)
+    checkIdentical(all(sapply(mg$get_matrices(), length) == c(5,5)), TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[5]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[5]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[5]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[5]][[1]]) == c(50,100)), TRUE)
 }
 
 test.metagene_produce_matrices_valid_design <- function() {
     mg <- demo_mg$clone()
-    checkIdentical("bin_size" %in% mg$params, FALSE)
-    checkIdentical("bin_count" %in% mg$params, FALSE)
+    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
+    checkIdentical("bin_count" %in% mg$get_params(), FALSE)
     mg$produce_matrices(design = design)
-    checkIdentical(mg$params[["bin_size"]], NULL)
-    checkIdentical(mg$params[["bin_count"]], 100)
-    checkIdentical(is.list(mg$matrices), TRUE)
-    checkIdentical(length(mg$matrices) == 2, TRUE)
-    checkIdentical(all(sapply(mg$matrices, class) == c("list", "list")), TRUE)
-    checkIdentical(all(sapply(mg$matrices, length) == c(2,2)), TRUE)
-    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(mg$get_params()[["bin_size"]], NULL)
+    checkIdentical(mg$get_params()[["bin_count"]], 100)
+    checkIdentical(is.list(mg$get_matrices()), TRUE)
+    checkIdentical(length(mg$get_matrices()) == 2, TRUE)
+    checkIdentical(all(sapply(mg$get_matrices(), class) == c("list", "list")), TRUE)
+    checkIdentical(all(sapply(mg$get_matrices(), length) == c(2,2)), TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[2]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[2]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[2]][[1]]) == c(50,100)), TRUE)
 }
 
 test.metagene_produce_matrices_valid_select_region <- function() {
     select_regions <- "list1"
     mg <- demo_mg$clone()
-    checkIdentical("bin_size" %in% mg$params, FALSE)
-    checkIdentical("bin_count" %in% mg$params, FALSE)
+    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
+    checkIdentical("bin_count" %in% mg$get_params(), FALSE)
     mg$produce_matrices(select_regions = select_regions)
-    checkIdentical(mg$params[["bin_size"]], NULL)
-    checkIdentical(mg$params[["bin_count"]], 100)
-    checkIdentical(is.list(mg$matrices), TRUE)
-    checkIdentical(length(mg$matrices) == 1, TRUE)
-    checkIdentical(all(sapply(mg$matrices, class) == "list"), TRUE)
-    checkIdentical(all(sapply(mg$matrices, length) == 5), TRUE)
-    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(mg$get_params()[["bin_size"]], NULL)
+    checkIdentical(mg$get_params()[["bin_count"]], 100)
+    checkIdentical(is.list(mg$get_matrices()), TRUE)
+    checkIdentical(length(mg$get_matrices()) == 1, TRUE)
+    checkIdentical(all(sapply(mg$get_matrices(), class) == "list"), TRUE)
+    checkIdentical(all(sapply(mg$get_matrices(), length) == 5), TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[5]][[1]]) == c(50,100)), TRUE)
 }
 
 test.metagene_produce_matrices_valid_bin_count <- function() {
     mg <- demo_mg$clone()
-    checkIdentical("bin_size" %in% mg$params, FALSE)
-    checkIdentical("bin_count" %in% mg$params, FALSE)
+    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
+    checkIdentical("bin_count" %in% mg$get_params(), FALSE)
     mg$produce_matrices(bin_count = 200)
-    checkIdentical(mg$params[["bin_size"]], NULL)
-    checkIdentical(mg$params[["bin_count"]], 200)
-    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(mg$get_params()[["bin_size"]], NULL)
+    checkIdentical(mg$get_params()[["bin_count"]], 200)
+    checkIdentical(length(mg$get_matrices()[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[5]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[5]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[1]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[2]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[3]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[4]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[5]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[1]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[2]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[3]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[4]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[5]][[1]]) == c(50,200)), TRUE)
 }
 
 test.metagene_produce_matrices_valid_bin_size <- function() {
     mg <- demo_mg$clone()
-    checkIdentical("bin_size" %in% mg$params, FALSE)
-    checkIdentical("bin_count" %in% mg$params, FALSE)
+    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
+    checkIdentical("bin_count" %in% mg$get_params(), FALSE)
     mg$produce_matrices(bin_size = 10)
-    checkIdentical(mg$params[["bin_size"]], 10)
-    checkIdentical(mg$params[["bin_count"]], 200)
-    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,200)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(mg$get_params()[["bin_size"]], 10)
+    checkIdentical(mg$get_params()[["bin_count"]], 200)
+    checkIdentical(length(mg$get_matrices()[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[5]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[5]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[1]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[2]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[3]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[4]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[5]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[1]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[2]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[3]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[4]][[1]]) == c(50,200)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[5]][[1]]) == c(50,200)), TRUE)
 }
 
 # Not valid design object
@@ -1101,14 +1272,14 @@ test.metagene_produce_matrices_valid_noise_removal_ncis <- function() {
     design <- get_demo_design()[,1:2]
     design[,2][2] <- 0
     mg$produce_matrices(noise_removal = "NCIS", design = design)
-    checkIdentical(mg$params[["bin_count"]], 100)
-    checkIdentical(mg$params[["noise_removal"]], "NCIS")
-    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(mg$get_params()[["bin_count"]], 100)
+    checkIdentical(mg$get_params()[["noise_removal"]], "NCIS")
+    checkIdentical(length(mg$get_matrices()[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[1]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[1]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[1]][[1]]) == c(50,100)), TRUE)
 }
 
 # Invalid normalization class
@@ -1137,38 +1308,38 @@ test.metagene_produce_matrices_invalid_normalization_value <- function() {
 test.metagene_produce_matrices_valid_normalization_rpm <- function() {
     mg <- demo_mg$clone()
     mg$produce_matrices(normalization = "RPM")
-    checkIdentical(mg$params[["bin_count"]], 100)
-    checkIdentical(mg$params[["normalization"]], "RPM")
-    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(mg$get_params()[["bin_count"]], 100)
+    checkIdentical(mg$get_params()[["normalization"]], "RPM")
+    checkIdentical(length(mg$get_matrices()[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[5]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[5]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[5]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[5]][[1]]) == c(50,100)), TRUE)
 }
 
 # Invalid flip_regions class
@@ -1185,79 +1356,79 @@ test.metagene_produce_matrices_invalid_flip_regions_class <- function() {
 # Valid flip_regions true
 test.metagene_produce_matrices_valid_flip_regions_true <- function() {
     mg <- demo_mg$clone()
-    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
     mg$produce_matrices(flip_regions = TRUE)
-    checkIdentical(mg$params[["bin_count"]], 100)
-    checkIdentical(mg$params[["flip_regions"]], TRUE)
-    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(mg$get_params()[["bin_count"]], 100)
+    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[5]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[5]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[5]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[5]][[1]]) == c(50,100)), TRUE)
 }
 
 # Valid flip_regions false
 test.metagene_produce_matrices_valid_flip_regions_false <- function() {
     mg <- demo_mg$clone()
-    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
     mg$produce_matrices(flip_regions = FALSE)
-    checkIdentical(mg$params[["bin_count"]], 100)
-    checkIdentical(mg$params[["flip_regions"]], FALSE)
-    checkIdentical(length(mg$matrices[[1]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[1]][[5]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$matrices[[2]][[5]]) == 1, TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[1]][[5]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$matrices[[2]][[5]][[1]]), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[2]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[3]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[4]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[1]][[5]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[2]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[3]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[4]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$matrices[[2]][[5]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(mg$get_params()[["bin_count"]], 100)
+    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
+    checkIdentical(length(mg$get_matrices()[[1]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[1]][[5]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[1]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[2]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[3]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[4]]) == 1, TRUE)
+    checkIdentical(length(mg$get_matrices()[[2]][[5]]) == 1, TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[1]][[5]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[1]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[2]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[3]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[4]][[1]]), TRUE)
+    checkIdentical(is.matrix(mg$get_matrices()[[2]][[5]][[1]]), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[1]][[5]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[1]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[2]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[3]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[4]][[1]]) == c(50,100)), TRUE)
+    checkIdentical(all(dim(mg$get_matrices()[[2]][[5]][[1]]) == c(50,100)), TRUE)
 }
 
 
@@ -1268,16 +1439,16 @@ test.metagene_produce_matrices_valid_flip_regions_false <- function() {
 # Valid case not previously flipped
 test.metagene_flip_regions_not_previously_flipped <- function() {
     mg <- metagene:::metagene$new(bam_files=bam_files[1], regions=regions_strand)
-    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
     mg$produce_matrices()
-    m1 <- mg$matrices[[1]][[1]][[1]]
-    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    m1 <- mg$get_matrices()[[1]][[1]][[1]]
+    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
     mg$flip_regions()
-    m2 <- mg$matrices[[1]][[1]][[1]]
-    checkIdentical(mg$params[["flip_regions"]], TRUE)
+    m2 <- mg$get_matrices()[[1]][[1]][[1]]
+    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
     mg$flip_regions()
-    m3 <- mg$matrices[[1]][[1]][[1]]
-    checkIdentical(mg$params[["flip_regions"]], TRUE)
+    m3 <- mg$get_matrices()[[1]][[1]][[1]]
+    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
     # Compare the matrices
     checkTrue(identical(m1, m2) == FALSE)
     checkTrue(identical(m2, m3) == TRUE)
@@ -1289,13 +1460,13 @@ test.metagene_flip_regions_not_previously_flipped <- function() {
 # Valid case previously flipped
 test.metagene_flip_regions_previously_flipped <- function() {
     mg <- metagene:::metagene$new(bam_files=bam_files[1], regions=regions_strand)
-    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
     mg$produce_matrices(flip_regions = TRUE)
-    m1 <- mg$matrices[[1]][[1]][[1]]
-    checkIdentical(mg$params[["flip_regions"]], TRUE)
+    m1 <- mg$get_matrices()[[1]][[1]][[1]]
+    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
     mg$flip_regions()
-    m2 <- mg$matrices[[1]][[1]][[1]]
-    checkIdentical(mg$params[["flip_regions"]], TRUE)
+    m2 <- mg$get_matrices()[[1]][[1]][[1]]
+    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
     # Compare the matrices
     checkTrue(identical(m1, m2) == TRUE)
 }
@@ -1308,13 +1479,13 @@ test.metagene_flip_regions_previously_flipped <- function() {
 # Valid case not previously flipped
 test.metagene_unflip_regions_not_previously_flipped <- function() {
     mg <- metagene:::metagene$new(bam_files=bam_files[1], regions=regions_strand)
-    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
     mg$produce_matrices()
-    m1 <- mg$matrices[[1]][[1]][[1]]
-    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    m1 <- mg$get_matrices()[[1]][[1]][[1]]
+    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
     mg$unflip_regions()
-    m2 <- mg$matrices[[1]][[1]][[1]]
-    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    m2 <- mg$get_matrices()[[1]][[1]][[1]]
+    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
     # Compare the matrices
     checkTrue(identical(m1, m2) == TRUE)
 }
@@ -1322,16 +1493,16 @@ test.metagene_unflip_regions_not_previously_flipped <- function() {
 # Valid case previously flipped
 test.metagene_unflip_regions_previously_flipped <- function() {
     mg <- metagene:::metagene$new(bam_files=bam_files[1], regions=regions_strand)
-    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
     mg$produce_matrices(flip_regions = TRUE)
-    m1 <- mg$matrices[[1]][[1]][[1]]
-    checkIdentical(mg$params[["flip_regions"]], TRUE)
+    m1 <- mg$get_matrices()[[1]][[1]][[1]]
+    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
     mg$unflip_regions()
-    m2 <- mg$matrices[[1]][[1]][[1]]
-    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    m2 <- mg$get_matrices()[[1]][[1]][[1]]
+    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
     mg$unflip_regions()
-    m3 <- mg$matrices[[1]][[1]][[1]]
-    checkIdentical(mg$params[["flip_regions"]], FALSE)
+    m3 <- mg$get_matrices()[[1]][[1]][[1]]
+    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
     # Compare the matrices
     checkTrue(identical(m1, m2) == FALSE)
     checkTrue(identical(m2, m3) == TRUE)

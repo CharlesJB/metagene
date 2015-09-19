@@ -118,6 +118,28 @@ metagene plots on the data (or a subset of the data).
                    every bam files. Default: \code{NULL}.}
 }
 \describe{
+  \item{}{mg$get_params()}
+}
+\describe{
+  \item{}{mg$get_design()}
+}
+\describe{
+  \item{}{mg$get_regions(region_names = NULL)}
+  \item{region_names}{The names of the regions to extract. If \code{NULL},
+                      all the regions are returned. Default: \code{NULL}.}
+}
+\describe{
+  \item{}{mg$get_matrices(region_names = NULL, exp_name = NULL)}
+  \item{region_names}{The names of the regions to extract. If \code{NULL},
+                      all the regions are returned. Default: \code{NULL}.}
+  \item{exp_names}{The names of the experiments to extract. If a design was
+                   added to the \code{metagene} object, \code{exp_names}
+                   correspond to the column names in the design, otherwise
+                   \code{exp_names} corresponds to the BAM name or the BAM
+                   filename. If \code{NULL}, all the experiments are
+                   returned. Default: \code{NULL}.}
+}
+\describe{
   \item{}{get_normalized_coverages = function(filenames)}
   \item{filenames}{The name of the file to extract normalized coverages (in
                    RPM). Can be the filename with the extension of the name

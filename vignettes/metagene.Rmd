@@ -234,7 +234,7 @@ We can limit the number of curve produced with the `produce_matrices` function.
 If we want to concentrate on one or more specific groups, there is the
 `select_regions` param:
 ```{r showSelectRegions}
-region_names <- names(mg$regions)
+region_names <- names(mg$get_regions())
 mg$produce_matrices(select_regions = region_names[1])
 results <- mg$plot(range = c(-1000,1000), title = "Show select_regions")
 ```
@@ -253,3 +253,68 @@ class(results)
 names(results)
 head(results$DF)
 ```
+
+## Manipulating `metagene` objects
+
+### Getters
+
+Multiple getters functions are available to access the data that is stored in a `metagene` object.
+
+#### `get_params`
+
+The various parameters used during the initialization of the `metagene` object, the production of the matrices and the production of the plot are saved and can be accessed with the `get_params` function:
+```{r getParams}
+mg <- get_demo_metagene()
+mg$get_params()
+```
+
+#### `get_design`
+
+To get the design that was used to produce the last version of the matrices, you can use the `get_design` function:
+```{r getDesign}
+mg$produce_matrices(design = get_demo_design())
+## Alternatively, it is also possible to add a design without producing the
+## matrices:
+#mg$add_design(get_demo_design())
+mg$get_design()
+```
+
+#### `get_bam_count`
+
+To get the number of aligned read in a BAM file, you can use the `get_bam_count` function:
+```{r getBamCount}
+mg$get_bam_count(bam_files[1])
+```
+
+#### `get_regions`
+
+To get all the regions, you can use the `get_regions` function:
+```{r getRegions}
+mg$get_regions()
+```
+
+It is also possible to extract a subset of the regions with the `get_regions` function:
+```{r getRegionsSubset}
+mg$get_regions(region_names = c(regions[1]))
+```
+
+#### `get_raw_coverages`
+
+To get the coverages produced during the initialization of the `metagene` object, you can use the `get_raw_coverages` function. Please note that to save space, metagene will only extract the coverages in the regions provided.
+
+```{r getRawCoverages}
+coverages <- mg$get_raw_coverages()
+coverages[[1]]
+length(coverages)
+```
+
+It is also possible to extract a subset of all the coverages by providing the filenames:
+
+```{r getRawCoveragesSubset}
+coverages <- mg$get_raw_coverages(filenames = bam_files[1:2])
+length(coverages)
+```
+
+#### `get_normalized_coverages`
+
+The `get_normalized_coverages` function works exactly like the `get_raw_coverages` function except that it returns the coverages in read per million aligned (RPM).

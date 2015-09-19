@@ -108,6 +108,28 @@
 #'                    every bam files. Default: \code{NULL}.}
 #' }
 #' \describe{
+#'   \item{}{mg$get_params()}
+#' }
+#' \describe{
+#'   \item{}{mg$get_design()}
+#' }
+#' \describe{
+#'   \item{}{mg$get_regions(region_names = NULL)}
+#'   \item{region_names}{The names of the regions to extract. If \code{NULL},
+#'                       all the regions are returned. Default: \code{NULL}.}
+#' }
+#' \describe{
+#'   \item{}{mg$get_matrices(region_names = NULL, exp_name = NULL)}
+#'   \item{region_names}{The names of the regions to extract. If \code{NULL},
+#'                       all the regions are returned. Default: \code{NULL}.}
+#'   \item{exp_names}{The names of the experiments to extract. If a design was
+#'                    added to the \code{metagene} object, \code{exp_names}
+#'                    correspond to the column names in the design, otherwise
+#'                    \code{exp_names} corresponds to the BAM name or the BAM
+#'                    filename. If \code{NULL}, all the experiments are
+#'                    returned. Default: \code{NULL}.}
+#' }
+#' \describe{
 #'   \item{}{get_normalized_coverages = function(filenames)}
 #'   \item{filenames}{The name of the file to extract normalized coverages (in
 #'                    RPM). Can be the filename with the extension of the name
@@ -155,12 +177,6 @@
 
 metagene <- R6Class("metagene",
   public = list(
-    # Public members
-    params = list(),
-    regions = GRangesList(),
-    matrices = list(),
-    design = data.frame(),
-    
     # Methods
     initialize = function(regions, bam_files, padding_size = 0,
                           cores = SerialParam(), verbose = FALSE,
@@ -172,14 +188,14 @@ metagene <- R6Class("metagene",
 			  force_seqlevels = force_seqlevels)
         # Save params
         private$parallel_job <- Parallel_Job$new(cores)
-        self$params[["padding_size"]] <- padding_size
-        self$params[["verbose"]] <- verbose
+        private$params[["padding_size"]] <- padding_size
+        private$params[["verbose"]] <- verbose
 	if (is.null(names(bam_files))) {
 	    names(bam_files) <- tools::file_path_sans_ext(basename(bam_files))
 	}
-        self$params[["bam_files"]] <- bam_files
-        self$params[["force_seqlevels"]] <- force_seqlevels
-        self$params[["flip_regions"]] <- FALSE
+        private$params[["bam_files"]] <- bam_files
+        private$params[["force_seqlevels"]] <- force_seqlevels
+        private$params[["flip_regions"]] <- FALSE
       
         # Prepare bam files
         private$print_verbose("Prepare bam files...")
@@ -187,7 +203,7 @@ metagene <- R6Class("metagene",
       
         # Prepare regions
         private$print_verbose("Prepare regions...")
-        self$regions <- private$prepare_regions(regions)
+        private$regions <- private$prepare_regions(regions)
       
         # Parse bam files
         private$print_verbose("Parse bam files...\n")
@@ -201,16 +217,56 @@ metagene <- R6Class("metagene",
         # Parameters validation are done by Bam_Handler object
         private$bam_handler$get_aligned_count(filename)
     },
+    get_params = function() {
+        private$params
+    },
+    get_design = function() {
+        private$design
+    },
+    get_regions = function(region_names = NULL) {
+        if (is.null(region_names)) {
+            private$regions
+        } else {
+            region_names <- tools::file_path_sans_ext(basename(region_names))
+            stopifnot(all(region_names %in% names(private$regions)))
+            private$regions[region_names]
+        }
+    },
+    get_matrices = function(region_names = NULL, exp_names = NULL) {
+        if (length(private$matrices) == 0) {
+            NULL
+        } else if (is.null(region_names) & is.null(exp_names)) {
+            private$matrices
+        } else {
+            if (!is.null(region_names)) {
+                stopifnot(is.character(region_names))
+                region_names <-
+                    tools::file_path_sans_ext(basename(region_names))
+                stopifnot(all(region_names %in% names(private$matrices)))
+            } else {
+                region_names <- names(private$regions)
+            }
+            if (!is.null(exp_names)) {
+                stopifnot(is.character(exp_names))
+                exp_names <- private$get_bam_names(exp_names)
+                stopifnot(all(exp_names %in% names(private$matrices[[1]])))
+            } else {
+                exp_names <- colnames(private$design)[-1]
+            }
+            matrices <- private$matrices[region_names]
+            lapply(matrices, `[`, exp_names)
+        }
+    },
     get_raw_coverages = function(filenames = NULL) {
         if (is.null(filenames)) {
-	    private$coverages
-	} else {
-	    stopifnot(is.character(filenames))
-	    stopifnot(length(filenames) > 0)
-	    bam_names <- private$get_bam_names(filenames)
-	    stopifnot(length(bam_names) == length(filenames))
-	    private$coverages[bam_names]
-	}
+            private$coverages
+        } else {
+            stopifnot(is.character(filenames))
+            stopifnot(length(filenames) > 0)
+            bam_names <- private$get_bam_names(filenames)
+            stopifnot(length(bam_names) == length(filenames))
+            private$coverages[bam_names]
+        }
     },
     get_normalized_coverages = function(filenames = NULL) {
         normalize_coverage <- function(filename) {
@@ -226,12 +282,12 @@ metagene <- R6Class("metagene",
 	coverages
     },
     add_design = function(design, check_bam_files = FALSE) {
-        self$design = private$get_design(design, check_bam_files)
+        private$design = private$fetch_design(design, check_bam_files)
     },
     produce_matrices = function(select_regions = NA, design = NA, bin_count = NA,
                                 bin_size = NA, noise_removal = NA,
                                 normalization = NA, flip_regions = FALSE) {
-        design = private$get_design(design)
+        design = private$fetch_design(design)
         private$check_produce_matrices_params(select_regions = select_regions,
                                               bin_count = bin_count,
                                               bin_size = bin_size,
@@ -254,7 +310,7 @@ metagene <- R6Class("metagene",
                                              noise_removal = noise_removal,
                                              normalization = normalization)) {
                 if (!is.null(bin_size)) {
-                    width <- width(self$regions[[1]][1])
+                    width <- width(private$regions[[1]][1])
                     bin_count <- floor(width / bin_size)
                 }
                 coverages <- private$coverages
@@ -268,7 +324,7 @@ metagene <- R6Class("metagene",
                 }
                 matrices <- list()
                 if (is.null(select_regions)) {
-                    select_regions <- names(self$regions)
+                    select_regions <- names(private$regions)
                 }
                 for (region in select_regions) {
                     matrices[[region]] <- list()
@@ -280,13 +336,13 @@ metagene <- R6Class("metagene",
                                            bin_count)
                     }
                 }
-                self$matrices <- matrices
-                self$params[["bin_size"]] <- bin_size
-                self$params[["bin_count"]] <- bin_count
-                self$params[["select_regions"]] <- select_regions
-                self$params[["noise_removal"]] <- noise_removal
-                self$params[["normalization"]] <- normalization
-                self$design <- design
+                private$matrices <- matrices
+                private$params[["bin_size"]] <- bin_size
+                private$params[["bin_count"]] <- bin_count
+                private$params[["select_regions"]] <- select_regions
+                private$params[["noise_removal"]] <- noise_removal
+                private$params[["normalization"]] <- normalization
+                private$design <- design
             }
         if (flip_regions == TRUE) {
             self$flip_regions()
@@ -304,13 +360,13 @@ metagene <- R6Class("metagene",
         sample_size = NULL
 
         # 1. Get the correctly formatted matrices
-        if (length(self$matrices) == 0) {
+        if (length(private$matrices) == 0) {
             self$produce_matrices()
         }
 
         if (stat == "bootstrap") {
             stat <- Bootstrap_Stat
-            sample_size <- as.integer(min(unlist(sapply(self$matrices, sapply,
+            sample_size <- as.integer(min(unlist(sapply(private$matrices, sapply,
                                                   sapply, nrow))))
         } else {
             stat <- Basic_Stat
@@ -320,12 +376,12 @@ metagene <- R6Class("metagene",
         # 2. Calculate means and confidence intervals
         DF <- data.frame(group = character(), position = numeric(),
                        value = numeric(), qinf = numeric(), qsup = numeric())
-        for (region in names(self$matrices)) {
-            for (bam_file in names(self$matrices[[region]])) {
+        for (region in names(private$matrices)) {
+            for (bam_file in names(private$matrices[[region]])) {
                 group_name <- paste(bam_file, region, sep = "_")
                 print(group_name)
-                data <- self$matrices[[region]][[bam_file]][["input"]]
-                ctrl <- self$matrices[[region]][[bam_file]][["ctrl"]]
+                data <- private$matrices[[region]][[bam_file]][["input"]]
+                ctrl <- private$matrices[[region]][[bam_file]][["ctrl"]]
                 current_stat <- ""
                 cores <- private$parallel_job$get_core_count()
                 if (! is.null(sample_size)) {
@@ -375,7 +431,7 @@ metagene <- R6Class("metagene",
     },
     export = function(bam_file, region, file) {
         region <- tools::file_path_sans_ext(basename(region))
-        region <- self$regions[[region]]
+        region <- private$regions[[region]]
         param <- Rsamtools::ScanBamParam(which = region)
         alignments <- GenomicAlignments::readGAlignments(bam_file, 
                                                             param = param)
@@ -387,21 +443,25 @@ metagene <- R6Class("metagene",
         invisible(coverage)
     },
     flip_regions = function() {
-        if (self$params[["flip_regions"]] == FALSE) {
+        if (private$params[["flip_regions"]] == FALSE) {
             private$flip_matrices()
-            self$params[["flip_regions"]] <- TRUE
+            private$params[["flip_regions"]] <- TRUE
         }
         invisible(self)
     },
     unflip_regions = function() {
-        if (self$params[["flip_regions"]] == TRUE) {
+        if (private$params[["flip_regions"]] == TRUE) {
             private$flip_matrices()
-            self$params[["flip_regions"]] <- FALSE
+            private$params[["flip_regions"]] <- FALSE
         }
         invisible(self)
     }
   ),
   private = list(
+    params = list(),
+    regions = GRangesList(),
+    matrices = list(),
+    design = data.frame(),
     coverages = list(),
     bam_handler = "",
     parallel_job = "",
@@ -476,7 +536,7 @@ metagene <- R6Class("metagene",
                 if (class(select_regions) != "character") {
                     stop("select_regions must be a character vector.")
                 }
-                if (!all(select_regions %in% names(self$regions))) {
+                if (!all(select_regions %in% names(private$regions))) {
                     stop(paste0("All elements in select_regions should be regions ",
                                 "defined during the creation of metagene object"))
                 }
@@ -521,9 +581,9 @@ metagene <- R6Class("metagene",
         if (!identical(bin_size, NA)) {
             if (!is.null(bin_size)) {
                 if (is.null(select_regions) | identical(select_regions, NA)) {
-                    select_regions <- names(self$regions)
+                    select_regions <- names(private$regions)
                 }
-                widths <- width(self$regions[names(self$regions) %in% select_regions])
+                widths <- width(private$regions[names(private$regions) %in% select_regions])
                 widths <- unique(unlist(widths))
                 if (length(widths) != 1) {
                     msg <- "bin_size can only be used if all selected regions have"
@@ -563,43 +623,43 @@ metagene <- R6Class("metagene",
     },
     matrices_need_update = function(select_regions, design, bin_count,
                                     bin_size, noise_removal, normalization) {
-        if (!identical(self$design, design)) {
+        if (!identical(private$design, design)) {
             return(TRUE)
         }
-        if (!identical(self$params[["select_regions"]], select_regions)) {
+        if (!identical(private$params[["select_regions"]], select_regions)) {
             return(TRUE)
         }
-        if (!identical(self$params[["bin_size"]], bin_size)) {
+        if (!identical(private$params[["bin_size"]], bin_size)) {
             return(TRUE)
         }
-        if (!identical(self$params[["bin_count"]], bin_count)) {
+        if (!identical(private$params[["bin_count"]], bin_count)) {
             return(TRUE)
         }
-        if (!identical(self$params[["noise_removal"]], noise_removal)) {
+        if (!identical(private$params[["noise_removal"]], noise_removal)) {
             return(TRUE)
         }
-        if (!identical(self$params[["normalization"]], normalization)) {
+        if (!identical(private$params[["normalization"]], normalization)) {
             return(TRUE)
         }
     },
     get_param_value = function(param_value) {
         param_name <- as.character(quote(param_value))
         if (identical(param_value, NA)) {
-            if (! param_name %in% names(self$params)) {
+            if (! param_name %in% names(private$params)) {
                 param_value <- NULL
             } else {
-                param_value <- self$params[[param_value]]
+                param_value <- private$params[[param_value]]
             }
         }
         return(param_value)
     },
     print_verbose = function(to_print) {
-        if (self$params[["verbose"]]) {
+        if (private$params[["verbose"]]) {
             cat(paste0(to_print, "\n"))
         }
     },
     get_matrix = function(coverages, region, bcount) {
-        gr <- self$regions[[region]]
+        gr <- private$regions[[region]]
         grl <- split(gr, GenomeInfoDb::seqnames(gr))
         i <- vapply(grl, length, numeric(1)) > 0
         m <- do.call("rbind", lapply(grl[i], private$get_view_means,
@@ -649,9 +709,9 @@ metagene <- R6Class("metagene",
         #       If not, add one by merging seqnames, start and end.
         GRangesList(lapply(regions, function(x) {
             # Add padding
-            start(x) <- start(x) - self$params$padding_size
+            start(x) <- start(x) - private$params$padding_size
             start(x)[start(x) < 0] <- 1
-            end(x) <- end(x) + self$params$padding_size
+            end(x) <- end(x) + private$params$padding_size
             # Clean seqlevels
 	    x <- sortSeqlevels(x)
 #            seqlevels(x) <- unique(as.character(seqnames(x)))
@@ -659,13 +719,13 @@ metagene <- R6Class("metagene",
         }))
     },
     produce_coverages = function() {
-	regions <- GenomicRanges::reduce(BiocGenerics::unlist(self$regions))
+	regions <- GenomicRanges::reduce(BiocGenerics::unlist(private$regions))
         res <- private$parallel_job$launch_job(
-	                data = self$params[["bam_files"]],
+	                data = private$params[["bam_files"]],
 		            FUN = private$bam_handler$get_coverage,
 		            regions = regions,
-		            force_seqlevels= self$params[["force_seqlevels"]])
-        names(res) <- names(self$params[["bam_files"]])
+		            force_seqlevels= private$params[["force_seqlevels"]])
+        names(res) <- names(private$params[["bam_files"]])
         lapply(res, GenomeInfoDb::sortSeqlevels)
     },
     # Produce a plot with based on a data.frame
@@ -702,10 +762,10 @@ metagene <- R6Class("metagene",
             ggtitle(title)
         p
     },
-    get_design = function(design, check_bam_files = FALSE) {
+    fetch_design = function(design, check_bam_files = FALSE) {
         private$check_design(design = design, check_bam_files)
         get_complete_design <- function() {
-            bam_files <- names(self$params[["bam_files"]])
+            bam_files <- names(private$params[["bam_files"]])
             design <- data.frame(bam_files = bam_files)
             for (bam_file in names(private$coverages)) {
                 colname <- file_path_sans_ext(basename(bam_file))
@@ -719,10 +779,10 @@ metagene <- R6Class("metagene",
             return(get_complete_design())
         }
         if (identical(design, NA)) {
-            if (all(dim(self$design) == c(0, 0))) {
+            if (all(dim(private$design) == c(0, 0))) {
                 return(get_complete_design())
             } else {
-                return(self$design)
+                return(private$design)
             }
         }
         return(design)
@@ -774,16 +834,16 @@ metagene <- R6Class("metagene",
         result
     },
     flip_matrices = function() {
-        for (region_name in names(self$matrices)) {
-            region <- self$regions[[region_name]]
+        for (region_name in names(private$matrices)) {
+            region <- private$regions[[region_name]]
             i <- as.logical(strand(region) == "-")
             flip <- function(x) {
                 x[i,] <- x[i,ncol(x):1]
                 x
             }
-            m <- self$matrices[[region_name]]
+            m <- private$matrices[[region_name]]
             m <- lapply(m, lapply, flip)
-            self$matrices[[region_name]] <- m
+            private$matrices[[region_name]] <- m
         }
     },
     get_bam_names = function(filenames) {
