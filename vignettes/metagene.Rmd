@@ -230,15 +230,6 @@ BAM file and region groups. In this case, we have `r length(bam_files)` BAM
 files and `r length(regions)` regions, which gives us
 `r length(bam_files) * length(regions)` curves.
 
-We can limit the number of curve produced with the `produce_matrices` function.
-If we want to concentrate on one or more specific groups, there is the
-`select_regions` param:
-```{r showSelectRegions}
-region_names <- names(mg$get_regions())
-mg$produce_matrices(select_regions = region_names[1])
-results <- mg$plot(range = c(-1000,1000), title = "Show select_regions")
-```
-
 We can also use the design we produced earlier to remove background signal and
 combine replicates:
 ```{r produceMatricesDesign}

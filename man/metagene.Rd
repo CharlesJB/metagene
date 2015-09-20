@@ -48,43 +48,26 @@ metagene plots on the data (or a subset of the data).
 \section{Methods}{
 
 \describe{
-  \item{}{\code{df <- mg$plot(range = c(-1,1), title = NULL,
-                stat = c("bootstrap", "basic", ...))}}
+  \item{}{\code{mg$plot(region_names = NULL, exp_names = NULL,
+                range c(-1, 1), title = NULL, show_friedman = FALSE)}
+                stat = c("bootstrap", "basic", ...))}
+  \item{region_names}{The names of the regions to extract. If \code{NULL},
+                      all the regions are returned. Default: \code{NULL}.}
+  \item{exp_names}{The names of the experiments to extract. If a design was
+                   added to the \code{metagene} object, \code{exp_names}
+                   correspond to the column names in the design, otherwise
+                   \code{exp_names} corresponds to the BAM name or the BAM
+                   filename. If \code{NULL}, all the experiments are
+                   returned. Default: \code{NULL}.}
   \item{range}{The values for the x axis. Must be a numeric vector of size
                2. Default: \code{c(-1, 1)}.}
   \item{title}{A title to add to the graph. If \code{NULL}, will be
                       automatically created. Default: NULL}
   \item{show_friedman}{Show result of Friedman statistic. Default: FALSE}
-  \item{stat}{The stat to use to calculate the values of the ribbon in the
-              metagene plot. Must be "bootstrap" or "basic". "bootstrap"
-              will estimate the range of average ("mean" or "median") that
-              could have produce the observed distribution of values for
-              each bin. With the "basic" approach, the ribbon will represent
-              the range of the values between \code{1 - alpha / 2} and
-              \code{alpha / 2} (see \code{...} param.}
-  \item{...}{Extra params for the calculation of the ribbon values. See
-             following param descriptions.}
-  \item{alpha}{The range of the estimation to be shown with the ribbon.
-               \code{1 - alpha / 2} and \code{alpha / 2} will be used.
-               Default: 0.05.}
-  \item{average}{The function to use to summarize the values of each
-                 bins. "mean" or "median". Default: "mean".}
-  \item{sample_count}{With "bootstrap" only. The number of draw to do
-                      in the bootstrap calculation. Default: 1000.}
-  \item{sample_size}{The number of element to select for each draws.
-                     Default: the smallest number of row of the matrices
-                     produced.}
 }
 \describe{
-  \item{}{\code{mg$produce_matrices(select_regions, design, bin_count,
-                bin_size, noise_removal, normalization, flip_regions}}
-  \item{select_regions}{A character vector representing corresponding to the
-                        regions to include in the metagene plot. The names
-                        of the regions must correspond to the names used for
-                        the initialization (\code{new}) of the metagene
-                        object. \code{NA} can be used to keep previous
-                        select_regions values. \code{NULL} can be used to
-                        keep all regions. Default: \code{NA}.}
+  \item{}{\code{mg$produce_matrices(design, bin_count, bin_size,
+                noise_removal, normalization, flip_regions}}
   \item{design}{A \code{data.frame} that describe to experiment to plot. See
                 \code{plot} function for more details. \code{NA} can be used
                 keep previous design value. Default: \code{NA}.}
@@ -110,12 +93,26 @@ metagene plots on the data (or a subset of the data).
                       Default: \code{FALSE}.}
 }
 \describe{
-  \item{}{get_raw_coverages = function(filenames)}
-  \item{filenames}{The name of the file to extract raw coverages. Can be the
-                   filename with the extension of the name of the bam file
-                   (if a named bam files was used during the creation of the
-                   metagene object). If \code{NULL}, returns the coverage
-                   every bam files. Default: \code{NULL}.}
+  \item{}{\code{mg$produce_data_frame(range = c(-1, 1), stat = "bootstrap",
+                ...)}}
+  \item{range}{The values for the x axis. Must be a numeric vector of size
+               2. Default: \code{c(-1, 1)}.}
+  \item{stat}{The stat to use to calculate the values of the ribbon in the
+              metagene plot. Must be "bootstrap" or "basic". "bootstrap"
+              will estimate the range of average ("mean" or "median") that
+              could have produce the observed distribution of values for
+              each bin. With the "basic" approach, the ribbon will represent
+              the range of the values between \code{1 - alpha / 2} and
+              \code{alpha / 2} (see \code{...} param.}
+  \item{...}{Extra params for the calculation of the ribbon values. See
+             following param descriptions.}
+  \item{alpha}{The range of the estimation to be shown with the ribbon.
+               \code{1 - alpha / 2} and \code{alpha / 2} will be used.
+               Default: 0.05.}
+  \item{average}{The function to use to summarize the values of each
+                 bins. "mean" or "median". Default: "mean".}
+  \item{sample_count}{With "bootstrap" only. The number of draw to do
+                      in the bootstrap calculation. Default: 1000.}
 }
 \describe{
   \item{}{mg$get_params()}
@@ -138,6 +135,28 @@ metagene plots on the data (or a subset of the data).
                    \code{exp_names} corresponds to the BAM name or the BAM
                    filename. If \code{NULL}, all the experiments are
                    returned. Default: \code{NULL}.}
+}
+\describe{
+  \item{}{mg$get_data_frame(region_names = NULL, exp_name = NULL)}
+  \item{region_names}{The names of the regions to extract. If \code{NULL},
+                      all the regions are returned. Default: \code{NULL}.}
+  \item{exp_names}{The names of the experiments to extract. If a design was
+                   added to the \code{metagene} object, \code{exp_names}
+                   correspond to the column names in the design, otherwise
+                   \code{exp_names} corresponds to the BAM name or the BAM
+                   filename. If \code{NULL}, all the experiments are
+                   returned. Default: \code{NULL}.}
+}
+\describe{
+  \item{}{get_plot = function()}
+}
+\describe{
+  \item{}{get_raw_coverages = function(filenames)}
+  \item{filenames}{The name of the file to extract raw coverages. Can be the
+                   filename with the extension of the name of the bam file
+                   (if a named bam files was used during the creation of the
+                   metagene object). If \code{NULL}, returns the coverage
+                   every bam files. Default: \code{NULL}.}
 }
 \describe{
   \item{}{get_normalized_coverages = function(filenames)}

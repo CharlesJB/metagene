@@ -293,139 +293,53 @@ test.metagene_initialize_valid_unnamed_bam_files <- function() {
 
 ## Valid default
 test.metagene_plot_default <- function() {
-  base_msg <- "metagene plot - "
-  mg <- demo_mg_min$clone()
+  mg <- demo_mg$clone()
+  mg$produce_data_frame(sample_count = 10)
   pdf(NULL)
-  res <- mg$plot(sample_count = 10)
+  mg$plot()
   dev.off()
-  msg <- paste0(base_msg, "Valid default did not return the expected class.")
-  checkTrue(class(res) == "list", msg)
-  msg <- paste0(base_msg, "Valid default did not return the expected content.")
-  checkIdentical(names(res), c("DF", "graph"))
+  plot <- mg$get_plot()
+  checkTrue(all(class(plot) == c("gg", "ggplot")))
 }
 
 ## Valid show_friedman false
 test.metagene_plot_valid_show_friedman_false <- function() {
-  base_msg <- "metagene plot - "
   mg <- demo_mg_min$clone()
+  mg$produce_data_frame(sample_count = 10)
   pdf(NULL)
-  res <- mg$plot(show_friedman = FALSE, sample_count = 10)
+  mg$plot(show_friedman = FALSE)
   dev.off()
-  msg <- paste0(base_msg, "Valid show_friedman false did not return the")
-  msg <- paste(msg, "expected class.")
-  checkTrue(class(res) == "list", msg)
-  msg <- paste0(base_msg, "Valid show_friedman false did not return the")
-  msg <- paste(msg, "expected content.")
-  checkIdentical(names(res), c("DF", "graph"))
+  plot <- mg$get_plot()
+  checkTrue(all(class(plot) == c("gg", "ggplot")))
 }
 
 ## Valid show_friedman true
 test.metagene_plot_valid_show_friedman_true <- function() {
-  base_msg <- "metagene plot - "
   mg <- demo_mg_min$clone()
+  mg$produce_data_frame(sample_count = 10)
   pdf(NULL)
-  res <- mg$plot(show_friedman = TRUE, sample_count = 10)
+  mg$plot(show_friedman = TRUE)
   dev.off()
-  msg <- paste0(base_msg, "Valid show_friedman true did not return the")
-  msg <- paste(msg, "expected class.")
-  checkTrue(class(res) == "list", msg)
-  msg <- paste0(base_msg, "Valid show_friedman true did not return the")
-  msg <- paste(msg, "expected content.")
-  checkIdentical(names(res), c("DF", "graph"))
+  plot <- mg$get_plot()
+  checkTrue(all(class(plot) == c("gg", "ggplot")))
 }
 
 ## Invalid show_friedman class
 test.metagene_plot_invalid_show_friedman_class <- function() {
-  base_msg <- "metagene plot - "
   mg <- demo_mg_min$clone()
   obs <- tryCatch(mg$plot(show_friedman = 1),
                   error=conditionMessage)
   exp <- "is.logical(show_friedman) is not TRUE"
-  msg <- paste0(base_msg, "Invalid show_friedman class did not return the")
-  msg <- paste(msg, "expected error")
-  checkIdentical(obs, exp, msg)
+  checkIdentical(obs, exp)
 }
 
 ## Invalid show_friedman length
 test.metagene_plot_invalid_show_friedman_length <- function() {
-  base_msg <- "metagene plot - "
   mg <- demo_mg_min$clone()
   obs <- tryCatch(mg$plot(show_friedman = c(TRUE, FALSE)),
                   error=conditionMessage)
   exp <- "length(show_friedman) == 1 is not TRUE"
-  msg <- paste0(base_msg, "Invalid show_friedman length did not return the")
-  msg <- paste(msg, "expected error")
-  checkIdentical(obs, exp, msg)
-}
-
-## Valid stat bootstrap
-test.metagene_plot_valid_stat_bootstrap <- function() {
-  base_msg <- "metagene plot - "
-  mg <- demo_mg_min$clone()
-  pdf(NULL)
-  res <- mg$plot(stat = "bootstrap", sample_count = 10)
-  dev.off()
-  msg <- paste0(base_msg, "Valid stat bootstrap did not return the expected class.")
-  checkTrue(class(res) == "list", msg)
-  msg <- paste0(base_msg, "Valid stat bootstrap did not return the expected content.")
-  checkIdentical(names(res), c("DF", "graph"))
-}
-
-## Valid stat basic
-test.metagene_plot_valid_stat_basic <- function() {
-  base_msg <- "metagene plot - "
-  mg <- demo_mg_min$clone()
-  pdf(NULL)
-  res <- mg$plot(stat = "basic")
-  dev.off()
-  msg <- paste0(base_msg, "Valid stat basic did not return the expected class.")
-  checkTrue(class(res) == "list", msg)
-  msg <- paste0(base_msg, "Valid stat basic did not return the expected content.")
-  checkIdentical(names(res), c("DF", "graph"))
-}
-
-## Invalid stat class
-test.metagene_plot_invalid_stat_class <- function() {
-  base_msg <- "metagene plot - "
-  mg <- demo_mg_min$clone()
-  obs <- tryCatch(mg$plot(stat = 1),
-                  error=conditionMessage)
-  exp <- "stat %in% c(\"bootstrap\", \"basic\") is not TRUE"
-  msg <- paste0(base_msg, "Invalid stat class did not return the expected error")
-  checkIdentical(obs, exp, msg)
-}
-
-## Invalid stat empty
-test.metagene_plot_invalid_stat_empty <- function() {
-  base_msg <- "metagene plot - "
-  mg <- demo_mg_min$clone()
-  obs <- tryCatch(mg$plot(stat = ""),
-                  error=conditionMessage)
-  exp <- "stat %in% c(\"bootstrap\", \"basic\") is not TRUE"
-  msg <- paste0(base_msg, "Invalid stat empty did not return the expected error")
-  checkIdentical(obs, exp, msg)
-}
-
-## Invalid stat length greater than one
-test.metagene_plot_invalid_stat_empty <- function() {
-  base_msg <- "metagene plot - "
-  mg <- demo_mg_min$clone()
-  obs <- tryCatch(mg$plot(stat = c("bootstrap", "basic")),
-                  error=conditionMessage)
-  exp <- "length(stat) == 1 is not TRUE"
-  msg <- paste0(base_msg, "Invalid stat empty did not return the expected error")
-  checkIdentical(obs, exp, msg)
-}
-
-## Invalid stat value
-test.metagene_plot_invalid_stat_value <- function() {
-  base_msg <- "metagene plot - "
-  mg <- demo_mg_min$clone()
-  obs <- tryCatch(mg$plot(stat = "invalid_stat_value"),
-                  error=conditionMessage)
-  exp <- "stat %in% c(\"bootstrap\", \"basic\") is not TRUE"
-  msg <- paste0(base_msg, "Invalid stat value did not return the expected error")
-  checkIdentical(obs, exp, msg)
+  checkIdentical(obs, exp)
 }
 
 ##################################################
@@ -597,6 +511,125 @@ test.metagene_get_matrices_invalid_usage_exp_names_absent <- function() {
                     error = conditionMessage)
     exp <- "private$check_bam_files(filenames) is not TRUE"
     checkIdentical(obs, exp)
+}
+
+##################################################
+# Test the metagene$get_data_frame() function
+##################################################
+
+## Valid usage default
+test.metagene_get_data_frame_valid_usage_default <- function() {
+    mg <- demo_mg$clone()
+    mg$produce_matrices()$produce_data_frame(sample_count = 10)
+    df <- mg$get_data_frame()
+    regions <- get_demo_regions()
+    bam_files <- get_demo_bam_files()
+    checkTrue(is.data.frame(df))
+    checkTrue(ncol(df) == 5)
+    checkTrue(nrow(df) == length(regions) * length(bam_files) * 100)
+}
+
+## Valid usage subset
+test.metagene_get_data_frame_valid_usage_subset <- function() {
+    regions <- get_demo_regions()[1]
+    bam_files <- get_demo_bam_files()[1:2]
+    mg <- demo_mg$clone()
+    mg$produce_matrices()$produce_data_frame(sample_count = 10)
+    df <- mg$get_data_frame(region_names = regions, exp_names = bam_files)
+    checkTrue(is.data.frame(df))
+    checkTrue(ncol(df) == 5)
+    checkTrue(nrow(df) == length(regions) * length(bam_files) * 100)
+}
+
+## Valid usage no matrices
+test.metagene_get_data_frame_valid_usage_no_matrices <- function() {
+    mg <- demo_mg$clone()
+    df <- mg$get_data_frame()
+    checkTrue(is.null(df))
+    df_subset <- mg$get_data_frame(get_demo_regions()[1],
+                                get_demo_bam_files()[1:2])
+    checkTrue(is.null(df_subset))
+}
+
+## Invalid usage region_names class
+test.metagene_get_data_frame_invalid_usage_region_names_class <- function() {
+    mg <- demo_mg$clone()
+    mg <- mg$produce_matrices()$produce_data_frame(sample_count = 10)
+    obs <- tryCatch(mg$get_data_frame(region_names = 1),
+                    error = conditionMessage)
+    exp <- "is.character(region_names) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid usage region_names empty
+test.metagene_get_data_frame_invalid_usage_region_names_empty <- function() {
+    mg <- demo_mg$clone()
+    mg <- mg$produce_matrices()$produce_data_frame(sample_count = 10)
+    obs <- tryCatch(mg$get_data_frame(region_names = ""),
+                    error = conditionMessage)
+    exp <- "all(region_names %in% names(private$matrices)) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid usage region_names absent
+test.metagene_get_data_frame_invalid_usage_region_names_absent <- function() {
+    mg <- demo_mg$clone()
+    mg <- mg$produce_matrices()$produce_data_frame(sample_count = 10)
+    obs <- tryCatch(mg$get_data_frame(region_names = "not_valid_name"),
+                    error = conditionMessage)
+    exp <- "all(region_names %in% names(private$matrices)) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid usage exp_names class
+test.metagene_get_data_frame_invalid_usage_exp_names_class <- function() {
+    mg <- demo_mg$clone()
+    mg <- mg$produce_matrices()$produce_data_frame(sample_count = 10)
+    obs <- tryCatch(mg$get_data_frame(exp_names = 1),
+                    error = conditionMessage)
+    exp <- "is.character(exp_names) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid usage exp_names empty
+test.metagene_get_data_frame_invalid_usage_exp_names_empty <- function() {
+    mg <- demo_mg$clone()
+    mg <- mg$produce_matrices()$produce_data_frame(sample_count = 10)
+    obs <- tryCatch(mg$get_data_frame(exp_names = ""),
+                    error = conditionMessage)
+    exp <- "private$check_bam_files(filenames) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+## Invalid usage exp_names absent
+test.metagene_get_data_frame_invalid_usage_exp_names_absent <- function() {
+    mg <- demo_mg$clone()
+    mg <- mg$produce_matrices()$produce_data_frame(sample_count = 10)
+    obs <- tryCatch(mg$get_data_frame(exp_names = "not_valid_name"),
+                    error = conditionMessage)
+    exp <- "private$check_bam_files(filenames) is not TRUE"
+    checkIdentical(obs, exp)
+}
+
+##################################################
+# Test the metagene$get_plot() function
+##################################################
+
+## Valid case no graph
+test.metagene_get_plot_valid_case_no_graph <- function() {
+    mg <- demo_mg$clone()
+    plot <- mg$get_plot()
+    checkTrue(is.null(plot))
+}
+
+## Valid case graph
+test.metagene_get_plot_valid_case_graph <- function() {
+    pdf(NULL)
+    mg <- demo_mg$clone()
+    mg$produce_data_frame(sample_count = 10)$plot()
+    plot <- mg$get_plot()
+    dev.off()
+    checkTrue(all(class(plot) == c("gg", "ggplot")))
 }
 
 ##################################################
@@ -952,34 +985,6 @@ test.metagene_produce_matrices_valid_design <- function() {
     checkIdentical(all(dim(mg$get_matrices()[[2]][[2]][[1]]) == c(50,100)), TRUE)
 }
 
-test.metagene_produce_matrices_valid_select_region <- function() {
-    select_regions <- "list1"
-    mg <- demo_mg$clone()
-    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
-    checkIdentical("bin_count" %in% mg$get_params(), FALSE)
-    mg$produce_matrices(select_regions = select_regions)
-    checkIdentical(mg$get_params()[["bin_size"]], NULL)
-    checkIdentical(mg$get_params()[["bin_count"]], 100)
-    checkIdentical(is.list(mg$get_matrices()), TRUE)
-    checkIdentical(length(mg$get_matrices()) == 1, TRUE)
-    checkIdentical(all(sapply(mg$get_matrices(), class) == "list"), TRUE)
-    checkIdentical(all(sapply(mg$get_matrices(), length) == 5), TRUE)
-    checkIdentical(length(mg$get_matrices()[[1]][[1]]) == 1, TRUE)
-    checkIdentical(length(mg$get_matrices()[[1]][[2]]) == 1, TRUE)
-    checkIdentical(length(mg$get_matrices()[[1]][[3]]) == 1, TRUE)
-    checkIdentical(length(mg$get_matrices()[[1]][[4]]) == 1, TRUE)
-    checkIdentical(length(mg$get_matrices()[[1]][[5]]) == 1, TRUE)
-    checkIdentical(is.matrix(mg$get_matrices()[[1]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$get_matrices()[[1]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$get_matrices()[[1]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$get_matrices()[[1]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(mg$get_matrices()[[1]][[5]][[1]]), TRUE)
-    checkIdentical(all(dim(mg$get_matrices()[[1]][[1]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$get_matrices()[[1]][[2]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$get_matrices()[[1]][[3]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$get_matrices()[[1]][[4]][[1]]) == c(50,100)), TRUE)
-    checkIdentical(all(dim(mg$get_matrices()[[1]][[5]][[1]]) == c(50,100)), TRUE)
-}
 
 test.metagene_produce_matrices_valid_bin_count <- function() {
     mg <- demo_mg$clone()
@@ -1132,30 +1137,6 @@ test.metagene_produce_matrices_design_using_no_file <- function() {
     checkIdentical(obs, exp, msg)
 }
 
-# Invalid select_regions class
-test.metagene_produce_matrices_invalid_select_regions_class <- function() {
-    mg <- demo_mg$clone()
-    obs <- tryCatch(mg$produce_matrices(select_regions=array(NA, dim = c(2,2,2))), 
-                    error=conditionMessage)
-    exp <- "select_regions must be a character vector."
-
-    msg <- paste0(base_msg, "A invalid select_regions object class ",
-                  "did not generate an exception with expected message." )
-    checkIdentical(obs, exp, msg)
-}
-
-# Invalid select_regions content
-test.metagene_produce_matrices_invalid_select_regions_content <- function() {
-    mg <- demo_mg$clone()
-    obs <- tryCatch(mg$produce_matrices(select_regions=c(regions, "Hello Word!")), 
-                    error=conditionMessage)
-    exp <- paste0("All elements in select_regions should be regions ",
-                  "defined during the creation of metagene object")
-    msg <- paste0(base_msg, "A invalid select_regions object content ",
-                  "did not generate an exception with expected message." )
-    checkIdentical(obs, exp, msg)
-}
-
 # Invalid bin_count class
 test.metagene_produce_matrices_invalid_bin_count_class <- function() {
     mg <- demo_mg$clone()
@@ -1218,7 +1199,6 @@ test.metagene_produce_matrices_invalid_bin_size_decimals <- function() {
 
 # Invalid bin_size regions widths
 test.metagene_produce_matrices_invalid_bin_size_regions_width <- function() {
-   mg <- demo_mg$clone()
    region <- lapply(regions[1:2], rtracklayer::import)
    width(region[[1]]) <- 1000
    mg <- metagene$new(bam_files=bam_files[1], regions=region)
@@ -1431,6 +1411,72 @@ test.metagene_produce_matrices_valid_flip_regions_false <- function() {
     checkIdentical(all(dim(mg$get_matrices()[[2]][[5]][[1]]) == c(50,100)), TRUE)
 }
 
+##################################################
+# Test the metagene$produce_data_frame() function
+##################################################
+
+## Valid stat bootstrap
+test.metagene_produce_data_frame_valid_stat_bootstrap <- function() {
+  mg <- demo_mg$clone()
+  mg$produce_data_frame(sample_count = 10)
+  mg$produce_data_frame(stat = "bootstrap")
+  df <- mg$get_data_frame()
+  regions <- get_demo_regions()
+  bam_files <- get_demo_bam_files()
+  checkTrue(is.data.frame(df))
+  checkTrue(ncol(df) == 5)
+  checkTrue(nrow(df) == length(regions) * length(bam_files) * 100)
+}
+
+## Valid stat basic
+test.metagene_produce_data_frame_valid_stat_basic <- function() {
+  mg <- demo_mg$clone()
+  mg$produce_data_frame(sample_count = 10)
+  mg$produce_data_frame(stat = "bootstrap")
+  df <- mg$get_data_frame()
+  regions <- get_demo_regions()
+  bam_files <- get_demo_bam_files()
+  checkTrue(is.data.frame(df))
+  checkTrue(ncol(df) == 5)
+  checkTrue(nrow(df) == length(regions) * length(bam_files) * 100)
+}
+
+## Invalid stat class
+test.metagene_produce_data_frame_invalid_stat_class <- function() {
+  mg <- demo_mg$clone()
+  obs <- tryCatch(mg$produce_data_frame(stat = 1),
+                  error=conditionMessage)
+  exp <- "is.character(stat) is not TRUE"
+  checkIdentical(obs, exp)
+}
+
+## Invalid stat empty
+test.metagene_produce_data_frame_invalid_stat_empty <- function() {
+  mg <- demo_mg_min$clone()
+  obs <- tryCatch(mg$produce_data_frame(stat = ""),
+                  error=conditionMessage)
+  exp <- "stat %in% c(\"bootstrap\", \"basic\") is not TRUE"
+  checkIdentical(obs, exp)
+}
+
+## Invalid stat length greater than one
+test.metagene_produce_data_frame_invalid_stat_length_greater_than_one <-
+    function() {
+  mg <- demo_mg_min$clone()
+  obs <- tryCatch(mg$produce_data_frame(stat = c("bootstrap", "basic")),
+                  error=conditionMessage)
+  exp <- "length(stat) == 1 is not TRUE"
+  checkIdentical(obs, exp)
+}
+
+## Invalid stat value
+test.metagene_produce_data_frame_invalid_stat_value <- function() {
+  mg <- demo_mg_min$clone()
+  obs <- tryCatch(mg$produce_data_frame(stat = "invalid_stat_value"),
+                  error=conditionMessage)
+  exp <- "stat %in% c(\"bootstrap\", \"basic\") is not TRUE"
+  checkIdentical(obs, exp)
+}
 
 ###################################################
 ## Test the metagene$flip_regions() function

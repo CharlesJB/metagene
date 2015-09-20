@@ -36,43 +36,26 @@
 #'
 #' @section Methods:
 #' \describe{
-#'   \item{}{\code{df <- mg$plot(range = c(-1,1), title = NULL,
-#'                 stat = c("bootstrap", "basic", ...))}}
+#'   \item{}{\code{mg$plot(region_names = NULL, exp_names = NULL,
+#'                 range c(-1, 1), title = NULL, show_friedman = FALSE)}
+#'                 stat = c("bootstrap", "basic", ...))}
+#'   \item{region_names}{The names of the regions to extract. If \code{NULL},
+#'                       all the regions are returned. Default: \code{NULL}.}
+#'   \item{exp_names}{The names of the experiments to extract. If a design was
+#'                    added to the \code{metagene} object, \code{exp_names}
+#'                    correspond to the column names in the design, otherwise
+#'                    \code{exp_names} corresponds to the BAM name or the BAM
+#'                    filename. If \code{NULL}, all the experiments are
+#'                    returned. Default: \code{NULL}.}
 #'   \item{range}{The values for the x axis. Must be a numeric vector of size
 #'                2. Default: \code{c(-1, 1)}.}
 #'   \item{title}{A title to add to the graph. If \code{NULL}, will be
 #'                       automatically created. Default: NULL}
 #'   \item{show_friedman}{Show result of Friedman statistic. Default: FALSE}
-#'   \item{stat}{The stat to use to calculate the values of the ribbon in the
-#'               metagene plot. Must be "bootstrap" or "basic". "bootstrap"
-#'               will estimate the range of average ("mean" or "median") that
-#'               could have produce the observed distribution of values for
-#'               each bin. With the "basic" approach, the ribbon will represent
-#'               the range of the values between \code{1 - alpha / 2} and
-#'               \code{alpha / 2} (see \code{...} param.}
-#'   \item{...}{Extra params for the calculation of the ribbon values. See
-#'              following param descriptions.}
-#'   \item{alpha}{The range of the estimation to be shown with the ribbon.
-#'                \code{1 - alpha / 2} and \code{alpha / 2} will be used.
-#'                Default: 0.05.}
-#'   \item{average}{The function to use to summarize the values of each
-#'                  bins. "mean" or "median". Default: "mean".}
-#'   \item{sample_count}{With "bootstrap" only. The number of draw to do
-#'                       in the bootstrap calculation. Default: 1000.}
-#'   \item{sample_size}{The number of element to select for each draws.
-#'                      Default: the smallest number of row of the matrices
-#'                      produced.}
 #' }
 #' \describe{
-#'   \item{}{\code{mg$produce_matrices(select_regions, design, bin_count,
-#'                 bin_size, noise_removal, normalization, flip_regions}}
-#'   \item{select_regions}{A character vector representing corresponding to the
-#'                         regions to include in the metagene plot. The names
-#'                         of the regions must correspond to the names used for
-#'                         the initialization (\code{new}) of the metagene
-#'                         object. \code{NA} can be used to keep previous
-#'                         select_regions values. \code{NULL} can be used to
-#'                         keep all regions. Default: \code{NA}.}
+#'   \item{}{\code{mg$produce_matrices(design, bin_count, bin_size,
+#'                 noise_removal, normalization, flip_regions}}
 #'   \item{design}{A \code{data.frame} that describe to experiment to plot. See
 #'                 \code{plot} function for more details. \code{NA} can be used
 #'                 keep previous design value. Default: \code{NA}.}
@@ -100,12 +83,26 @@
 #'                       Default: \code{FALSE}.}
 #' }
 #' \describe{
-#'   \item{}{get_raw_coverages = function(filenames)}
-#'   \item{filenames}{The name of the file to extract raw coverages. Can be the
-#'                    filename with the extension of the name of the bam file
-#'                    (if a named bam files was used during the creation of the
-#'                    metagene object). If \code{NULL}, returns the coverage
-#'                    every bam files. Default: \code{NULL}.}
+#'   \item{}{\code{mg$produce_data_frame(range = c(-1, 1), stat = "bootstrap",
+#'                 ...)}}
+#'   \item{range}{The values for the x axis. Must be a numeric vector of size
+#'                2. Default: \code{c(-1, 1)}.}
+#'   \item{stat}{The stat to use to calculate the values of the ribbon in the
+#'               metagene plot. Must be "bootstrap" or "basic". "bootstrap"
+#'               will estimate the range of average ("mean" or "median") that
+#'               could have produce the observed distribution of values for
+#'               each bin. With the "basic" approach, the ribbon will represent
+#'               the range of the values between \code{1 - alpha / 2} and
+#'               \code{alpha / 2} (see \code{...} param.}
+#'   \item{...}{Extra params for the calculation of the ribbon values. See
+#'              following param descriptions.}
+#'   \item{alpha}{The range of the estimation to be shown with the ribbon.
+#'                \code{1 - alpha / 2} and \code{alpha / 2} will be used.
+#'                Default: 0.05.}
+#'   \item{average}{The function to use to summarize the values of each
+#'                  bins. "mean" or "median". Default: "mean".}
+#'   \item{sample_count}{With "bootstrap" only. The number of draw to do
+#'                       in the bootstrap calculation. Default: 1000.}
 #' }
 #' \describe{
 #'   \item{}{mg$get_params()}
@@ -128,6 +125,28 @@
 #'                    \code{exp_names} corresponds to the BAM name or the BAM
 #'                    filename. If \code{NULL}, all the experiments are
 #'                    returned. Default: \code{NULL}.}
+#' }
+#' \describe{
+#'   \item{}{mg$get_data_frame(region_names = NULL, exp_name = NULL)}
+#'   \item{region_names}{The names of the regions to extract. If \code{NULL},
+#'                       all the regions are returned. Default: \code{NULL}.}
+#'   \item{exp_names}{The names of the experiments to extract. If a design was
+#'                    added to the \code{metagene} object, \code{exp_names}
+#'                    correspond to the column names in the design, otherwise
+#'                    \code{exp_names} corresponds to the BAM name or the BAM
+#'                    filename. If \code{NULL}, all the experiments are
+#'                    returned. Default: \code{NULL}.}
+#' }
+#' \describe{
+#'   \item{}{get_plot = function()}
+#' }
+#' \describe{
+#'   \item{}{get_raw_coverages = function(filenames)}
+#'   \item{filenames}{The name of the file to extract raw coverages. Can be the
+#'                    filename with the extension of the name of the bam file
+#'                    (if a named bam files was used during the creation of the
+#'                    metagene object). If \code{NULL}, returns the coverage
+#'                    every bam files. Default: \code{NULL}.}
 #' }
 #' \describe{
 #'   \item{}{get_normalized_coverages = function(filenames)}
@@ -190,9 +209,9 @@ metagene <- R6Class("metagene",
         private$parallel_job <- Parallel_Job$new(cores)
         private$params[["padding_size"]] <- padding_size
         private$params[["verbose"]] <- verbose
-	if (is.null(names(bam_files))) {
-	    names(bam_files) <- tools::file_path_sans_ext(basename(bam_files))
-	}
+        if (is.null(names(bam_files))) {
+            names(bam_files) <- tools::file_path_sans_ext(basename(bam_files))
+        }
         private$params[["bam_files"]] <- bam_files
         private$params[["force_seqlevels"]] <- force_seqlevels
         private$params[["flip_regions"]] <- FALSE
@@ -257,6 +276,39 @@ metagene <- R6Class("metagene",
             lapply(matrices, `[`, exp_names)
         }
     },
+    get_data_frame = function(region_names = NULL, exp_names = NULL) {
+        if (nrow(private$df) == 0) {
+            NULL
+        } else if (is.null(region_names) & is.null(exp_names)) {
+            private$df
+        } else {
+            if (!is.null(region_names)) {
+                stopifnot(is.character(region_names))
+                region_names <- tools::file_path_sans_ext(basename(region_names))
+                stopifnot(all(region_names %in% names(private$matrices)))
+            } else {
+                region_names <- names(private$regions)
+            }
+            if (!is.null(exp_names)) {
+                stopifnot(is.character(exp_names))
+                exp_names <- private$get_bam_names(exp_names)
+                stopifnot(all(exp_names %in% names(private$matrices[[1]])))
+            } else {
+                exp_names <- colnames(private$design)[-1]
+            }
+            eg <- expand.grid(exp_names, region_names)
+            groups <- do.call(paste, c(eg, sep = "_"))
+            i <- private$df$group %in% groups
+            private$df[i,]
+        }
+    },
+    get_plot = function() {
+        if (is.character(private$graph)) {
+            NULL
+        } else {
+            private$graph
+        }
+    },
     get_raw_coverages = function(filenames = NULL) {
         if (is.null(filenames)) {
             private$coverages
@@ -284,27 +336,26 @@ metagene <- R6Class("metagene",
     add_design = function(design, check_bam_files = FALSE) {
         private$design = private$fetch_design(design, check_bam_files)
     },
-    produce_matrices = function(select_regions = NA, design = NA, bin_count = NA,
-                                bin_size = NA, noise_removal = NA,
-                                normalization = NA, flip_regions = FALSE) {
+    produce_matrices = function(design = NA, bin_count = NA, bin_size = NA,
+                                noise_removal = NA, normalization = NA,
+                                flip_regions = FALSE) {
         design = private$fetch_design(design)
-        private$check_produce_matrices_params(select_regions = select_regions,
-                                              bin_count = bin_count,
+        private$check_produce_matrices_params(bin_count = bin_count,
                                               bin_size = bin_size,
                                               design = design,
                                               noise_removal = noise_removal,
                                               normalization = normalization,
                                               flip_regions = flip_regions)
-            select_regions <- private$get_param_value(select_regions)
-            bin_count <- private$get_param_value(bin_count)
-            bin_size <- private$get_param_value(bin_size)
-            noise_removal <- private$get_param_value(noise_removal)
-            normalization <- private$get_param_value(normalization)
+            bin_count <- private$get_param_value(bin_count, "bin_count")
+            bin_size <- private$get_param_value(bin_size, "bin_size")
+            noise_removal <- private$get_param_value(noise_removal,
+                                                     "noise_removal")
+            normalization <- private$get_param_value(normalization,
+                                                     "normalization")
             if (is.null(bin_count) & is.null(bin_size)) {
                 bin_count = 100
             }
-            if (private$matrices_need_update(select_regions = select_regions,
-                                             design = design,
+            if (private$matrices_need_update(design = design,
                                              bin_count = bin_count,
                                              bin_size = bin_size,
                                              noise_removal = noise_removal,
@@ -323,10 +374,7 @@ metagene <- R6Class("metagene",
                   coverages <- private$normalize_coverages(coverages, design)
                 }
                 matrices <- list()
-                if (is.null(select_regions)) {
-                    select_regions <- names(private$regions)
-                }
-                for (region in select_regions) {
+                for (region in names(self$get_regions())) {
                     matrices[[region]] <- list()
                     for (design_name in colnames(design)[-1]) {
                         matrices[[region]][[design_name]] <- list()
@@ -339,7 +387,6 @@ metagene <- R6Class("metagene",
                 private$matrices <- matrices
                 private$params[["bin_size"]] <- bin_size
                 private$params[["bin_count"]] <- bin_count
-                private$params[["select_regions"]] <- select_regions
                 private$params[["noise_removal"]] <- noise_removal
                 private$params[["normalization"]] <- normalization
                 private$design <- design
@@ -351,83 +398,96 @@ metagene <- R6Class("metagene",
         }
         invisible(self)
     },
-    plot = function(range = c(-1,1), title = NULL, show_friedman = FALSE,
-                    stat = "bootstrap", ...) {
+    produce_data_frame = function(range = c(-1, 1), stat = "bootstrap", ...) {
+        stopifnot(is.character(stat))
         stopifnot(length(stat) == 1)
         stopifnot(stat %in% c("bootstrap", "basic"))
+        # 1. Get the correctly formatted matrices
+        if (length(private$matrices) == 0) {
+            self$produce_matrices()
+        }
+
+        # 2. Produce the data.frame
+        if (private$data_frame_need_update(stat, ...) == TRUE) {
+            sample_size = NULL
+            if (stat == "bootstrap") {
+                stat <- Bootstrap_Stat
+                sample_size <- sapply(private$matrices, sapply, sapply, nrow)
+                sample_size <- as.integer(min(unlist(sample_size)))
+            } else {
+                stat <- Basic_Stat
+            }
+            df <- data.frame(group = character(), position = numeric(),
+                             value = numeric(), qinf = numeric(),
+                             qsup = numeric())
+            for (region in names(private$matrices)) {
+                for (bam_file in names(private$matrices[[region]])) {
+                    group_name <- paste(bam_file, region, sep = "_")
+                    print(group_name)
+                    data <- private$matrices[[region]][[bam_file]][["input"]]
+                    ctrl <- private$matrices[[region]][[bam_file]][["ctrl"]]
+                    current_stat <- ""
+                    cores <- private$parallel_job$get_core_count()
+                    if (! is.null(sample_size)) {
+                        current_stat <- stat$new(data = data, ctrl = ctrl,
+                                                 sample_size = sample_size,
+                                                 range = range,
+                                                 cores = cores, ...)
+                    } else {
+                        current_stat <- stat$new(data = data, ctrl = ctrl,
+                                                 range = range,
+                                                 cores = cores, ...)
+                    }
+                    current_df <- current_stat$get_statistics()
+                    current_df <- cbind(rep(group_name, nrow(current_df)),
+                                        current_df)
+                    colnames(current_df)[1] <- "group"
+                    df <- rbind(df, current_df)
+                }
+            }
+            private$df <- df
+        }
+        invisible(self)
+    },
+    plot = function(region_names = NULL, exp_names = NULL, range = c(-1,1),
+                    title = NULL, show_friedman = FALSE) {
         stopifnot(is.logical(show_friedman))
         stopifnot(length(show_friedman) == 1)
-        sample_size = NULL
 
         # 1. Get the correctly formatted matrices
         if (length(private$matrices) == 0) {
             self$produce_matrices()
         }
 
-        if (stat == "bootstrap") {
-            stat <- Bootstrap_Stat
-            sample_size <- as.integer(min(unlist(sapply(private$matrices, sapply,
-                                                  sapply, nrow))))
-        } else {
-            stat <- Basic_Stat
+        # 2. Produce the data frame
+        if (nrow(private$df) == 0) {
+            self$produce_data_frame()
         }
+        df <- self$get_data_frame(region_names = region_names,
+                                  exp_names = exp_names)
 
-        res <- list()
-        # 2. Calculate means and confidence intervals
-        DF <- data.frame(group = character(), position = numeric(),
-                       value = numeric(), qinf = numeric(), qsup = numeric())
-        for (region in names(private$matrices)) {
-            for (bam_file in names(private$matrices[[region]])) {
-                group_name <- paste(bam_file, region, sep = "_")
-                print(group_name)
-                data <- private$matrices[[region]][[bam_file]][["input"]]
-                ctrl <- private$matrices[[region]][[bam_file]][["ctrl"]]
-                current_stat <- ""
-                cores <- private$parallel_job$get_core_count()
-                if (! is.null(sample_size)) {
-                    current_stat <- stat$new(data = data, ctrl = ctrl,
-                                                    sample_size = sample_size,
-                                                    range = range,
-                                                    cores = cores, ...)
-                } else {
-                    current_stat <- stat$new(data = data, ctrl = ctrl,
-                                                    range = range,
-                                                    cores = cores, ...)
-                }
-                current_DF <- current_stat$get_statistics()
-                current_DF <- cbind(rep(group_name, nrow(current_DF)), 
-                                    current_DF)
-                colnames(current_DF)[1] <- "group"
-                DF <- rbind(DF, current_DF)
-            }
-        }
-        res$DF <- DF
-        
-        #
         # 3. Test de Friedman
         #
         # Friedman only done when more than 1 curve is present
         # 
         friedman <- NULL
         if (show_friedman == TRUE) {
-            if (length(unique(DF[["group"]])) > 1) {
-                friedman <- mu.friedman.test(DF[["value"]], group=DF[["group"]],
-                                 block=DF[["position"]])
+            if (length(unique(df[["group"]])) > 1) {
+                private$friedman <- mu.friedman.test(df[["value"]],
+                                                     group=df[["group"]],
+                                                     block=df[["position"]])
             }
-            res$friedman_test <- friedman
         }
         
         # 4. Produce the graph
-        #    DF <- metagene:::getDataFrame(bootstrap_result, 
-        #                                     range=c(-1,1), binSize=1)
-	if (is.null(title)) {
-	    title <- paste(unique(DF[["group"]]), collapse=" vs ")
-	}
-        p <- private$plot_graphic(DF, title = title,
-                                binSize = 1, friedman=friedman)
+        if (is.null(title)) {
+            title <- paste(unique(private$df[["group"]]), collapse=" vs ")
+        }
+        p <- private$plot_graphic(df = df, title = title, binSize = 1,
+                                  friedman=private$friedman_test)
         print(p)
-        res$graph <- p
-        return(res)
+        private$graph <- p
+        invisible(self)
     },
     export = function(bam_file, region, file) {
         region <- tools::file_path_sans_ext(basename(region))
@@ -463,6 +523,9 @@ metagene <- R6Class("metagene",
     matrices = list(),
     design = data.frame(),
     coverages = list(),
+    df = data.frame(),
+    graph = "",
+    friedman_test = "",
     bam_handler = "",
     parallel_job = "",
     check_param = function(regions, bam_files, padding_size,
@@ -528,20 +591,9 @@ metagene <- R6Class("metagene",
             }
         }
     },
-    check_produce_matrices_params = function(select_regions, bin_count,
-                                             bin_size, design, noise_removal,
-                                             normalization, flip_regions) {
-        if (!identical(select_regions, NA)) {
-            if (!is.null(select_regions)) {
-                if (class(select_regions) != "character") {
-                    stop("select_regions must be a character vector.")
-                }
-                if (!all(select_regions %in% names(private$regions))) {
-                    stop(paste0("All elements in select_regions should be regions ",
-                                "defined during the creation of metagene object"))
-                }
-            }
-        }
+    check_produce_matrices_params = function(bin_count, bin_size, design,
+                                             noise_removal, normalization,
+                                             flip_regions) {
         # At least one file must be used in the design
         if (!identical(design, NA)) {
             if (!is.null(design)) {
@@ -580,14 +632,12 @@ metagene <- R6Class("metagene",
         # bin_size should be used only if all regions have the same width
         if (!identical(bin_size, NA)) {
             if (!is.null(bin_size)) {
-                if (is.null(select_regions) | identical(select_regions, NA)) {
-                    select_regions <- names(private$regions)
-                }
-                widths <- width(private$regions[names(private$regions) %in% select_regions])
+                regions <- names(self$get_regions())
+                widths <- width(private$regions[regions])
                 widths <- unique(unlist(widths))
                 if (length(widths) != 1) {
-                    msg <- "bin_size can only be used if all selected regions have"
-                    msg <- paste(msg, "same width")
+                    msg <- "bin_size can only be used if all selected regions"
+                    msg <- paste(msg, "have same width")
                     stop(msg)
                 } else {
                     modulo <- widths %% bin_size
@@ -621,12 +671,9 @@ metagene <- R6Class("metagene",
             stop(msg)
         }
     },
-    matrices_need_update = function(select_regions, design, bin_count,
-                                    bin_size, noise_removal, normalization) {
+    matrices_need_update = function(design, bin_count, bin_size, noise_removal,
+                                    normalization) {
         if (!identical(private$design, design)) {
-            return(TRUE)
-        }
-        if (!identical(private$params[["select_regions"]], select_regions)) {
             return(TRUE)
         }
         if (!identical(private$params[["bin_size"]], bin_size)) {
@@ -641,14 +688,64 @@ metagene <- R6Class("metagene",
         if (!identical(private$params[["normalization"]], normalization)) {
             return(TRUE)
         }
+        return(FALSE)
     },
-    get_param_value = function(param_value) {
-        param_name <- as.character(quote(param_value))
+    data_frame_need_update = function(stat = NA, alpha = NA, average = NA,
+                                      sample_count = NA) {
+        need_update = FALSE
+        # Fetch saved values
+        stat = private$get_param_value(stat, "stat")
+        alpha = private$get_param_value(alpha, "alpha")
+        average = private$get_param_value(average, "average")
+        sample_count = private$get_param_value(sample_count, "sample_count")
+
+        # Add default, if needed
+        if (is.null(stat)) {
+            stat <- "bootstrap"
+        }
+        if (is.null(alpha)) {
+            alpha <- 0.05
+        }
+        if (is.null(average)) {
+            average <- "mean"
+        }
+        if (is.null(sample_count)) {
+            sample_count <- 1000
+        }
+        if (nrow(private$df) == 0) {
+            need_update <- TRUE
+            private$params[["sample_count"]] <- sample_count
+            private$params[["average"]] <- average
+            private$params[["alpha"]] <- alpha
+            private$params[["stat"]] <- stat
+        } else {
+            # Check if data frame need update
+            if (!identical(private$params[["stat"]], stat)) {
+                need_update <- TRUE
+                private$params[["stat"]] <- stat
+            }
+            if (!identical(private$params[["alpha"]], alpha)) {
+                need_update <- TRUE
+                private$params[["alpha"]] <- alpha
+            }
+            if (!identical(private$params[["average"]], average)) {
+                need_update <- TRUE
+                private$params[["average"]] <- average
+            }
+            if (!identical(private$params[["sample_count"]], sample_count)) {
+                need_update <- TRUE
+                private$params[["sample_count"]] <- sample_count
+            }
+        }
+        need_update
+    },
+    get_param_value = function(param_value, param_name) {
+        param_name <- as.character(param_name)
         if (identical(param_value, NA)) {
             if (! param_name %in% names(private$params)) {
                 param_value <- NULL
             } else {
-                param_value <- private$params[[param_value]]
+                param_value <- private$params[[param_name]]
             }
         }
         return(param_value)
@@ -731,24 +828,24 @@ metagene <- R6Class("metagene",
     # Produce a plot with based on a data.frame
     #
     # Input:
-    #    DF:       The data frame produced by the plot.getDataFrame function
+    #    df:       The data frame produced by the plot.getDataFrame function
     #    title:    The title of the graph
     #    binSize:  The number of nucleotides in each bin
     #    friedman: The Friedman test result or NULL if not test done
     # Ouput:
     #    The graph that is printed on the current device.
-    plot_graphic = function(DF, title, binSize, friedman=NULL) {
+    plot_graphic = function(df, title, binSize, friedman=NULL) {
         # Prepare y label
         if (binSize > 1) {
             yLabel <- paste("Mean RPM for each", binSize, "positions")
         } else {
             yLabel <- paste("Mean RPM for each position")
         }
-        friedmanLabel <- ifelse(is.null(friedman), "", 
+        friedmanLabel <- ifelse(friedman == "", "",
                             paste0("Friedman p-value \n", 
                             signif(friedman$p.value, digits = 6), " "))
         # TODO: add x label
-        p <- ggplot(DF, aes(x=position, y=value, ymin=qinf, ymax=qsup)) +
+        p <- ggplot(df, aes(x=position, y=value, ymin=qinf, ymax=qsup)) +
             geom_ribbon(aes(fill=group), alpha=0.3) +
             geom_line(aes(color=group), size=1, litype=1, bg="transparent") +
             theme(panel.grid.major = element_line()) +
