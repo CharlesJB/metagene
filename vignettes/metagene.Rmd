@@ -181,68 +181,106 @@ A typical metagene analysis will consist steps:
 * Conversion in coverage.
 * Noise removal
 * Normalization of the coverage values.
-* Statistical analysis.
+* Matrices production.
+* Data frame production.
 * Generation of the metagene plot.
 
-To facilitate the analysis, all those steps managed by a metagene object. A
-typical analysis will require 3 steps:
+### Minimal analysis
 
-1. Initialization of the metagene object: during this step, the metagene object
-will produce the coverages for every regions specified and for every
-BAM files.
-2. Production of the matrices: To produce the metagene plot, the normalized
-coverages must be converted in a matrix where the columns represent the
-positions and the rows the regions. With simple experimental design (i.e.: no
-control and no replicate), this step can be ignored since the `plot` function is
-able to produce the matrices with default param if no matrices are found (see
-the `Plotting results` section below for a concrete example). During this step:
-  * The background is removed
-  * The replicates are merged
-  * The matrices are created.
-3. Plotting: during this step, the metagene object will perform
-the statistical analysis necessary to obtain a robust estimate of the mean
-and its confidence interval for every group of regions and will show the
-results in a metagene plot.
+A minimal metagene analysis can be performed in 2 steps:
 
-### Generating coverages
+1. Initialization (the `new` function).
+2. `plot`
+```{r minimalAnalysis}
+regions <- get_demo_regions()
+bam_files <- get_demo_bam_files()
+# Initialization
+mg <- metagene$new(regions = regions, bam_files = bam_files)
+# Plotting
+mg$plot(range = c(-1000,1000), title = "Demo metagene plot")
+```
+As you can see, it is not mandatory to explicitly call each step of the metagene
+analysis. For instance, in the previous example, the `plot` function call the
+other steps automatically with default values (the next section will describe
+the steps in more details).
 
-To extract coverages, the user must initialize the metagene object. The minimal
-requirements for this step is a list of bam files and a list of regions:
-```{r initializeMetageneObj}
+In this specific case, the plot is messy since by default
+`r Biocpkg("metagene")` will produce a curve for each possible combinations of
+BAM file and regions. Since we have `r length(bam_files)` BAM files and
+`r length(regions)` regions, this gives us
+`r length(bam_files) * length(regions)` curves.
+
+If we want more control on how every step of the analysis are performed, we
+have to call each functions directly.
+
+### Complete analysis
+
+In order to fully control every step of a metagene analysis, it is important to
+understand how a complete analysis is performed. If we are satisfied with the
+default values, it is not mandatory to explicitly call every step (as was shown
+in the previous section).
+
+#### 1. Initialization
+
+During this step, the coverages for every regions specified are extracted from
+every BAM files. More specifically, a new `GRanges` is created by combining
+all the regions specified with the `regions` param of the `new` function.
+```{r initialization}
+regions <- get_demo_regions()
+bam_files <- get_demo_bam_files()
 mg <- metagene$new(regions = regions, bam_files = bam_files)
 ```
 
-### Plotting results
+#### 2. Producing the matrices
 
-The statistical analysis and the production of the metagene plot are done
-in a single step with the function `plot` of the metagene object. In this
-specific case, we know that all the regions have the same size and are all
-centered on the same element. We can specify this information with the `range`
-parameter.
+To produce the metagene plot, the coverages must be converted in a matrix where
+the columns represent the positions and the rows the regions. Furthermore, to
+reduce the computation time during the following steps, the positions are also
+binned.
 
-```{r producePlotEx1}
-results <- mg$plot(range = c(-1000,1000), title = "Demo metagene plot")
+We can control the size of the bin either with the `bin_count` or the
+`bin_size` arguments. Those two parameters are linked together and we only have
+to provide the values for one of them. It is only possible to use the `bin_size`
+argument when all the regions have the same width. Otherwise, this could result
+in a different number of bins for each regions. By default, a `bin_count` of
+100 will be used during this step.
+```{r showProduceMatrices}
+mg$produce_matrices()
 ```
-
-As you can see, the current plot is messy since by default
-`r Biocpkg("metagene")` will produce a curve for each possible combination of
-BAM file and region groups. In this case, we have `r length(bam_files)` BAM
-files and `r length(regions)` regions, which gives us
-`r length(bam_files) * length(regions)` curves.
 
 We can also use the design we produced earlier to remove background signal and
 combine replicates:
 ```{r produceMatricesDesign}
 mg$produce_matrices(design = design)
-results <- mg$plot(range = c(-1000,1000), title = "Show design")
 ```
 
-The `plot` function returns a `list` containing the `data.frame` used by
-`ggplot2` to produce the results:
-```{r showDataFrame, collapse=TRUE}
-class(results)
-names(results)
-head(results$DF)
+### 3. Producing the `data.frame`
+
+The metagene plot are produced using the `ggplot2` package, which require a
+`data.frame` as input. During this step, the values of the ribbon are
+calculated. The algorithm used for the estimation of the confidence interval
+can be specified with the `stat` parameter.
+
+By default, metagene uses "bootstrap" to obtain a better estimation of the
+mean of enrichment for every positions in each group of regions/BAM files.
+Another approach, called "basic" will simply use the ribbon to represent 95%
+of the values for each positions in each groups.
+```{r produceDataFrame}
+mg$produce_data_frame(stat = "basic")
+```
+
+### 4. Plotting
+
+During this step, metagene will use the `data.frame` to plot the calculated
+values using `ggplot2`. We show a subset of the regions by using the
+`region_names` and `exp_names` parameter. The `region_names` correspond to the
+names of the regions used during the initialization. The `exp_name` will vary
+depending if a design was added. If no design was added, this param correspond
+to the BAM name or BAM filenames. Otherwise, we have to use the names of the
+columns from the design.
+```{r showPlot}
+mg$plot(region_names = "list1", title = "Demo plot subset",
+        range = c(-1000, 1000))
 ```
 
 ## Manipulating `metagene` objects
@@ -309,3 +347,12 @@ length(coverages)
 #### `get_normalized_coverages`
 
 The `get_normalized_coverages` function works exactly like the `get_raw_coverages` function except that it returns the coverages in read per million aligned (RPM).
+
+### Chaining functions
+
+Every function of metagene (except for the getters) invisibly return a pointer
+to itself. This means that the functions can be chained:
+
+```{r showChain}
+mg <- metagene$new(regions, bam_files)$plot(title = "Show chain")
+```
