@@ -16,6 +16,10 @@
 #   gr <- GRanges("chr1", IRanges(c(100, 300), c(200, 500))
 #   gr <- intoNbins(gr)
 intoNbins <- function(gr, n = 10) {
+    stopifnot(class(gr) == "GRanges")
+    stopifnot(length(gr) > 0)
+    stopifnot(is.numeric(n))
+    stopifnot(n > 0)
     if (any(GenomicRanges::width(gr) < n)) {
         stop("all 'width(gr)' must be >= 'n'")
     }
@@ -49,7 +53,6 @@ intoNbins <- function(gr, n = 10) {
 #' }
 #'
 #' @import GenomeInfoDb
-#' @export
 get_promoters_txdb <- function(txdb, upstream = 1000, downstream = 1000) {
     stopifnot(is(txdb, "TxDb"))
     GenomicFeatures::promoters(GenomicFeatures::genes(txdb),

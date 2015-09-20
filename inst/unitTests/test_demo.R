@@ -9,6 +9,40 @@ if(FALSE) {
 
 ### }}}
 
+
+###################################################
+## Test the get_demo_bam_files() function
+###################################################
+
+test.get_demo_bam_files <- function() {
+    bam_files <- get_demo_bam_files()
+    checkTrue(length(bam_files) == 5)
+    checkTrue(all(file.exists(bam_files)))
+}
+
+###################################################
+## Test the get_demo_regions() function
+###################################################
+
+test.get_demo_regions <- function() {
+    regions <- get_demo_regions()
+    checkTrue(length(regions) == 2)
+    checkTrue(all(file.exists(regions)))
+}
+
+###################################################
+## Test the get_demo_metagene() function
+###################################################
+
+test.get_demo_metagene <- function() {
+    mg <- get_demo_metagene()
+    checkTrue(all(class(mg) == c("metagene", "R6")))
+    bam_files <- mg$get_params()$bam_files
+    regions <- names(mg$get_regions())
+    checkTrue(length(bam_files) == 5)
+    checkTrue(all(file.exists(bam_files)))
+}
+
 ###################################################
 ## Test the get_demo_design() function
 ###################################################

@@ -1,5 +1,4 @@
 export(metagene)
-export(get_promoters_txdb)
 export(get_demo_bam_files)
 export(get_demo_regions)
 export(get_demo_metagene)

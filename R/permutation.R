@@ -32,6 +32,8 @@
 #' FUN = function(a, b) { mean(a) - mean(b) } # Dummy function for demo purpose
 #' permutation_results <- permutation_test(m1, m2, sample_size = sample_size,
 #'                                         sample_count = 1000, FUN = FUN)
+#'
+#' @export
 permutation_test <- function(matrix1, matrix2, sample_size, sample_count, FUN, ...) {
   stopifnot(is.matrix(matrix1))
   stopifnot(is.matrix(matrix2))
@@ -39,6 +41,7 @@ permutation_test <- function(matrix1, matrix2, sample_size, sample_count, FUN, .
   stopifnot(is.numeric(sample_size))
   stopifnot(is.numeric(sample_count))
   stopifnot(sample_size <= ((nrow(matrix1) + nrow(matrix2)) / 2))
+  stopifnot(is.function(FUN))
 
   # We combine to 2 original matrices to create the pool for the permutations
   new_matrix <- rbind(matrix1, matrix2)
