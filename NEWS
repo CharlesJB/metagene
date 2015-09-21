@@ -1,0 +1,16 @@
+CHANGES FOR VERSION 2.2.0
+------------------------
+    o Added checks to avoid producing identical matrices or data frame when the
+    parameters are still the same after first function call.
+    o Splitted the analysis in multiple (optionnal) intermediate steps
+    (add_design, produce_matrices and produce_data_frame).
+    o narrowPeak and broadPeak format is now supported.
+    o Added multiple getter to access metagene members that are all now
+    private (get_params, get_design, get_regions, get_matrices,
+    get_data_frame, get_plot, get_raw_coverages and get_normalized_coverages.
+    o Added the NCIS algorithm for noise removal.
+    o Replaced the old datasets with promoters_hg19, promoters_hg18,
+    promoters_mm10 and promoters_mm9 that can be accessed with
+    data(promoters_????).
+    o Added flip_regions and unflip_regions to switch regions orientation based
+    on the strand.
