@@ -20,113 +20,189 @@ metagene plots on the data (or a subset of the data).
 \section{Constructor}{
 
 \describe{
-  \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
+    \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
                              cores = SerialParam(), verbose = FALSE,
                              force_seqlevels = FALSE)}}
-  \item{regions}{Either a \code{vector} of BED filenames, a \code{GRanges}
-                 object or a \code{GRangesList} object.}
-  \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
-                   indexed. i.e.: if a file is named file.bam, there must be
-                   a file named file.bam.bai in the same directory.}
-  \item{padding_size}{The regions will be extended on each side by the value
-                      of this parameter. The padding_size must be a
-                      non-negative integer. Default = 0.}
-  \item{cores}{The number of cores available to parallelize the analysis.
-               Either a positive integer or a \code{BiocParallelParam}.
-               Default: \code{SerialParam()}.}
-  \item{verbose}{Print progression of the analysis. A logical constant.
-                 Default: \code{FALSE}.}
-  \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found in
-                         bam file header. Default: \code{FALSE}.}
+    \item{regions}{Either a \code{vector} of BED, narrowPeak or broadPeak
+                   filenames, a \code{GRanges} object or a \code{GRangesList}
+                   object.}
+    \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
+                     indexed. i.e.: if a file is named file.bam, there must
+                     be a file named file.bam.bai in the same directory.}
+    \item{padding_size}{The regions will be extended on each side by the
+                        value of this parameter. The padding_size must be a
+                        non-negative integer. Default = 0.}
+    \item{cores}{The number of cores available to parallelize the analysis.
+                 Either a positive integer or a \code{BiocParallelParam}.
+                 Default: \code{SerialParam()}.}
+    \item{verbose}{Print progression of the analysis. A logical constant.
+                   Default: \code{FALSE}.}
+    \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
+                           in bam file header. Default: \code{FALSE}.}
 }
 
- \code{metagene$new} returns a \code{metagene} object that contains the
- coverages for every BAM files in the regions from the \code{regions} param.
+    \code{metagene$new} returns a \code{metagene} object that contains the
+        coverages for every BAM files in the regions from the \code{regions}
+        param.
 }
 
 \section{Methods}{
 
 \describe{
-  \item{}{\code{df <- mg$plot(design = NULL, regions_group = NULL,
-              bin_size = 100, alpha = 0.05, sample_count = 1000,
-              title = NULL)}}
-  \item{design}{A \code{data.frame} that describe to experiment to plot. The
-                first column must be the existing BAM filenames. The other
-                columns (at least one is required) represent how the files
-                should be grouped. All those colums should be in numeric
-                format. All the files in the same group will be
-                combined before doing the statistical analysis. For each
-                column, there will be one line with its ribon in
-                the metagene plot. At least one file should be selected (not
-                zero). If \code{NULL}, all BAM files passed as argument
-                during \code{metagene} object creation will be used to
-                create a default design.
-                Default = \code{NULL}.
-
-                0: Do not use file.
-                1: File is input.
-                2: File is control.}
-  \item{regions_group}{A \code{list} or a \code{vector} of region names to
-                     include in the analysis. If \code{NULL}, all the
-                     regions used when creating the
-                     \code{metagene} object will be used.
-                     Default: \code{NULL}}
-  \item{bin_size}{The size of bin to use before calculating the statistics.
-                  larger \code{bin_size} will reduce the calculation time
-                  and produce smoother curves. It must be a positive
-                  integer. Default = 100.}
-  \item{alpha}{The condifence interval (CI) to represent with a ribbon. Must
-               be a value between 0 and 1. With a value of 0.05, the ribbon
-               will represent 95% of the estimated values of the means.
-               Default = 0.05.}
-  \item{sample_count}{The number of draw to do during bootstrap analysis.
-                      Default: 1000.}
-  \item{title}{A title to add to the graph. If \code{NULL}, will be
-                      automatically created. Default: NULL}
+    \item{}{\code{mg$plot(region_names = NULL, exp_names = NULL,
+                  range c(-1, 1), title = NULL, show_friedman = FALSE)}
+                  stat = c("bootstrap", "basic", ...))}
+    \item{region_names}{The names of the regions to extract. If \code{NULL},
+                        all the regions are returned. Default: \code{NULL}.}
+    \item{exp_names}{The names of the experiments to extract. If a design was
+                     added to the \code{metagene} object, \code{exp_names}
+                     correspond to the column names in the design, otherwise
+                     \code{exp_names} corresponds to the BAM name or the BAM
+                     filename. If \code{NULL}, all the experiments are
+                     returned. Default: \code{NULL}.}
+    \item{range}{The values for the x axis. Must be a numeric vector of size
+                 2. Default: \code{c(-1, 1)}.}
+    \item{title}{A title to add to the graph. If \code{NULL}, will be
+                        automatically created. Default: NULL}
+    \item{show_friedman}{Show result of Friedman statistic. Default: FALSE}
 }
 \describe{
-  \item{}{\code{mg$produce_matrices(select_regions, design, bin_count,
-                bin_size}}
-  \item{select_regions}{A character vector representing corresponding to the
-                        regions to include in the metagene plot. The names
-                        of the regions must correspond to the names used for
-                        the initialization (\code{new}) of the metagene
-                        object. \code{NA} can be used to keep previous
-                        select_regions values. \code{NULL} can be used to
-                        keep all regions. Default: \code{NA}.}
-  \item{design}{A \code{data.frame} that describe to experiment to plot. See
-                \code{new} function for more details. \code{NA} can be used
-                keep previous design value. Default: \code{NA}.}
-  \item{bin_count}{The number of bin to create. \code{NA} can be used to
-                   keep previous bin_count value. If both bin_count and
-                   bin_size are \code{NA}, a bin_count value of 100 will be
-                   used. Default: \code{NA}.}
-  \item{bin_size}{The size of bin to create. Can only be used if all the
-                  regions have the same size. \code{NA} can be used to keep
+    \item{}{\code{mg$produce_matrices(design, bin_count, bin_size,
+                  noise_removal, normalization, flip_regions}}
+    \item{design}{A \code{data.frame} that describe to experiment to plot.
+                  see \code{plot} function for more details. \code{NA} can be
+                  used keep previous design value. Default: \code{NA}.}
+    \item{bin_count}{The number of bin to create. \code{NA} can be used to
+                     keep previous bin_count value. If both bin_count and
+                     bin_size are \code{NA}, a bin_count value of 100 will be
+                     used. Default: \code{NA}.}
+    \item{bin_size}{The size of bin to create. Can only be used if all the
+                    regions have the same size. \code{NA} can be used to keep
                   previous bin_size value. If both bin_count and bin_size
                   are \code{NA}, a bin_count value of 100 will be used.
                   Default: \code{NA}.}
+    \item{noise_removal}{The algorithm to use to remove control(s). Possible
+                         values are \code{NA}, \code{NULL} or "NCIS". By
+                         default, value is \code{NULL}. Use \code{NA} keep
+                         previous \code{noise_removal} value (i.e. if
+                         \code{produce_matrices} was called before). See
+                         Liand and Keles 2012 for the NCIS algorithm.}
+    \item{normalization}{The algorithm to use to normalize samples. Possible
+                         default, value is \code{NULL}. Use \code{NA} keep
+                         previous \code{normalization} value (i.e. if
+                         \code{produce_matrices} was called before).}
+    \item{flip_regions}{Should regions on negative strand be flip_regions?
+                        Default: \code{FALSE}.}
 }
 \describe{
-  \item{}{\code{mg$export(bam_file, region, file)}}
-  \item{bam_file}{The name of the bam file to export.}
-  \item{region}{The name of the region to export.}
-  \item{file}{The name of the ouput file.}
+    \item{}{\code{mg$produce_data_frame(range = c(-1, 1), stat = "bootstrap",
+                  ...)}}
+    \item{range}{The values for the x axis. Must be a numeric vector of size
+                 2. Default: \code{c(-1, 1)}.}
+    \item{stat}{The stat to use to calculate the values of the ribbon in the
+                metagene plot. Must be "bootstrap" or "basic". "bootstrap"
+                will estimate the range of average ("mean" or "median") that
+                could have produce the observed distribution of values for
+                each bin. With the "basic" approach, the ribbon will
+                represent the range of the values between
+                \code{1 - alpha / 2} and \code{alpha / 2} (see \code{...}
+                param.}
+    \item{...}{Extra params for the calculation of the ribbon values. See
+               following param descriptions.}
+    \item{alpha}{The range of the estimation to be shown with the ribbon.
+                 \code{1 - alpha / 2} and \code{alpha / 2} will be used.
+                 Default: 0.05.}
+    \item{average}{The function to use to summarize the values of each
+                   bins. "mean" or "median". Default: "mean".}
+    \item{sample_count}{With "bootstrap" only. The number of draw to do
+                        in the bootstrap calculation. Default: 1000.}
 }
 \describe{
-  \item{}{\code{mg$heatmap(region, bam_file, bin_size)}}
-  \item{region}{The name of the region to export.}
-  \item{bam_file}{The name of the bam file to export.}
-  \item{bin_size}{The size of the bin to produce before creating heatmap. It
-                     must be a positive integer. Default: 10.}
+    \item{}{mg$get_params()}
+}
+\describe{
+    \item{}{mg$get_design()}
+}
+\describe{
+    \item{}{mg$get_regions(region_names = NULL)}
+    \item{region_names}{The names of the regions to extract. If \code{NULL},
+                        all the regions are returned. Default: \code{NULL}.}
+}
+\describe{
+    \item{}{mg$get_matrices(region_names = NULL, exp_name = NULL)}
+    \item{region_names}{The names of the regions to extract. If \code{NULL},
+                        all the regions are returned. Default: \code{NULL}.}
+    \item{exp_names}{The names of the experiments to extract. If a design was
+                     added to the \code{metagene} object, \code{exp_names}
+                     correspond to the column names in the design, otherwise
+                     \code{exp_names} corresponds to the BAM name or the BAM
+                     filename. If \code{NULL}, all the experiments are
+                     returned. Default: \code{NULL}.}
+}
+\describe{
+    \item{}{mg$get_data_frame(region_names = NULL, exp_name = NULL)}
+    \item{region_names}{The names of the regions to extract. If \code{NULL},
+                        all the regions are returned. Default: \code{NULL}.}
+    \item{exp_names}{The names of the experiments to extract. If a design was
+                     added to the \code{metagene} object, \code{exp_names}
+                     correspond to the column names in the design, otherwise
+                     \code{exp_names} corresponds to the BAM name or the BAM
+                     filename. If \code{NULL}, all the experiments are
+                     returned. Default: \code{NULL}.}
+}
+\describe{
+    \item{}{get_plot = function()}
+}
+\describe{
+    \item{}{get_raw_coverages = function(filenames)}
+    \item{filenames}{The name of the file to extract raw coverages. Can be
+                     the filename with the extension of the name of the bam
+                     file (if a named bam files was used during the creation
+                     of the metagene object). If \code{NULL}, returns the
+                     coverage of every bam files. Default: \code{NULL}.}
+}
+\describe{
+    \item{}{get_normalized_coverages = function(filenames)}
+    \item{filenames}{The name of the file to extract normalized coverages (in
+                     RPM). Can be the filename with the extension of the name
+                     of the bam file (if a named bam files was used during
+                     the creation of the metagene object). If \code{NULL},
+                     returns the coverage every bam files. Default:
+                     \code{NULL}.}
+}
+\describe{
+    \item{}{\code{mg$export(bam_file, region, file)}}
+    \item{bam_file}{The name of the bam file to export.}
+    \item{region}{The name of the region to export.}
+    \item{file}{The name of the ouput file.}
+}
+\describe{
+    \item{}{\code{mg$add_design(design = NULL, check_bam_files = FALSE)}}
+    \item{design}{A \code{data.frame} that describe to experiment to plot.
+                  See \code{plot} function for more details. \code{NA} can be
+                  used keep previous design value. Default: \code{NA}.}
+    \item{check_bam_files}{Force check that all the bam files from the first
+                           columns of the design are present in current
+                           metagene object. Default: \code{FALSE}}
+}
+\describe{
+    \item{}{\code{mg$unflip_regions()}}
+}
+
+\describe{
+    \item{}{\code{mg$flip_regions()}}
+}
+\describe{
+    \item{}{\code{mg$unflip_regions()}}
 }
 }
 \examples{
-regions <- get_demo_regions()
- bam_files <- get_demo_bam_files()
- mg <- metagene$new(regions, bam_files)
- \dontrun{
- df <- metagene$plot()}
+region <- get_demo_regions()[1]
+bam_file <- get_demo_bam_files()[1]
+mg <- metagene$new(regions = region, bam_files = bam_file)
+\dontrun{
+    df <- metagene$plot()
+}
 }
 \keyword{datasets}
 
