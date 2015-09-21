@@ -3,8 +3,8 @@
 ### {{{ --- Test setup ---
 
 if(FALSE) {
-  library( "RUnit" )
-  library( "metagene" )
+    library( "RUnit" )
+    library( "metagene" )
 }
 
 ### }}}
@@ -96,5 +96,4 @@ test.permutation_test_invalid_fun_class <- function() {
                     error=conditionMessage)
     exp <- "is.function(FUN) is not TRUE"
     checkIdentical(obs, exp)
-
 }

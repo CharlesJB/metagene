@@ -3,12 +3,12 @@ title: "metagene: a package to produce metagene plots"
 author: "Charles Joly Beauparlant"
 date: "`r Sys.Date()`"
 output:
-   BiocStyle::html_document:
-     toc: true
+    BiocStyle::html_document:
+        toc: true
 vignette: >
-  %\VignetteIndexEntry{Introduction to metagene}
-  %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+    %\VignetteIndexEntry{Introduction to metagene}
+    %\VignetteEngine{knitr::rmarkdown}
+    \usepackage[utf8]{inputenc}
 ---
 
 `metagene`: a package to produce aggregation plots
@@ -20,7 +20,8 @@ library(knitr)
 ```
 
 **Package**: `r Biocpkg("metagene")`<br />
-**Authors**: `r eval(parse(text = packageDescription("metagene")[["Author@R"]]))`<br />
+**Authors**:
+`r eval(parse(text = packageDescription("metagene")[["Author@R"]]))`<br />
 **Modified**: 18 september, 2015<br />
 **Compiled**: `r date()`<br />
 **License**: `r packageDescription("metagene")[["License"]]`<br />
@@ -87,7 +88,8 @@ regions
 
 The name of the files (without the extension) will be used to name each groups.
 
-`metagene` also support the [narrowPeak](https://genome.ucsc.edu/FAQ/FAQformat.html#format12)
+`metagene` also support the
+[narrowPeak](https://genome.ucsc.edu/FAQ/FAQformat.html#format12)
 and the [broadPeak](https://genome.ucsc.edu/FAQ/FAQformat.html#format13).
 
 #### GRanges or GRangesList objects - Regions
@@ -140,9 +142,9 @@ for all the design groups, the BAM filenames or the BAM names (if a named BAM.
 file was used).
 * Following columns: One column per design group (replicates and/or controls).
 The column can take only three values:
-	+ 0: ignore file
-	+ 1: input
-	+ 2: control
+    + 0: ignore file
+    + 1: input
+    + 2: control
 
 The file must also contain a header. It is recommanded to use `Samples` for the
 name of the first column, but the value is not checked. The other columns in
@@ -166,10 +168,10 @@ For instance, the previous design data.frame could have been create directly
 in R:
 ```{r alternateDesign}
 design <- data.frame(Samples = c("align1_rep1.bam", "align1_rep2.bam",
-                            "align2_rep1.bam", "align2_rep2.bam", "ctrl.bam"),
-		                    align1 = c(1,1,0,0,2), align2 = c(0,0,1,1,2))
+                     "align2_rep1.bam", "align2_rep2.bam", "ctrl.bam"),
+                     align1 = c(1,1,0,0,2), align2 = c(0,0,1,1,2))
 design$Samples <- paste0(system.file("extdata", package="metagene"), "/",
-                            design$Samples)
+                         design$Samples)
 kable(design)
 ```
 
@@ -287,11 +289,14 @@ mg$plot(region_names = "list1", title = "Demo plot subset",
 
 ### Getters
 
-Multiple getters functions are available to access the data that is stored in a `metagene` object.
+Multiple getters functions are available to access the data that is stored in a
+`metagene` object.
 
 #### `get_params`
 
-The various parameters used during the initialization of the `metagene` object, the production of the matrices and the production of the plot are saved and can be accessed with the `get_params` function:
+The various parameters used during the initialization of the `metagene` object,
+the production of the matrices and the production of the plot are saved and can
+be accessed with the `get_params` function:
 ```{r getParams}
 mg <- get_demo_metagene()
 mg$get_params()
@@ -299,7 +304,8 @@ mg$get_params()
 
 #### `get_design`
 
-To get the design that was used to produce the last version of the matrices, you can use the `get_design` function:
+To get the design that was used to produce the last version of the matrices,
+you can use the `get_design` function:
 ```{r getDesign}
 mg$produce_matrices(design = get_demo_design())
 ## Alternatively, it is also possible to add a design without producing the
@@ -310,7 +316,8 @@ mg$get_design()
 
 #### `get_bam_count`
 
-To get the number of aligned read in a BAM file, you can use the `get_bam_count` function:
+To get the number of aligned read in a BAM file, you can use the `get_bam_count`
+function:
 ```{r getBamCount}
 mg$get_bam_count(bam_files[1])
 ```
@@ -322,14 +329,17 @@ To get all the regions, you can use the `get_regions` function:
 mg$get_regions()
 ```
 
-It is also possible to extract a subset of the regions with the `get_regions` function:
+It is also possible to extract a subset of the regions with the `get_regions`
+function:
 ```{r getRegionsSubset}
 mg$get_regions(region_names = c(regions[1]))
 ```
 
 #### `get_raw_coverages`
 
-To get the coverages produced during the initialization of the `metagene` object, you can use the `get_raw_coverages` function. Please note that to save space, metagene will only extract the coverages in the regions provided.
+To get the coverages produced during the initialization of the `metagene`
+object, you can use the `get_raw_coverages` function. Please note that to save
+space, metagene will only extract the coverages in the regions provided.
 
 ```{r getRawCoverages}
 coverages <- mg$get_raw_coverages()
@@ -337,7 +347,8 @@ coverages[[1]]
 length(coverages)
 ```
 
-It is also possible to extract a subset of all the coverages by providing the filenames:
+It is also possible to extract a subset of all the coverages by providing the
+filenames:
 
 ```{r getRawCoveragesSubset}
 coverages <- mg$get_raw_coverages(filenames = bam_files[1:2])
@@ -346,7 +357,9 @@ length(coverages)
 
 #### `get_normalized_coverages`
 
-The `get_normalized_coverages` function works exactly like the `get_raw_coverages` function except that it returns the coverages in read per million aligned (RPM).
+The `get_normalized_coverages` function works exactly like the
+`get_raw_coverages` function except that it returns the coverages in read per
+million aligned (RPM).
 
 ### Chaining functions
 

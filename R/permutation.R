@@ -34,42 +34,44 @@
 #'                                         sample_count = 1000, FUN = FUN)
 #'
 #' @export
-permutation_test <- function(matrix1, matrix2, sample_size, sample_count, FUN, ...) {
-  stopifnot(is.matrix(matrix1))
-  stopifnot(is.matrix(matrix2))
-  stopifnot(ncol(matrix1) == ncol(matrix2))
-  stopifnot(is.numeric(sample_size))
-  stopifnot(is.numeric(sample_count))
-  stopifnot(sample_size <= ((nrow(matrix1) + nrow(matrix2)) / 2))
-  stopifnot(is.function(FUN))
+permutation_test <- function(matrix1, matrix2, sample_size, sample_count, FUN,
+                             ...) {
+    stopifnot(is.matrix(matrix1))
+    stopifnot(is.matrix(matrix2))
+    stopifnot(ncol(matrix1) == ncol(matrix2))
+    stopifnot(is.numeric(sample_size))
+    stopifnot(is.numeric(sample_count))
+    stopifnot(sample_size <= ((nrow(matrix1) + nrow(matrix2)) / 2))
+    stopifnot(is.function(FUN))
 
-  # We combine to 2 original matrices to create the pool for the permutations
-  new_matrix <- rbind(matrix1, matrix2)
+    # We combine to 2 original matrices to create the pool for the permutations
+    new_matrix <- rbind(matrix1, matrix2)
 
-  # We create 2 matrices of index with sample_count number of columns and
-  # sample_size number of rows. The same column of the 2 matrices cannot
-  # contain the same index (i.e.: a sampling without replacement).
-  i1 <- matrix(nrow = sample_size, ncol = sample_count)
-  i2 <- matrix(nrow = sample_size, ncol = sample_count)
-  for (i in seq(1:sample_count)) {
-    #j <- sample(1:nrow(new_matrix), sample_size * 2, prob = prob)
-    j <- sample(1:nrow(new_matrix), sample_size * 2)
-    i1[,i] <- split(j, 1:2)[[1]]
-    i2[,i] <- split(j, 1:2)[[2]]
-  }
+    # We create 2 matrices of index with sample_count number of columns and
+    # sample_size number of rows. The same column of the 2 matrices cannot
+    # contain the same index (i.e.: a sampling without replacement).
+    i1 <- matrix(nrow = sample_size, ncol = sample_count)
+    i2 <- matrix(nrow = sample_size, ncol = sample_count)
+    for (i in seq(1:sample_count)) {
+        #j <- sample(1:nrow(new_matrix), sample_size * 2, prob = prob)
+        j <- sample(1:nrow(new_matrix), sample_size * 2)
+        i1[,i] <- split(j, 1:2)[[1]]
+        i2[,i] <- split(j, 1:2)[[2]]
+    }
 
-  # We generate a matrix of profiles corresponding to the mean of the columns
-  # of the matrices generated during each permutation round.
-  get_means <- function(i) {
-    #i <- sample(1:nrow(new_matrix), sample_size * sample_count, replace = TRUE)
-    #i <- matrix(i, nrow = sample_size)
-    replicates <- apply(i, 2, function(j) new_matrix[j,])
-    apply(replicates, 2, function(x) colMeans(matrix(x, ncol = ncol(new_matrix))))
-  }
-  m1 <- get_means(i1)
-  m2 <- get_means(i2)
+    # We generate a matrix of profiles corresponding to the mean of the columns
+    # of the matrices generated during each permutation round.
+    get_means <- function(i) {
+        replicates <- apply(i, 2, function(j) new_matrix[j,])
+        colmeans <- function(x) {
+            colMeans(matrix(x, ncol = ncol(new_matrix)))
+        }
+        apply(replicates, 2, colmeans)
+    }
+    m1 <- get_means(i1)
+    m2 <- get_means(i2)
 
-  # We calculate the scores for each combination of profiles.
-  stopifnot(identical(dim(m1), dim(m2)))
-  vapply(1:ncol(m1), function(x) FUN(m1[,x], m2[,x], ...), numeric(1))
+    # We calculate the scores for each combination of profiles.
+    stopifnot(identical(dim(m1), dim(m2)))
+    vapply(1:ncol(m1), function(x) FUN(m1[,x], m2[,x], ...), numeric(1))
 }

@@ -3,12 +3,11 @@
 ### {{{ --- Test setup ---
 
 if(FALSE) {
-	library( "RUnit" )
-	library( "metagene" )
+    library( "RUnit" )
+    library( "metagene" )
 }
 
 ### }}}
-
 
 ###################################################
 ## Test the metagene:::intoNbins() function
@@ -45,14 +44,14 @@ test.intonbins_valid_gr_valid_n_length_equal_gr_width <- function() {
 
 ## Invalid gr class
 test.intonbins_invalid_gr_class <- function() {
-    obs <- tryCatch(metagene:::intoNbins(1), error=conditionMessage)
+    obs <- tryCatch(metagene:::intoNbins(1), error = conditionMessage)
     exp <- "class(gr) == \"GRanges\" is not TRUE"
     checkIdentical(obs, exp)
 }
 
 ## Invalid gr empty
 test.intonbins_invalid_gr_empty <- function() {
-    obs <- tryCatch(metagene:::intoNbins(GRanges()), error=conditionMessage)
+    obs <- tryCatch(metagene:::intoNbins(GRanges()), error = conditionMessage)
     exp <- "length(gr) > 0 is not TRUE"
     checkIdentical(obs, exp)
 }
@@ -61,7 +60,7 @@ test.intonbins_invalid_gr_empty <- function() {
 test.intonbins_invalid_n_class <- function() {
     gr <- rtracklayer::import(get_demo_regions()[1])
     n <- "a"
-    obs <- tryCatch(metagene:::intoNbins(gr, n), error=conditionMessage)
+    obs <- tryCatch(metagene:::intoNbins(gr, n), error = conditionMessage)
     exp <- "is.numeric(n) is not TRUE"
     checkIdentical(obs, exp)
 }
@@ -70,7 +69,7 @@ test.intonbins_invalid_n_class <- function() {
 test.intonbins_invalid_n_zero <- function() {
     gr <- rtracklayer::import(get_demo_regions()[1])
     n <- 0
-    obs <- tryCatch(metagene:::intoNbins(gr, n), error=conditionMessage)
+    obs <- tryCatch(metagene:::intoNbins(gr, n), error = conditionMessage)
     exp <- "n > 0 is not TRUE"
     checkIdentical(obs, exp)
 }
@@ -79,7 +78,7 @@ test.intonbins_invalid_n_zero <- function() {
 test.intonbins_invalid_n_negative <- function() {
     gr <- rtracklayer::import(get_demo_regions()[1])
     n <- -1
-    obs <- tryCatch(metagene:::intoNbins(gr, n), error=conditionMessage)
+    obs <- tryCatch(metagene:::intoNbins(gr, n), error = conditionMessage)
     exp <- "n > 0 is not TRUE"
     checkIdentical(obs, exp)
 }
@@ -88,7 +87,7 @@ test.intonbins_invalid_n_negative <- function() {
 test.intonbins_invalid_n_greater_than_width_gr <- function() {
     gr <- rtracklayer::import(get_demo_regions()[1])
     n <- unique(width(gr)) + 1
-    obs <- tryCatch(metagene:::intoNbins(gr, n), error=conditionMessage)
+    obs <- tryCatch(metagene:::intoNbins(gr, n), error = conditionMessage)
     exp <- "all 'width(gr)' must be >= 'n'"
     checkIdentical(obs, exp)
 }

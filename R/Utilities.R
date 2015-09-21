@@ -47,14 +47,14 @@ intoNbins <- function(gr, n = 10) {
 #'
 #' @examples
 #' \dontrun{
-#'   # require(TxDb.Hsapiens.UCSC.hg19.knownGene)
-#'   txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
-#'   promoters_hg19 <- get_promoters_txdb(txdb)
+#'     # require(TxDb.Hsapiens.UCSC.hg19.knownGene)
+#'     txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+#'     promoters_hg19 <- get_promoters_txdb(txdb)
 #' }
 #'
 #' @import GenomeInfoDb
 get_promoters_txdb <- function(txdb, upstream = 1000, downstream = 1000) {
     stopifnot(is(txdb, "TxDb"))
     GenomicFeatures::promoters(GenomicFeatures::genes(txdb),
-			       upstream = upstream, downstream = downstream)
+                               upstream = upstream, downstream = downstream)
 }
