@@ -289,12 +289,6 @@ test.bam_handler_get_coverage_negative_coverage <- function() {
     bam_file <- bam_files[4]
     obs <- bam_handler$get_coverage(bam_file, region)
     checkTrue(all(vapply(obs, function(x) all(runValue(x) >= 0), logical(1))))
-    # Sanity check
-    weight <- 1 / (bam_handler$get_aligned_count(bam_file) / 1000000)
-    param <- Rsamtools::ScanBamParam(which = reduce(region))
-    sane <- GenomicAlignments::readGAlignments(bam_file, param = param)
-    sane <- GenomicAlignments::coverage(sane, weight = weight)
-    checkTrue(!all(sapply(sane, function(x) all(runValue(x) >= 0))))
 }
 
 ## Invalid bam file
