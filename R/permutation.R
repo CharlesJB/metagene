@@ -30,8 +30,9 @@
 #' # Perform permutation test
 #' sample_size <- min(nrow(m1), nrow(m2))
 #' FUN = function(a, b) { mean(a) - mean(b) } # Dummy function for demo purpose
+#' # A sample_count >= 1000 should be used in a real analysis
 #' permutation_results <- permutation_test(m1, m2, sample_size = sample_size,
-#'                                         sample_count = 1000, FUN = FUN)
+#'                                         sample_count = 10, FUN = FUN)
 #'
 #' @export
 permutation_test <- function(matrix1, matrix2, sample_size, sample_count, FUN,
