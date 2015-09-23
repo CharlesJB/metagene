@@ -1,7 +1,5 @@
 ---
 title: "metagene: a package to produce metagene plots"
-author: "Charles Joly Beauparlant"
-date: "`r Sys.Date()`"
 output:
     BiocStyle::html_document:
         toc: true
@@ -10,9 +8,6 @@ vignette: >
     %\VignetteEngine{knitr::rmarkdown}
     \usepackage[utf8]{inputenc}
 ---
-
-`metagene`: a package to produce aggregation plots
-========================================================
 
 ```{r style, echo = FALSE, results = 'asis', message = FALSE}
 BiocStyle::markdown()
@@ -42,7 +37,7 @@ interval for every group of samples.
 
 This vignette will introduce all the main features of the metagene package.
 
-## Loading metagene package
+## Loading the metagene package
 
 ```{r libraryLoad, message = FALSE}
 library(metagene)
@@ -222,7 +217,7 @@ understand how a complete analysis is performed. If we are satisfied with the
 default values, it is not mandatory to explicitly call every step (as was shown
 in the previous section).
 
-#### 1. Initialization
+#### Initialization
 
 During this step, the coverages for every regions specified are extracted from
 every BAM files. More specifically, a new `GRanges` is created by combining
@@ -233,7 +228,7 @@ bam_files <- get_demo_bam_files()
 mg <- metagene$new(regions = regions, bam_files = bam_files)
 ```
 
-#### 2. Producing the matrices
+#### Producing the matrices
 
 To produce the metagene plot, the coverages must be converted in a matrix where
 the columns represent the positions and the rows the regions. Furthermore, to
@@ -256,7 +251,7 @@ combine replicates:
 mg$produce_matrices(design = design)
 ```
 
-### 3. Producing the `data.frame`
+#### Producing the `data.frame`
 
 The metagene plot are produced using the `ggplot2` package, which require a
 `data.frame` as input. During this step, the values of the ribbon are
@@ -271,7 +266,7 @@ of the values for each positions in each groups.
 mg$produce_data_frame(stat = "basic")
 ```
 
-### 4. Plotting
+#### Plotting
 
 During this step, metagene will use the `data.frame` to plot the calculated
 values using `ggplot2`. We show a subset of the regions by using the
@@ -285,7 +280,7 @@ mg$plot(region_names = "list1", title = "Demo plot subset",
         range = c(-1000, 1000))
 ```
 
-## Manipulating `metagene` objects
+## Manipulating the `metagene` objects
 
 ### Getters
 
@@ -367,5 +362,9 @@ Every function of metagene (except for the getters) invisibly return a pointer
 to itself. This means that the functions can be chained:
 
 ```{r showChain}
-mg <- metagene$new(regions, bam_files)$plot(title = "Show chain")
+rg <- get_demo_regions()
+bam <- get_demo_bam_files()
+d <- get_demo_design()
+title <- "Show chain"
+mg <- metagene$new(rg, bam)$produce_matrices(design = d)$plot(title = title)
 ```
