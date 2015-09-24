@@ -852,6 +852,18 @@ test.metagene_add_design_valid_design_na_design_first <- function() {
     checkIdentical(mg$get_design(), get_demo_design())
 }
 
+## Valid design, factor sample names
+test.metagene_add_design_valid_design_factor_sample_names <- function() {
+    mg <- demo_mg$clone()
+    design <- get_demo_design()
+    design[,1] <- factor(design[,1])
+    mg$add_design(design)
+    checkTrue(is.factor(design[,1]))
+    checkTrue(is.character(mg$get_design()[,1]))
+    checkIdentical(design[,-1], mg$get_design()[,-1])
+    checkIdentical(as.character(design[,1]), mg$get_design()[,1])
+}
+
 ## Valid check_bam_files TRUE NA design
 test.metagene_add_design_valid_check_bam_files_true_na_design <- function() {
     mg <- demo_mg$clone()

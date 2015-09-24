@@ -591,7 +591,8 @@ metagene <- R6Class("metagene",
                                     " be in numeric format"))
                 }
                 if (check_bam_files == TRUE) {
-                    if (!all(private$check_bam_files(design[,1]))) {
+                    samples <- as.character(design[,1])
+                    if (!all(private$check_bam_files(samples))) {
                         stop("Design contains bam files absent from metagene.")
                     }
                 }
@@ -893,6 +894,7 @@ metagene <- R6Class("metagene",
                     return(private$design)
                 }
             }
+            design[,1] <- as.character(design[,1])
             return(design)
         },
         remove_controls = function(coverages, design) {
