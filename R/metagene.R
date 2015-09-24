@@ -591,7 +591,8 @@ metagene <- R6Class("metagene",
                                     " be in numeric format"))
                 }
                 if (check_bam_files == TRUE) {
-                    if (!all(private$check_bam_files(design[,1]))) {
+                    samples <- as.character(design[,1])
+                    if (!all(private$check_bam_files(samples))) {
                         stop("Design contains bam files absent from metagene.")
                     }
                 }
@@ -893,6 +894,7 @@ metagene <- R6Class("metagene",
                     return(private$design)
                 }
             }
+            design[,1] <- as.character(design[,1])
             return(design)
         },
         remove_controls = function(coverages, design) {
@@ -958,10 +960,14 @@ metagene <- R6Class("metagene",
             }
         },
         get_bam_names = function(filenames) {
-        stopifnot(private$check_bam_files(filenames))
-            vapply(filenames,
-               private$bam_handler$get_bam_name,
-               character(1))
+            if (all(filenames %in% colnames(private$design)[-1])) {
+                filenames
+            } else {
+                stopifnot(private$check_bam_files(filenames))
+                vapply(filenames,
+                   private$bam_handler$get_bam_name,
+                   character(1))
+            }
         },
         check_bam_files = function(bam_files) {
             all(vapply(bam_files,
