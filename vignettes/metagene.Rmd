@@ -21,7 +21,7 @@ library(knitr)
 **Compiled**: `r date()`<br />
 **License**: `r packageDescription("metagene")[["License"]]`<br />
 
-## Introduction
+# Introduction
 
 This package produces metagene-like plots to compare the behavior of
 DNA-interacting proteins at selected groups of features. A typical analysis
@@ -37,15 +37,15 @@ interval for every group of samples.
 
 This vignette will introduce all the main features of the metagene package.
 
-## Loading the metagene package
+# Loading the metagene package
 
 ```{r libraryLoad, message = FALSE}
 library(metagene)
 ```
 
-## Inputs
+# Inputs
 
-### Alignment files (BAM files)
+## Alignment files (BAM files)
 
 There is no hard limit in the number of BAM files that can be included in an
 analysis (but with too many BAM files, memory may become an issue). BAM files
@@ -69,9 +69,9 @@ named_bam_files
 Using named BAM files can simplify the use of the metagene helper functions and
 the creation of the design.
 
-### Genomic regions
+## Genomic regions
 
-#### BED files
+### BED files
 
 To compare custom regions of interest, it is possible to use a list of one or
 more BED files.
@@ -87,12 +87,12 @@ The name of the files (without the extension) will be used to name each groups.
 [narrowPeak](https://genome.ucsc.edu/FAQ/FAQformat.html#format12)
 and the [broadPeak](https://genome.ucsc.edu/FAQ/FAQformat.html#format13).
 
-#### GRanges or GRangesList objects - Regions
+### GRanges or GRangesList objects - Regions
 
 As an alternative to a list of BED files, `GRanges` or `GRangesList` objects can
 be used.
 
-#### Available datasets
+### Available datasets
 
 Some common datasets are already available with the `metagene` package:
 
@@ -109,7 +109,7 @@ promoters_hg19
 For more details about each datasets, please refer to their documentation (i.e.:
 `?promoters_hg19`).
 
-### Design groups
+## Design groups
 
 A design group contains a set of BAM files that, when put together, represent
 a logical analysis. Furthermore, a design group contains the relationship
@@ -126,7 +126,7 @@ the following columns:
 There is two possible way to create design groups, by reading a file or by
 directly creating a design object in R.
 
-#### Design groups from a file
+### Design groups from a file
 
 Design groups can be loaded into the metagene package by using a text file. As
 the relationship between BAM files as to be specified, the following columns
@@ -153,7 +153,7 @@ design$Samples <- paste(system.file("extdata", package="metagene"),
 kable(design)
 ```
 
-#### Design groups from R
+### Design groups from R
 
 It is not obligatory to use a design file, you can create the design
 `data.frame` using your prefered method (as long as the restrictions on the
@@ -170,7 +170,7 @@ design$Samples <- paste0(system.file("extdata", package="metagene"), "/",
 kable(design)
 ```
 
-## Analysis steps
+# Analysis steps
 
 A typical metagene analysis will consist steps:
 
@@ -182,7 +182,7 @@ A typical metagene analysis will consist steps:
 * Data frame production.
 * Generation of the metagene plot.
 
-### Minimal analysis
+## Minimal analysis
 
 A minimal metagene analysis can be performed in 2 steps:
 
@@ -210,14 +210,14 @@ BAM file and regions. Since we have `r length(bam_files)` BAM files and
 If we want more control on how every step of the analysis are performed, we
 have to call each functions directly.
 
-### Complete analysis
+## Complete analysis
 
 In order to fully control every step of a metagene analysis, it is important to
 understand how a complete analysis is performed. If we are satisfied with the
 default values, it is not mandatory to explicitly call every step (as was shown
 in the previous section).
 
-#### Initialization
+### Initialization
 
 During this step, the coverages for every regions specified are extracted from
 every BAM files. More specifically, a new `GRanges` is created by combining
@@ -228,7 +228,7 @@ bam_files <- get_demo_bam_files()
 mg <- metagene$new(regions = regions, bam_files = bam_files)
 ```
 
-#### Producing the matrices
+### Producing the matrices
 
 To produce the metagene plot, the coverages must be converted in a matrix where
 the columns represent the positions and the rows the regions. Furthermore, to
@@ -251,7 +251,7 @@ combine replicates:
 mg$produce_matrices(design = design)
 ```
 
-#### Producing the `data.frame`
+### Producing the `data.frame`
 
 The metagene plot are produced using the `ggplot2` package, which require a
 `data.frame` as input. During this step, the values of the ribbon are
@@ -266,7 +266,7 @@ of the values for each positions in each groups.
 mg$produce_data_frame(stat = "basic")
 ```
 
-#### Plotting
+### Plotting
 
 During this step, metagene will use the `data.frame` to plot the calculated
 values using `ggplot2`. We show a subset of the regions by using the
@@ -280,14 +280,14 @@ mg$plot(region_names = "list1", title = "Demo plot subset",
         range = c(-1000, 1000))
 ```
 
-## Manipulating the `metagene` objects
+# Manipulating the `metagene` objects
 
-### Getters
+## Getters
 
 Multiple getters functions are available to access the data that is stored in a
 `metagene` object.
 
-#### `get_params`
+### `get_params`
 
 The various parameters used during the initialization of the `metagene` object,
 the production of the matrices and the production of the plot are saved and can
@@ -297,7 +297,7 @@ mg <- get_demo_metagene()
 mg$get_params()
 ```
 
-#### `get_design`
+### `get_design`
 
 To get the design that was used to produce the last version of the matrices,
 you can use the `get_design` function:
@@ -309,7 +309,7 @@ mg$produce_matrices(design = get_demo_design())
 mg$get_design()
 ```
 
-#### `get_bam_count`
+### `get_bam_count`
 
 To get the number of aligned read in a BAM file, you can use the `get_bam_count`
 function:
@@ -317,7 +317,7 @@ function:
 mg$get_bam_count(bam_files[1])
 ```
 
-#### `get_regions`
+### `get_regions`
 
 To get all the regions, you can use the `get_regions` function:
 ```{r getRegions}
@@ -330,7 +330,7 @@ function:
 mg$get_regions(region_names = c(regions[1]))
 ```
 
-#### `get_raw_coverages`
+### `get_raw_coverages`
 
 To get the coverages produced during the initialization of the `metagene`
 object, you can use the `get_raw_coverages` function. Please note that to save
@@ -350,13 +350,13 @@ coverages <- mg$get_raw_coverages(filenames = bam_files[1:2])
 length(coverages)
 ```
 
-#### `get_normalized_coverages`
+### `get_normalized_coverages`
 
 The `get_normalized_coverages` function works exactly like the
 `get_raw_coverages` function except that it returns the coverages in read per
 million aligned (RPM).
 
-### Chaining functions
+## Chaining functions
 
 Every function of metagene (except for the getters) invisibly return a pointer
 to itself. This means that the functions can be chained:
@@ -369,7 +369,7 @@ title <- "Show chain"
 mg <- metagene$new(rg, bam)$produce_matrices(design = d)$plot(title = title)
 ```
 
-### Copying a metagene object
+## Copying a metagene object
 
 To copy a metagene object, you have to use the `clone` function:
 
