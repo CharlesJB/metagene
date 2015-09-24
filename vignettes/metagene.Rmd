@@ -368,3 +368,11 @@ d <- get_demo_design()
 title <- "Show chain"
 mg <- metagene$new(rg, bam)$produce_matrices(design = d)$plot(title = title)
 ```
+
+### Copying a metagene object
+
+To copy a metagene object, you have to use the `clone` function:
+
+```{r copyMetagene}
+mg_copy <- mg$clone()
+```
