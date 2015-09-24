@@ -958,10 +958,14 @@ metagene <- R6Class("metagene",
             }
         },
         get_bam_names = function(filenames) {
-        stopifnot(private$check_bam_files(filenames))
-            vapply(filenames,
-               private$bam_handler$get_bam_name,
-               character(1))
+            if (all(filenames %in% colnames(private$design)[-1])) {
+                filenames
+            } else {
+                stopifnot(private$check_bam_files(filenames))
+                vapply(filenames,
+                   private$bam_handler$get_bam_name,
+                   character(1))
+            }
         },
         check_bam_files = function(bam_files) {
             all(vapply(bam_files,
