@@ -6,6 +6,8 @@ This package produces metagene plots to compare the behavior of DNA-interacting 
 
 ## Bioconductor Package ##
 
+[![Bioconductor Time](http://bioconductor.org/shields/years-in-bioc/metagene.svg)](http://bioconductor.org/packages/release/bioc/html/metagene.html "Bioconductor status")
+
 metagene is now an official package of [Bioconductor](http://bioconductor.org/). The current release can be directly downloaded from their website:
 [Current release](http://www.bioconductor.org/packages/release/bioc/html/metagene.html)
 
