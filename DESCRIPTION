@@ -42,7 +42,8 @@ Imports:
     ggplot2,
     muStat,
     Rsamtools,
-    DBChIP
+    DBChIP,
+    matrixStats
 Suggests:
     RUnit,
     BiocGenerics,

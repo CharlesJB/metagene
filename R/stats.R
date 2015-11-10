@@ -4,22 +4,16 @@
 Stat <- R6Class("Stat",
     public = list(
         initialize = function(data, ctrl = NULL, alpha = 0.05, average = "mean",
-                              range = c(-1, 1), cores = SerialParam()) {
+                              range = c(-1, 1)) {
 
             private$check_param(data = data, ctrl = ctrl, alpha = alpha,
                           average = average, range = range)
 
             # Save parameters
-            if (average == "mean") {
-            private$parameters[["average"]] <- base:::mean
-            } else if (average == "median") {
-                private$parameters[["average"]] <- median
-            }
+            private$parameters[["average"]] <- average
             private$parameters[["alpha"]] <- alpha
-            private$parameters[["cores"]] <- cores
             private$parameters[["range"]] <- range
       
-            private$parallel_job <- Parallel_Job$new(cores)
             private$data <- data
             if (!is.null(ctrl)) {
                 private$ctrl <- ctrl
@@ -41,8 +35,7 @@ Stat <- R6Class("Stat",
         parameters = list(),
         data = matrix(),
         ctrl = NULL,
-        parallel_job = '',
-        check_param = function(data, ctrl, alpha, average, range, cores) {
+        check_param = function(data, ctrl, alpha, average, range) {
             # Check parameters validity
             if (!is.matrix(data) || sum(!is.na(data) == 0)) {
                 stop("data must be a matrix with at least one value")
@@ -108,7 +101,11 @@ Basic_Stat <- R6Class("Basic_Stat",
 
             # Prepare function
             calculate_statistic <- function(column_values) {
-                value <- average(column_values)
+                if (average == "mean") {
+                    value <- mean(column_values)
+                } else {
+                    value <- median(column_values)
+                }
                 qinf <- unname(quantile(column_values, alpha/2))
                 qsup <- unname(quantile(column_values, 1-(alpha/2)))
                 c(value = value, qinf = qinf, qsup = qsup)
@@ -117,8 +114,7 @@ Basic_Stat <- R6Class("Basic_Stat",
             # Calculate results
             position <- seq(range[1], range[2], length.out = ncol(data))
             data <- split(data, rep(1:ncol(data), each = nrow(data)))
-            res <- private$parallel_job$launch_job(data = data,
-                                                   FUN = calculate_statistic)
+            res <- lapply(data, calculate_statistic)
             res <- data.frame(do.call(rbind, res))
             cbind(position, res, row.names = NULL)
         }
@@ -131,9 +127,8 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
     inherit = Stat,
     public = list(
         initialize = function(data, ctrl = NULL, alpha = 0.05, average = "mean",
-                              range = c(-1, 1), cores = SerialParam(),
-                              sample_count = 1000, sample_size = NA,
-                              debug = FALSE) {
+                              range = c(-1, 1), sample_count = 1000,
+                              sample_size = NA, debug = FALSE) {
 
             # Check parameters validity
             super$check_param(data = data, ctrl = ctrl, alpha = alpha,
@@ -164,7 +159,7 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
 
             # Initialize and calculate statistic
             super$initialize(data = data, ctrl = ctrl, alpha = alpha,
-                             average = average, range = range, cores = cores)
+                             average = average, range = range)
         },
         get_statistics = function() {
             if (private$parameters[["debug"]]) {
@@ -190,11 +185,9 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
             if (!is.null(ctrl)) {
                 res <- lapply(split(data, rep(1:ncol(data), each = nrow(data))),
                               private$calculate_statistic, ctrl = ctrl)
-
             } else {
                 res <- lapply(split(data, rep(1:ncol(data), each = nrow(data))),
                               private$calculate_statistic)
-
             }
             res <- data.frame(do.call(rbind, res))
             cbind(position, res, row.names = NULL)
@@ -232,35 +225,19 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
             sample_size <- private$parameters[["sample_size"]]
 
             sample_data <- function() {
-                if (is.null(ctrl)) {
-                    column_values[sample(seq_along(column_values), sample_size,
-                                  replace=TRUE)]
-                } else {
-                    row <- sample(1:length(column_values), sample_size,
-                                  replace = TRUE)
-                    col <- sample(1:ncol(ctrl), sample_size, replace = TRUE)
-                    data <- column_values[row]
-                    ctrl <- as.numeric(ctrl)[nrow(ctrl) * (col - 1) + row]
-                    data <- data - ctrl
-                    data[data < 0] <- 0
-                    data
-                }
+                    column_values[sample(seq_along(column_values),
+                                         sample_size * sample_count,
+                                         replace=TRUE)]
             }
-            replicate(sample_count, sample_data())
+            matrix(sample_data(), ncol = sample_count)
         },
         calculate_replicate_values = function(replicates) {
-            workers <- private$parallel_job$get_core_count()
             average <- private$parameters[["average"]]
-            sample_size <- private$parameters[["sample_size"]]
-
-            groups <- suppressWarnings(split(replicates, 1:workers))
-            groups <- lapply(groups, function(x) matrix(x, nrow = sample_size))
-            get_average <- function(group, average) {
-                apply(group, 2, average)
+            if (identical(average, "mean")) {
+                colMeans(replicates)
+            } else {
+                matrixStats::colMedians(replicates)
             }
-            values <- private$parallel_job$launch_job(groups, get_average,
-                                                      average)
-            do.call(c, values)
         }
     )
 )

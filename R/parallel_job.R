@@ -32,7 +32,9 @@ Parallel_Job <- R6Class("Parallel_Job",
     ),
     private = list(
         get_bpparam = function(cores) {
-            if (is.numeric(cores)) {
+			if (.Platform$OS.type != "unix") {
+				BPPARAM <- SerialParam()
+			} else if (is.numeric(cores)) {
                 # The number of cores has to be a positive integer
                 if(as.integer(cores) != cores || cores <= 0) {
                     msg <- "cores must be positive numeric or "
@@ -42,7 +44,7 @@ Parallel_Job <- R6Class("Parallel_Job",
                 if (cores == 1) {
                     BPPARAM <- SerialParam()
                 } else {
-                    BPPARAM <- SnowParam(workers = cores)
+                    BPPARAM <- MulticoreParam(workers = cores)
                 }
             } else {
             # Must be one of the BiocParallelParam class
