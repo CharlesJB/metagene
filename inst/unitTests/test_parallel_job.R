@@ -9,6 +9,7 @@ if(FALSE) {
 
 ### }}}
 
+if (.Platform$OS.type == "unix") {
 ###################################################
 ## Test the Parallel_Job$new() function (initialize)
 ###################################################
@@ -147,4 +148,5 @@ test.parallel_job_set_core_count_string_core_number <- function() {
                     error = conditionMessage)
     exp <- "cores must be positive numeric or BiocParallelParam instance."
     checkIdentical(obs, exp)
+}
 }
