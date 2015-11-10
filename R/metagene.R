@@ -426,32 +426,40 @@ metagene <- R6Class("metagene",
                 df <- data.frame(group = character(), position = numeric(),
                                  value = numeric(), qinf = numeric(),
                                  qsup = numeric())
-                for (region in names(private$matrices)) {
-                    for (bam_file in names(private$matrices[[region]])) {
-                        group_name <- paste(bam_file, region, sep = "_")
-                        print(group_name)
-                        data <-
-                            private$matrices[[region]][[bam_file]][["input"]]
-                        ctrl <- private$matrices[[region]][[bam_file]][["ctrl"]]
-                        current_stat <- ""
-                        cores <- private$parallel_job$get_core_count()
-                        if (! is.null(sample_size)) {
-                            current_stat <- stat$new(data = data, ctrl = ctrl,
-                                                     sample_size = sample_size,
-                                                     range = range,
-                                                     cores = cores, ...)
-                        } else {
-                            current_stat <- stat$new(data = data, ctrl = ctrl,
-                                                     range = range,
-                                                     cores = cores, ...)
-                        }
-                        current_df <- current_stat$get_statistics()
-                        current_df <- cbind(rep(group_name, nrow(current_df)),
-                                            current_df)
-                        colnames(current_df)[1] <- "group"
-                        df <- rbind(df, current_df)
+
+				m <- private$matrices
+                regions <- names(m)
+				stopifnot(length(unique(lapply(m, names))) == 1)
+				exp_names <- unique(lapply(m, names))[[1]]
+
+                combinations <- expand.grid(regions, exp_names)
+                combinations <- split(combinations, 1:nrow(combinations))
+
+                get_statistics <- function(combination) {
+                    region <- as.character(combination[1,1])
+                    exp_name <- as.character(combination[1,2])
+                    group_name <- paste(exp_name, region, sep = "_")
+                    message(group_name)
+                    data <- m[[region]][[exp_name]][["input"]]
+                    ctrl <- m[[region]][[exp_name]][["ctrl"]]
+                    current_stat <- ""
+                    if (! is.null(sample_size)) {
+                        current_stat <- stat$new(data = data, ctrl = ctrl,
+                                                 sample_size = sample_size,
+                                                 range = range, ...)
+                    } else {
+                        current_stat <- stat$new(data = data, ctrl = ctrl,
+                                                 range = range, ...)
                     }
+                    current_df <- current_stat$get_statistics()
+                    current_df <- cbind(rep(group_name, nrow(current_df)),
+                                        current_df)
+                    colnames(current_df)[1] <- "group"
+                    current_df
                 }
+                df <- private$parallel_job$launch_job(data = combinations,
+                                                      FUN = get_statistics)
+                df <- do.call("rbind", df)
                 private$df <- df
             }
             invisible(self)

@@ -2,33 +2,31 @@
 metagene: A package to produce metagene plots
 ========================================================
 
+This package produces metagene plots to compare the behavior of DNA-interacting proteins at selected groups of genes/features. Bam files are used to increase the resolution. Multiple combination of group of bam files and/or group of genomic regions can be compared in a single analysis. Bootstraping analysis is used to compare the groups and locate regions with statistically different enrichment profiles.
 
-This repository contains R functions used to do multiple ChIP-Seq experiments
-comparisons.
+## Bioconductor Package ##
 
-This package produces Metagene-like plots to compare the behavior of
-DNA-interacting proteins at selected groups of features. A typical analysis can
-be done in viscinity of transcription start sites (TSS) of genes or at any
-regions of interest (such as enhancers). Multiple combinations of group of
-features and/or group of bam files can be compared in a single analysis.
-Bootstraping analysis is used to compare the groups and locate regions with
-statistically different enrichment profiles. In order to increase the
-sensitivity of the analysis, alignment data is used instead of peaks produced
-with peak callers (i.e.: MACS2 or PICS). The metagene package uses bootstrap to
-obtain a better estimation of the mean enrichment and the confidence interval
-for every group of samples.
+[![Bioconductor Time](http://bioconductor.org/shields/years-in-bioc/metagene.svg)](http://bioconductor.org/packages/release/bioc/html/metagene.html "Bioconductor status")
+
+metagene is now an official package of [Bioconductor](http://bioconductor.org/). The current release can be directly downloaded from their website:
+[Current release](http://www.bioconductor.org/packages/release/bioc/html/metagene.html)
+
 
 ## Authors ##
 
 [Charles Joly Beauparlant](http://ca.linkedin.com/pub/charles-joly-beauparlant/89/491/3b3),
 [Fabien Claude Lamaze](http://ca.linkedin.com/in/fabienlamaze/en),
 [Rawane Samb](http://ca.linkedin.com/in/rawanesamb),
-[Astrid Louise Deschenes](http://ca.linkedin.com/in/astriddeschenes) and
+[Astrid Deschenes](http://ca.linkedin.com/in/astriddeschenes) and
 [Arnaud Droit](http://ca.linkedin.com/in/drarnaud).
 
 See
 [Arnaud Droit Lab](http://bioinformatique.ulaval.ca/home/ "Arnaud Droit Lab")
 website.
+
+## Maintainer ##
+
+[Charles Joly Beauparlant](http://ca.linkedin.com/pub/charles-joly-beauparlant/89/491/3b3)
 
 ## License ##
 

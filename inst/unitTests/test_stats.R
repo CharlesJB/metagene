@@ -64,30 +64,6 @@ test.basic_stat_initialize_invalid_range_length <- function() {
     checkIdentical(obs, exp)
 }
 
-## Invalid cores numeric values - zero
-test.basic_stat_initialize_zero_core_number <- function() {
-    obs <- tryCatch(metagene:::Basic_Stat$new(data = valid_data, cores = 0),
-                    error = conditionMessage)
-    exp <- "cores must be positive numeric or BiocParallelParam instance."
-    checkIdentical(obs, exp)
-}
-
-## Invalid cores numeric values - negative value
-test.basic_stat_initialize_negative_core_number <- function() {
-    obs <- tryCatch(metagene:::Basic_Stat$new(data = valid_data, cores = -1),
-                    error = conditionMessage)
-    exp <- "cores must be positive numeric or BiocParallelParam instance."
-    checkIdentical(obs, exp)
-}
-
-## Invalid cores non-numeric values - string
-test.basic_stat_initialize_string_core_number <- function() {
-    obs <- tryCatch(metagene:::Basic_Stat$new(data = valid_data, cores = "1"),
-                    error = conditionMessage)
-    exp <- "cores must be positive numeric or BiocParallelParam instance."
-    checkIdentical(obs, exp)
-}
-
 ###################################################
 ## Test the Basic_Stats$get_statistics() function
 ###################################################
