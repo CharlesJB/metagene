@@ -866,8 +866,7 @@ metagene <- R6Class("metagene",
             # TODO: add x label
             p <- ggplot(df, aes(x=position, y=value, ymin=qinf, ymax=qsup)) +
                 geom_ribbon(aes(fill=group), alpha=0.3) +
-                geom_line(aes(color=group), size=1, litype=1,
-                          bg="transparent") +
+                geom_line(aes(color=group), size=1) +
                 theme(panel.grid.major = element_line()) +
                 theme(panel.grid.minor = element_line()) +
                 theme(panel.background = element_blank()) +
