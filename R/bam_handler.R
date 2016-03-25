@@ -221,12 +221,15 @@ Bam_Handler <- R6Class("Bam_Handler",
         },
         check_bam_levels = function(bam_file, regions, force) {
             bam_levels <- names(scanBamHeader(bam_file)[[1]]$targets)
-            if (!all(unique(GenomeInfoDb::seqnames(regions)) %in% bam_levels)) {
+            if (!all(unique(GenomeInfoDb::seqlevels(regions)) %in% bam_levels)) {
                 if (force == FALSE) {
-                    stop("Some seqnames of regions are absent in bam_file")
+                    stop("Some seqlevels of regions are absent in bam_file")
                 } else {
                     i <- seqlevels(regions) %in% bam_levels
                     seqlevels(regions, force = TRUE) <- seqlevels(regions)[i]
+		    if (length(regions) == 0) {
+			stop("No seqlevels matching between regions and bam file")
+		    }
                 }
             }
             regions
@@ -286,14 +289,14 @@ Bam_Handler <- R6Class("Bam_Handler",
                 stop("Parameter regions must be a GRanges object.")
             }
 
-            # The seqlevels of regions must all be present in bam_file
-            regions <- private$check_bam_levels(bam_file, regions,
-                            force = force_seqlevels)
-
             # The regions must not be empty
             if (length(regions) == 0) {
                 stop("Parameter regions must not be an empty GRanges object")
             }
+
+            # The seqlevels of regions must all be present in bam_file
+            regions <- private$check_bam_levels(bam_file, regions,
+                            force = force_seqlevels)
 
             # The regions must not be overlapping
             reduce(regions)
