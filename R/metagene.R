@@ -77,7 +77,8 @@
 #'                          Liand and Keles 2012 for the NCIS algorithm.}
 #'     \item{normalization}{The algorithm to use to normalize samples. Possible
 #;                          values are \code{NA}, \code{NULL} or "RPM". By
-#'                          default, value is \code{NULL}. Use \code{NA} keep
+#'                          default, value is \code{NULL} and no normalization
+#'                          will be performed. Use \code{NA} keep
 #'                          previous \code{normalization} value (i.e. if
 #'                          \code{produce_matrices} was called before).}
 #'     \item{flip_regions}{Should regions on negative strand be flip_regions?
