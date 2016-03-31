@@ -221,11 +221,14 @@ Bam_Handler <- R6Class("Bam_Handler",
         },
         check_bam_levels = function(bam_file, regions, force) {
             bam_levels <- GenomeInfoDb::seqlevels(Rsamtools::BamFile(bam_file))
-            if (!all(unique(GenomeInfoDb::seqnames(regions)) %in% bam_levels)) {
+            if (!all(unique(GenomeInfoDb::seqlevels(regions)) %in% bam_levels)) {
                 if (force == FALSE) {
-                    stop("Some seqnames of regions are absent in bam_file")
+                    stop("Some seqlevels of regions are absent in bam_file")
                 } else {
                     GenomeInfoDb::seqlevels(regions, force = TRUE) <- bam_levels
+                    if (length(regions) == 0) {
+                        stop("No seqlevels matching between regions and bam file")
+                    }
                 }
             }
             regions
