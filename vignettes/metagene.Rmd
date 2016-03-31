@@ -194,7 +194,7 @@ bam_files <- get_demo_bam_files()
 # Initialization
 mg <- metagene$new(regions = regions, bam_files = bam_files)
 # Plotting
-mg$plot(range = c(-1000,1000), title = "Demo metagene plot")
+mg$plot(title = "Demo metagene plot")
 ```
 As you can see, it is not mandatory to explicitly call each step of the metagene
 analysis. For instance, in the previous example, the `plot` function call the
@@ -235,12 +235,9 @@ the columns represent the positions and the rows the regions. Furthermore, to
 reduce the computation time during the following steps, the positions are also
 binned.
 
-We can control the size of the bin either with the `bin_count` or the
-`bin_size` arguments. Those two parameters are linked together and we only have
-to provide the values for one of them. It is only possible to use the `bin_size`
-argument when all the regions have the same width. Otherwise, this could result
-in a different number of bins for each regions. By default, a `bin_count` of
-100 will be used during this step.
+We can control the size of the bins with the `bin_count` argument. By
+default, a `bin_count` of 100 will be used during this step.
+
 ```{r showProduceMatrices}
 mg$produce_matrices()
 ```
@@ -276,8 +273,7 @@ depending if a design was added. If no design was added, this param correspond
 to the BAM name or BAM filenames. Otherwise, we have to use the names of the
 columns from the design.
 ```{r showPlot}
-mg$plot(region_names = "list1", title = "Demo plot subset",
-        range = c(-1000, 1000))
+mg$plot(region_names = "list1", title = "Demo plot subset")
 ```
 
 # Manipulating the `metagene` objects
