@@ -220,17 +220,26 @@ Bam_Handler <- R6Class("Bam_Handler",
             invisible(bam_name)
         },
         check_bam_levels = function(bam_file, regions, force) {
-            bam_levels <- names(scanBamHeader(bam_file)[[1]]$targets)
+            bam_levels <- GenomeInfoDb::seqlevels(Rsamtools::BamFile(bam_file))
             if (!all(unique(GenomeInfoDb::seqlevels(regions)) %in% bam_levels)) {
                 if (force == FALSE) {
                     stop("Some seqlevels of regions are absent in bam_file")
                 } else {
-                    i <- seqlevels(regions) %in% bam_levels
-                    seqlevels(regions, force = TRUE) <- seqlevels(regions)[i]
-		    if (length(regions) == 0) {
-			stop("No seqlevels matching between regions and bam file")
-		    }
+                    GenomeInfoDb::seqlevels(regions, force = TRUE) <- bam_levels
+                    if (length(regions) == 0) {
+                        stop("No seqlevels matching between regions and bam file")
+                    }
                 }
+            }
+            regions
+        },
+        check_bam_length = function(bam_file, regions) {
+            bam_infos <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bam_file))
+            grl <- split(regions, as.character(seqnames(regions)))
+            gr_max <- vapply(grl, function(x) max(end(x)), numeric(1))
+            i <- match(names(gr_max), seqnames(bam_infos))
+            if (!all(seqlengths(bam_infos)[i] >= gr_max)) {
+                stop("Some regions are outside max chromosome length")
             }
             regions
         },
@@ -297,6 +306,10 @@ Bam_Handler <- R6Class("Bam_Handler",
             # The seqlevels of regions must all be present in bam_file
             regions <- private$check_bam_levels(bam_file, regions,
                             force = force_seqlevels)
+
+            # The seqlengths of regions must be smaller or eqal to those in
+			# bam_file
+            regions <- private$check_bam_length(bam_file, regions)
 
             # The regions must not be overlapping
             reduce(regions)
