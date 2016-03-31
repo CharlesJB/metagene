@@ -268,46 +268,6 @@ test.metagene_plot_default <- function() {
     checkTrue(all(class(plot) ==  c("gg", "ggplot")))
 }
 
-## Valid show_friedman false
-test.metagene_plot_valid_show_friedman_false <- function() {
-    mg <- demo_mg_min$clone()
-    mg$produce_data_frame(sample_count = 10)
-    pdf(NULL)
-    mg$plot(show_friedman = FALSE)
-    dev.off()
-    plot <- mg$get_plot()
-    checkTrue(all(class(plot) ==  c("gg", "ggplot")))
-}
-
-## Valid show_friedman true
-test.metagene_plot_valid_show_friedman_true <- function() {
-    mg <- demo_mg_min$clone()
-    mg$produce_data_frame(sample_count = 10)
-    pdf(NULL)
-    mg$plot(show_friedman = TRUE)
-    dev.off()
-    plot <- mg$get_plot()
-    checkTrue(all(class(plot) ==  c("gg", "ggplot")))
-}
-
-## Invalid show_friedman class
-test.metagene_plot_invalid_show_friedman_class <- function() {
-    mg <- demo_mg_min$clone()
-    obs <- tryCatch(mg$plot(show_friedman = 1),
-                    error = conditionMessage)
-    exp <- "is.logical(show_friedman) is not TRUE"
-    checkIdentical(obs, exp)
-}
-
-## Invalid show_friedman length
-test.metagene_plot_invalid_show_friedman_length <- function() {
-    mg <- demo_mg_min$clone()
-    obs <- tryCatch(mg$plot(show_friedman = c(TRUE, FALSE)),
-                    error = conditionMessage)
-    exp <- "length(show_friedman) == 1 is not TRUE"
-    checkIdentical(obs, exp)
-}
-
 ##################################################
 # Test the metagene$get_params() function
 ##################################################
