@@ -230,6 +230,16 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
             regions
         },
+        check_bam_length = function(bam_file, regions) {
+            bam_infos <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bam_file))
+            grl <- split(region, as.character(seqnames(regions)))
+            gr_max <- vapply(grl, function(x) max(end(x)), numeric(1))
+            i <- match(names(gr_max), seqnames(si))
+            if (!all(seqlengths(si)[i] >= gr_max)) {
+                stop("Some regions are outside max chromosome length")
+            }
+            regions
+        },
         index_bam_file = function(bam_file) {
             if (file.exists(paste(bam_file, ".bai", sep=""))  == FALSE) {
                 # If there is no index file, we sort and index the current bam
@@ -293,6 +303,10 @@ Bam_Handler <- R6Class("Bam_Handler",
             # The seqlevels of regions must all be present in bam_file
             regions <- private$check_bam_levels(bam_file, regions,
                             force = force_seqlevels)
+
+            # The seqlengths of regions must be smaller or eqal to those in
+			# bam_file
+            regions <- private$check_bam_length(bam_file, regions)
 
             # The regions must not be overlapping
             reduce(regions)
