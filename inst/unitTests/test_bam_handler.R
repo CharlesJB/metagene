@@ -372,8 +372,8 @@ test.bam_handler_get_coverage_invalid_regions_one_seqnames_not_in_bam <-
     checkIdentical(obs, exp)
 }
 
-## Valid regions seqlevels not in bam
-test.bam_handler_get_coverage_valid_regions_seqlevels_not_in_bam_force <-
+## Invalid regions seqlevels not in bam
+test.bam_handler_get_coverage_invalid_regions_seqlevels_not_in_bam <-
     function() {
     bam_handler <- demo_bh$clone()
     bam_file <- bam_files[1]
@@ -382,7 +382,8 @@ test.bam_handler_get_coverage_valid_regions_seqlevels_not_in_bam_force <-
     obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file,
                                              regions = region),
                     error = conditionMessage)
-    checkTrue(obs == "Some seqlevels of regions are absent in bam_file")
+    exp <- "Some seqlevels of regions are absent in bam_file"
+    checkIdentical(obs, exp)
 }
 
 ## Seqnames not in bam force seqlevels

@@ -50,3 +50,4 @@ Suggests:
     knitr,
     BiocStyle,
     rmarkdown
+RoxygenNote: 5.0.1
