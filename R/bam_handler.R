@@ -232,10 +232,10 @@ Bam_Handler <- R6Class("Bam_Handler",
         },
         check_bam_length = function(bam_file, regions) {
             bam_infos <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bam_file))
-            grl <- split(region, as.character(seqnames(regions)))
+            grl <- split(regions, as.character(seqnames(regions)))
             gr_max <- vapply(grl, function(x) max(end(x)), numeric(1))
-            i <- match(names(gr_max), seqnames(si))
-            if (!all(seqlengths(si)[i] >= gr_max)) {
+            i <- match(names(gr_max), seqnames(bam_infos))
+            if (!all(seqlengths(bam_infos)[i] >= gr_max)) {
                 stop("Some regions are outside max chromosome length")
             }
             regions
