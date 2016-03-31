@@ -935,10 +935,8 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 
 test.metagene_produce_matrices_valid_default <- function() {
     mg <- demo_mg$clone()
-    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
     checkIdentical("bin_count" %in% mg$get_params(), FALSE)
     mg$produce_matrices()
-    checkIdentical(mg$get_params()[["bin_size"]], NULL)
     checkIdentical(mg$get_params()[["bin_count"]], 100)
     checkIdentical(is.list(mg$get_matrices()), TRUE)
     checkIdentical(length(mg$get_matrices()) ==  2, TRUE)
@@ -979,10 +977,8 @@ test.metagene_produce_matrices_valid_default <- function() {
 
 test.metagene_produce_matrices_valid_design <- function() {
     mg <- demo_mg$clone()
-    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
     checkIdentical("bin_count" %in% mg$get_params(), FALSE)
     mg$produce_matrices(design = design)
-    checkIdentical(mg$get_params()[["bin_size"]], NULL)
     checkIdentical(mg$get_params()[["bin_count"]], 100)
     matrices <- mg$get_matrices()
     checkIdentical(is.list(matrices), TRUE)
@@ -1006,50 +1002,8 @@ test.metagene_produce_matrices_valid_design <- function() {
 
 test.metagene_produce_matrices_valid_bin_count <- function() {
     mg <- demo_mg$clone()
-    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
     checkIdentical("bin_count" %in% mg$get_params(), FALSE)
     mg$produce_matrices(bin_count = 200)
-    checkIdentical(mg$get_params()[["bin_size"]], NULL)
-    checkIdentical(mg$get_params()[["bin_count"]], 200)
-    matrices <- mg$get_matrices()
-    checkIdentical(length(matrices[[1]][[1]]) ==  1, TRUE)
-    checkIdentical(length(matrices[[1]][[2]]) ==  1, TRUE)
-    checkIdentical(length(matrices[[1]][[3]]) ==  1, TRUE)
-    checkIdentical(length(matrices[[1]][[4]]) ==  1, TRUE)
-    checkIdentical(length(matrices[[1]][[5]]) ==  1, TRUE)
-    checkIdentical(length(matrices[[2]][[1]]) ==  1, TRUE)
-    checkIdentical(length(matrices[[2]][[2]]) ==  1, TRUE)
-    checkIdentical(length(matrices[[2]][[3]]) ==  1, TRUE)
-    checkIdentical(length(matrices[[2]][[4]]) ==  1, TRUE)
-    checkIdentical(length(matrices[[2]][[5]]) ==  1, TRUE)
-    checkIdentical(is.matrix(matrices[[1]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(matrices[[1]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(matrices[[1]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(matrices[[1]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(matrices[[1]][[5]][[1]]), TRUE)
-    checkIdentical(is.matrix(matrices[[2]][[1]][[1]]), TRUE)
-    checkIdentical(is.matrix(matrices[[2]][[2]][[1]]), TRUE)
-    checkIdentical(is.matrix(matrices[[2]][[3]][[1]]), TRUE)
-    checkIdentical(is.matrix(matrices[[2]][[4]][[1]]), TRUE)
-    checkIdentical(is.matrix(matrices[[2]][[5]][[1]]), TRUE)
-    checkIdentical(all(dim(matrices[[1]][[1]][[1]]) ==  c(50,200)), TRUE)
-    checkIdentical(all(dim(matrices[[1]][[2]][[1]]) ==  c(50,200)), TRUE)
-    checkIdentical(all(dim(matrices[[1]][[3]][[1]]) ==  c(50,200)), TRUE)
-    checkIdentical(all(dim(matrices[[1]][[4]][[1]]) ==  c(50,200)), TRUE)
-    checkIdentical(all(dim(matrices[[1]][[5]][[1]]) ==  c(50,200)), TRUE)
-    checkIdentical(all(dim(matrices[[2]][[1]][[1]]) ==  c(50,200)), TRUE)
-    checkIdentical(all(dim(matrices[[2]][[2]][[1]]) ==  c(50,200)), TRUE)
-    checkIdentical(all(dim(matrices[[2]][[3]][[1]]) ==  c(50,200)), TRUE)
-    checkIdentical(all(dim(matrices[[2]][[4]][[1]]) ==  c(50,200)), TRUE)
-    checkIdentical(all(dim(matrices[[2]][[5]][[1]]) ==  c(50,200)), TRUE)
-}
-
-test.metagene_produce_matrices_valid_bin_size <- function() {
-    mg <- demo_mg$clone()
-    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
-    checkIdentical("bin_count" %in% mg$get_params(), FALSE)
-    mg$produce_matrices(bin_size = 10)
-    checkIdentical(mg$get_params()[["bin_size"]], 10)
     checkIdentical(mg$get_params()[["bin_count"]], 200)
     matrices <- mg$get_matrices()
     checkIdentical(length(matrices[[1]][[1]]) ==  1, TRUE)
@@ -1171,59 +1125,6 @@ test.metagene_produce_matrices_invalid_bin_count_decimals <- function() {
     obs <- tryCatch(mg$produce_matrices(bin_count = 1.2),
                    error = conditionMessage)
     exp <- "bin_count must be NULL or a positive integer"
-    checkIdentical(obs, exp)
-}
-
-# Invalid bin_size class
-test.metagene_produce_matrices_invalid_bin_size_class <- function() {
-    mg <- demo_mg$clone()
-    obs <- tryCatch(mg$produce_matrices(bin_size = "a"),
-                    error = conditionMessage)
-    exp <- "bin_size must be NULL or a positive integer"
-    checkIdentical(obs, exp)
-}
-
-# Invalid bin_size negative value
-test.metagene_produce_matrices_invalid_bin_size_negative_value <- function() {
-    mg <- demo_mg$clone()
-    obs <- tryCatch(mg$produce_matrices(bin_size = -1),
-                    error = conditionMessage)
-    exp <- "bin_size must be NULL or a positive integer"
-    checkIdentical(obs, exp)
-}
-
-# Invalid bin_size decimals
-test.metagene_produce_matrices_invalid_bin_size_decimals <- function() {
-    mg <- demo_mg$clone()
-    obs <- tryCatch(mg$produce_matrices(bin_size = 1.2),
-                    error = conditionMessage)
-    exp <- "bin_size must be NULL or a positive integer"
-    checkIdentical(obs, exp)
-}
-
-# Invalid bin_size regions widths
-test.metagene_produce_matrices_invalid_bin_size_regions_width <- function() {
-    region <- lapply(regions[1:2], rtracklayer::import)
-    width(region[[1]]) <- 1000
-    mg <- metagene$new(bam_files = bam_files[1], regions = region)
-    obs <- tryCatch(mg$produce_matrices(bin_size = 100),
-                    error = conditionMessage)
-    exp <- "bin_size can only be used if all selected regions have"
-    exp <- paste(exp, "same width")
-    checkIdentical(obs, exp)
-}
-
-# Warning width not multiple of bin_size
-test.metagene_produce_matrices_invalid_bin_size_regions_width_not_multiple <-
-    function() {
-    mg <- demo_mg$clone()
-    bin_size <- 1234
-    width <- 2000
-    obs <- tryCatch(mg$produce_matrices(bin_size = 1234),
-                    warning = conditionMessage)
-    exp <- paste0("width (", width, ") is not a multiple of ")
-    exp <- paste0(exp, "bin_size (", bin_size, "), last bin ")
-    exp <- paste0(exp, "will be removed.")
     checkIdentical(obs, exp)
 }
 

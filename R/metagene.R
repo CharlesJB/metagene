@@ -53,20 +53,15 @@
 #'                    metagene will use generic label. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'     \item{}{\code{mg$produce_matrices(design, bin_count, bin_size,
-#'                   noise_removal, normalization, flip_regions}}
+#'     \item{}{\code{mg$produce_matrices(design, bin_count, noise_removal,
+#'                   normalization, flip_regions, bin_size = NULL}}
 #'     \item{design}{A \code{data.frame} that describe to experiment to plot.
 #'                   see \code{plot} function for more details. \code{NA} can be
 #'                   used keep previous design value. Default: \code{NA}.}
 #'     \item{bin_count}{The number of bin to create. \code{NA} can be used to
-#'                      keep previous bin_count value. If both bin_count and
-#'                      bin_size are \code{NA}, a bin_count value of 100 will be
-#'                      used. Default: \code{NA}.}
-#'     \item{bin_size}{The size of bin to create. Can only be used if all the
-#'                     regions have the same size. \code{NA} can be used to keep
-#'                   previous bin_size value. If both bin_count and bin_size
-#'                   are \code{NA}, a bin_count value of 100 will be used.
-#'                   Default: \code{NA}.}
+#'                      keep previous bin_count value. A bin_count value of 100
+#'                      will be used if no value is specified. Default:
+#'                      \code{NA}.}
 #'     \item{noise_removal}{The algorithm to use to remove control(s). Possible
 #'                          values are \code{NA}, \code{NULL} or "NCIS". By
 #'                          default, value is \code{NULL}. Use \code{NA} keep
@@ -81,12 +76,11 @@
 #'                          \code{produce_matrices} was called before).}
 #'     \item{flip_regions}{Should regions on negative strand be flip_regions?
 #'                         Default: \code{FALSE}.}
+#'     \item{bin_size}{Deprecated.}
 #' }
 #' \describe{
-#'     \item{}{\code{mg$produce_data_frame(range = c(-1, 1), stat = "bootstrap",
+#'     \item{}{\code{mg$produce_data_frame(stat = "bootstrap", range = NULL
 #'                   ...)}}
-#'     \item{range}{The values for the x axis. Must be a numeric vector of size
-#'                  2. Default: \code{c(-1, 1)}.}
 #'     \item{stat}{The stat to use to calculate the values of the ribbon in the
 #'                 metagene plot. Must be "bootstrap" or "basic". "bootstrap"
 #'                 will estimate the range of average ("mean" or "median") that
@@ -95,6 +89,7 @@
 #'                 represent the range of the values between
 #'                 \code{1 - alpha / 2} and \code{alpha / 2} (see \code{...}
 #'                 param.}
+#'     \item{range}{Deprecated.}
 #'     \item{...}{Extra params for the calculation of the ribbon values. See
 #'                following param descriptions.}
 #'     \item{alpha}{The range of the estimation to be shown with the ribbon.
@@ -215,6 +210,7 @@ metagene <- R6Class("metagene",
                 new_names <- tools::file_path_sans_ext(basename(bam_files))
                 names(bam_files) <- new_names
             }
+            private$params[["bin_count"]] <- 100
             private$params[["bam_files"]] <- bam_files
             private$params[["force_seqlevels"]] <- force_seqlevels
             private$params[["flip_regions"]] <- FALSE
@@ -339,9 +335,13 @@ metagene <- R6Class("metagene",
         add_design = function(design, check_bam_files = FALSE) {
             private$design = private$fetch_design(design, check_bam_files)
         },
-        produce_matrices = function(design = NA, bin_count = NA, bin_size = NA,
+        produce_matrices = function(design = NA, bin_count = NA,
                                     noise_removal = NA, normalization = NA,
-                                    flip_regions = FALSE) {
+                                    flip_regions = FALSE, bin_size = NULL) {
+            if (!is.null(bin_size)) {
+                warning("bin_size is now deprecated. Please use bin_count.")
+                bin_size <- NULL
+            }
             design = private$fetch_design(design)
             private$check_produce_matrices_params(bin_count = bin_count,
                                                   bin_size = bin_size,
@@ -350,12 +350,11 @@ metagene <- R6Class("metagene",
                                                   normalization = normalization,
                                                   flip_regions = flip_regions)
             bin_count <- private$get_param_value(bin_count, "bin_count")
-            bin_size <- private$get_param_value(bin_size, "bin_size")
             noise_removal <- private$get_param_value(noise_removal,
                                                      "noise_removal")
             normalization <- private$get_param_value(normalization,
                                                      "normalization")
-            if (is.null(bin_count) & is.null(bin_size)) {
+            if (is.null(bin_count)) {
                 bin_count = 100
             }
             if (private$matrices_need_update(design = design,
@@ -363,10 +362,6 @@ metagene <- R6Class("metagene",
                                              bin_size = bin_size,
                                              noise_removal = noise_removal,
                                              normalization = normalization)) {
-                if (!is.null(bin_size)) {
-                    width <- width(private$regions[[1]][1])
-                    bin_count <- floor(width / bin_size)
-                }
                 coverages <- private$coverages
                 if (!is.null(noise_removal)) {
                   coverages <- private$remove_controls(coverages, design)
@@ -388,7 +383,6 @@ metagene <- R6Class("metagene",
                     }
                 }
                 private$matrices <- matrices
-                private$params[["bin_size"]] <- bin_size
                 private$params[["bin_count"]] <- bin_count
                 private$params[["noise_removal"]] <- noise_removal
                 private$params[["normalization"]] <- normalization
@@ -401,8 +395,16 @@ metagene <- R6Class("metagene",
             }
             invisible(self)
         },
-        produce_data_frame = function(range = c(-1, 1), stat = "bootstrap",
+        produce_data_frame = function(stat = "bootstrap", range = NULL,
                                       ...) {
+            # Prepare range
+            if (!is.null(range)) {
+                warning("range param in produce_data_frame is now deprecated.")
+            }
+            bin_count <- private$params[["bin_count"]]
+            dist <- floor(bin_count / 2)
+            range <- c(-dist, dist)
+
             stopifnot(is.character(stat))
             stopifnot(length(stat) == 1)
             stopifnot(stat %in% c("bootstrap", "basic"))
@@ -426,10 +428,10 @@ metagene <- R6Class("metagene",
                                  value = numeric(), qinf = numeric(),
                                  qsup = numeric())
 
-				m <- private$matrices
+                m <- private$matrices
                 regions <- names(m)
-				stopifnot(length(unique(lapply(m, names))) == 1)
-				exp_names <- unique(lapply(m, names))[[1]]
+                stopifnot(length(unique(lapply(m, names))) == 1)
+                exp_names <- unique(lapply(m, names))[[1]]
 
                 combinations <- expand.grid(regions, exp_names)
                 combinations <- split(combinations, 1:nrow(combinations))
@@ -616,37 +618,6 @@ metagene <- R6Class("metagene",
                     }
                 }
             }
-            # bin_size should be a numeric value without digits
-            if (!identical(bin_size, NA)) {
-                if (!is.null(bin_size)) {
-                    if (!is.numeric(bin_size) || bin_size < 0 ||
-                        as.integer(bin_size) != bin_size) {
-                        stop("bin_size must be NULL or a positive integer")
-                    }
-                }
-            }
-            # bin_size should be used only if all regions have the same width
-            if (!identical(bin_size, NA)) {
-                if (!is.null(bin_size)) {
-                    regions <- names(self$get_regions())
-                    widths <- width(private$regions[regions])
-                    widths <- unique(unlist(widths))
-                    if (length(widths) != 1) {
-                        msg <- "bin_size can only be used if all selected"
-                        msg <- paste(msg, "regions have same width")
-                        stop(msg)
-                    } else {
-                        modulo <- widths %% bin_size
-                        if (modulo != 0) {
-                            msg <- paste0("width (", widths, ") is not a ")
-                            msg <- paste0(msg, "multiple of bin_size (")
-                            msg <- paste0(msg, bin_size, "), last bin will be ")
-                            msg <- paste0(msg, "removed.")
-                            warning(msg)
-                        }
-                    }
-                }
-            }
             if (!identical(noise_removal, NA)) {
                 if (!is.null(noise_removal)) {
                     if (!noise_removal %in% c("NCIS", "RPM")) {
@@ -672,9 +643,6 @@ metagene <- R6Class("metagene",
         matrices_need_update = function(design, bin_count, bin_size,
                                         noise_removal, normalization) {
             if (!identical(private$design, design)) {
-                return(TRUE)
-            }
-            if (!identical(private$params[["bin_size"]], bin_size)) {
                 return(TRUE)
             }
             if (!identical(private$params[["bin_count"]], bin_count)) {
