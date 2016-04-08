@@ -373,6 +373,37 @@ To copy a metagene object, you have to use the `clone` function:
 mg_copy <- mg$clone()
 ```
 
+# Managing large datasets
+
+While `metagene` try to reduce it's memory usage, it's possible to run into
+memory limits when working with multiple large datasets (especially when there
+is a lot of regions with a large width).
+
+One way to avoid this is to analyse each dataset seperately and then merge just
+before producing the metagene plot:
+
+```{r memory, collapse=TRUE}
+mg1 <- metagene$new(bam_files = bam_files, regions = regions[1])
+mg1$produce_data_frame()
+mg2 <- metagene$new(bam_files = bam_files, regions = regions[2])
+mg2$produce_data_frame()
+```
+
+Then you can extract the `data.frame`s and combine them with `rbind`:
+
+```{r extractDF}
+df1 <- mg1$get_data_frame()
+df2 <- mg2$get_data_frame()
+df <- rbind(df1, df2)
+```
+
+Finally, you can use the `plot_metagene` function to produce the metagene plot:
+
+```{r plotMetagene}
+p <- plot_metagene(df)
+p + ggplot2::ggtitle("Managing large datasets")
+```
+
 # Comparing profiles with permutations
 
 It is possible to compare two metagene profiles using the `permutation_test`
