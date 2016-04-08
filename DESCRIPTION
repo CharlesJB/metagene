@@ -1,5 +1,5 @@
 Package: metagene
-Version: 2.3.4
+Version: 2.3.5
 Date: 2014-05-05
 Title: A package to produce metagene plots
 Author: Charles Joly Beauparlant <charles.joly-beauparlant@crchul.ulaval.ca>,
@@ -49,5 +49,6 @@ Suggests:
     BiocGenerics,
     knitr,
     BiocStyle,
-    rmarkdown
+    rmarkdown,
+    similaRpeak
 RoxygenNote: 5.0.1
