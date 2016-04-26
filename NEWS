@@ -1,3 +1,24 @@
+CHANGES IN VERSION 2.3.0
+------------------------
+
+NEW FEATURES
+
+    o Refactored the bootstrap approach to improve memory usage and reduce
+      calculation time.
+    o Added a plot_metagene function to produce a metagene plot from a
+      data.frame to avoid always having to rely on the metagene object.
+    o Deprecated the range and bin_size params.
+    o Added new sections in the vignettes: "Managing large datasets" and
+      "Comparing profiles with permutations".
+
+BUG FIXES
+
+    o Removed params that no longer works with ggplot2 > 2.2.0.
+    o Changed the seqlevels checks to match changes in GenomicAlignments.
+    o Added a check to stop early and output clear error message when position
+      in a GRanges is greater than the size of a chromosome.
+
+
 CHANGES FOR VERSION 2.2.0
 ------------------------
     o Added checks to avoid producing identical matrices or data frame when the
