@@ -341,7 +341,6 @@ metagene <- R6Class("metagene",
 			    view <- Views(cov[[chr]], start(gr), end(gr))
 			    as.numeric(do.call("c", viewApply(view, function(x) x)))
 			}
-			stopifnot(gene_name %in% names(private$regions))
 			coverages <- self$get_normalized_coverages()
 			for (region in names(self$get_regions())) {
 				gr <- self$get_regions()[[region]]
