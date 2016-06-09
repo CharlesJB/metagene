@@ -335,6 +335,25 @@ metagene <- R6Class("metagene",
         add_design = function(design, check_bam_files = FALSE) {
             private$design = private$fetch_design(design, check_bam_files)
         },
+		produce_rna_seq_matrices = function() {
+			stitch_gene <- function(cov, gr) {
+			    chr <- unique(as.character(GenomeInfoDb::seqnames(gr)))
+			    view <- Views(cov[[chr]], start(gr), end(gr))
+			    as.numeric(do.call("c", viewApply(view, function(x) x)))
+			}
+			stopifnot(gene_name %in% names(private$regions))
+			coverages <- self$get_normalized_coverages()
+			for (region in names(self$get_regions())) {
+				gr <- self$get_regions()[[region]]
+				matrices[[region]] <- list()
+				for (bam_name in names(coverages)) {
+					matrices[[region]][[bam_name]] <- list()
+
+					matrices[[region]][[design_name]][["input"]] <-
+						stitch_gene(coverages[[bam_name]], gr)
+				}
+			}
+		},
         produce_matrices = function(design = NA, bin_count = NA,
                                     noise_removal = NA, normalization = NA,
                                     flip_regions = FALSE, bin_size = NULL) {
@@ -395,6 +414,74 @@ metagene <- R6Class("metagene",
             }
             invisible(self)
         },
+		produce_data_frame_rna_seq = function(stat = "bootstrap", gene_name, ...) {
+			stopifnot(is.character(gene_name))
+			stopifnot(length(gene_name) == 1)
+			stopifnot(gene_name %in% names(self$get_regions()))
+            stopifnot(is.character(stat))
+            stopifnot(length(stat) == 1)
+            stopifnot(stat %in% c("bootstrap", "basic"))
+
+			gr <- self$get_regions()[[gene_name]]
+			range <- c(1, sum(width(gr)))
+
+            # 1. Get the correctly formatted matrices
+            if (length(private$matrices) == 0) {
+                self$produce_rna_seq_matrices()
+            }
+
+            # 2. Produce the data.frame
+            if (private$data_frame_need_update(stat, ...) == TRUE) {
+                sample_size = NULL
+                if (stat == "bootstrap") {
+                    stat <- Bootstrap_Stat
+                    sample_size <- sapply(private$matrices, sapply, sapply,
+                                          nrow)
+                    sample_size <- as.integer(min(unlist(sample_size)))
+                } else {
+                    stat <- Basic_Stat
+                }
+                df <- data.frame(group = character(), position = numeric(),
+                                 value = numeric(), qinf = numeric(),
+                                 qsup = numeric())
+
+                m <- private$matrices
+                regions <- names(m)
+                stopifnot(length(unique(lapply(m, names))) == 1)
+                exp_names <- unique(lapply(m, names))[[1]]
+
+                combinations <- expand.grid(regions, exp_names)
+                combinations <- split(combinations, 1:nrow(combinations))
+
+                get_statistics <- function(combination) {
+                    region <- as.character(combination[1,1])
+                    exp_name <- as.character(combination[1,2])
+                    group_name <- paste(exp_name, region, sep = "_")
+                    message(group_name)
+                    data <- m[[region]][[exp_name]][["input"]]
+                    ctrl <- m[[region]][[exp_name]][["ctrl"]]
+                    current_stat <- ""
+                    if (! is.null(sample_size)) {
+                        current_stat <- stat$new(data = data, ctrl = ctrl,
+                                                 sample_size = sample_size,
+                                                 range = range, ...)
+                    } else {
+                        current_stat <- stat$new(data = data, ctrl = ctrl,
+                                                 range = range, ...)
+                    }
+                    current_df <- current_stat$get_statistics()
+                    current_df <- cbind(rep(group_name, nrow(current_df)),
+                                        current_df)
+                    colnames(current_df)[1] <- "group"
+                    current_df
+                }
+                df <- private$parallel_job$launch_job(data = combinations,
+                                                      FUN = get_statistics)
+                df <- do.call("rbind", df)
+                private$df <- df
+            }
+            invisible(self)
+		},
         produce_data_frame = function(stat = "bootstrap", range = NULL,
                                       ...) {
             # Prepare range
