@@ -335,23 +335,38 @@ metagene <- R6Class("metagene",
         add_design = function(design, check_bam_files = FALSE) {
             private$design = private$fetch_design(design, check_bam_files)
         },
-		produce_rna_seq_matrices = function() {
+		produce_rna_seq_matrices = function(design = NA) {
 			stitch_gene <- function(cov, gr) {
 			    chr <- unique(as.character(GenomeInfoDb::seqnames(gr)))
 			    view <- Views(cov[[chr]], start(gr), end(gr))
 			    as.numeric(do.call("c", viewApply(view, function(x) x)))
 			}
 			coverages <- self$get_normalized_coverages()
+                matrices <- list()
 			for (region in names(self$get_regions())) {
 				gr <- self$get_regions()[[region]]
-				matrices[[region]] <- list()
-				for (bam_name in names(coverages)) {
-					matrices[[region]][[bam_name]] <- list()
+                                design <- private$fetch_design(design)
 
-					matrices[[region]][[design_name]][["input"]] <-
-						stitch_gene(coverages[[bam_name]], gr)
-				}
+                                if (nrow(design) == 0) {
+                                    m <- lapply(coverages, stitch_gene, gr)
+                                    m <- do.call("rbind", m)
+                                    matrices[[region]][["all"]][["input"]] <- m
+                                } else {
+                                    for (design_name in colnames(design)[-1]) {
+                                        i <- design[[basename(design_name)]] > 0
+                                        bam_names <- design[i,1]
+                                        bam_names <- basename(gsub(".bam", "", as.character(bam_names)))
+                                        m <- lapply(coverages[bam_names], stitch_gene, gr)
+                                        m <- do.call("rbind", m)
+                                        matrices[[region]][[design_name]][["input"]] <- m
+                                    }
+
+                                }
+                                
 			}
+                private$matrices <- matrices
+                private$type <- "rna-seq"
+                invisible(self)
 		},
         produce_matrices = function(design = NA, bin_count = NA,
                                     noise_removal = NA, normalization = NA,
@@ -411,9 +426,11 @@ metagene <- R6Class("metagene",
             } else {
                 self$unflip_regions()
             }
+            private$type <- "chip-seq"
             invisible(self)
         },
-		produce_data_frame_rna_seq = function(stat = "bootstrap", gene_name, ...) {
+		produce_rna_seq_data_frame = function(stat = "bootstrap", gene_name, ...) {
+                        stopifnot(private$type == "rna-seq")
 			stopifnot(is.character(gene_name))
 			stopifnot(length(gene_name) == 1)
 			stopifnot(gene_name %in% names(self$get_regions()))
@@ -432,49 +449,29 @@ metagene <- R6Class("metagene",
             # 2. Produce the data.frame
             if (private$data_frame_need_update(stat, ...) == TRUE) {
                 sample_size = NULL
+                m <- private$matrices
                 if (stat == "bootstrap") {
                     stat <- Bootstrap_Stat
-                    sample_size <- sapply(private$matrices, sapply, sapply,
-                                          nrow)
-                    sample_size <- as.integer(min(unlist(sample_size)))
+                    sample_size <- min(sapply(m, sapply, sapply, nrow))
                 } else {
                     stat <- Basic_Stat
                 }
-                df <- data.frame(group = character(), position = numeric(),
-                                 value = numeric(), qinf = numeric(),
-                                 qsup = numeric())
 
-                m <- private$matrices
-                regions <- names(m)
-                stopifnot(length(unique(lapply(m, names))) == 1)
-                exp_names <- unique(lapply(m, names))[[1]]
-
-                combinations <- expand.grid(regions, exp_names)
-                combinations <- split(combinations, 1:nrow(combinations))
-
-                get_statistics <- function(combination) {
-                    region <- as.character(combination[1,1])
-                    exp_name <- as.character(combination[1,2])
-                    group_name <- paste(exp_name, region, sep = "_")
+                regions <- m[[gene_name]]
+                get_statistics <- function(x) {
+                    group_name <- paste(gene_name, x, sep = "_")
                     message(group_name)
-                    data <- m[[region]][[exp_name]][["input"]]
-                    ctrl <- m[[region]][[exp_name]][["ctrl"]]
-                    current_stat <- ""
-                    if (! is.null(sample_size)) {
-                        current_stat <- stat$new(data = data, ctrl = ctrl,
-                                                 sample_size = sample_size,
-                                                 range = range, ...)
-                    } else {
-                        current_stat <- stat$new(data = data, ctrl = ctrl,
-                                                 range = range, ...)
-                    }
+                    data <- regions[[x]][["input"]]
+                    current_stat <- stat$new(data = data,
+                                             sample_size = sample_size,
+                                             range = range)
                     current_df <- current_stat$get_statistics()
                     current_df <- cbind(rep(group_name, nrow(current_df)),
                                         current_df)
                     colnames(current_df)[1] <- "group"
                     current_df
                 }
-                df <- private$parallel_job$launch_job(data = combinations,
+                df <- private$parallel_job$launch_job(data = names(regions),
                                                       FUN = get_statistics)
                 df <- do.call("rbind", df)
                 private$df <- df
@@ -483,6 +480,7 @@ metagene <- R6Class("metagene",
 		},
         produce_data_frame = function(stat = "bootstrap", range = NULL,
                                       ...) {
+            stopifnot(private$type == "chip-seq")
             # Prepare range
             if (!is.null(range)) {
                 warning("range param in produce_data_frame is now deprecated.")
@@ -610,6 +608,7 @@ metagene <- R6Class("metagene",
         graph = "",
         bam_handler = "",
         parallel_job = "",
+        type = "",
         check_param = function(regions, bam_files, padding_size,
                                cores, verbose, force_seqlevels) {
             # Check parameters validity
