@@ -301,7 +301,11 @@ metagene <- R6Class("metagene",
             }
         },
         get_plot = function() {
-            if (is.character(private$graph)) {
+            if (private$type == "rna-seq") {
+                warning("Not available when working with RNA-Seq data.")
+                NULL
+            }
+            else if (is.character(private$graph)) {
                 NULL
             } else {
                 private$graph
@@ -429,17 +433,11 @@ metagene <- R6Class("metagene",
             private$type <- "chip-seq"
             invisible(self)
         },
-		produce_rna_seq_data_frame = function(stat = "bootstrap", gene_name, ...) {
-                        stopifnot(private$type == "rna-seq")
-			stopifnot(is.character(gene_name))
-			stopifnot(length(gene_name) == 1)
-			stopifnot(gene_name %in% names(self$get_regions()))
+        produce_rna_seq_data_frame = function(stat = "bootstrap", ...) {
+            stopifnot(private$type == "rna-seq")
             stopifnot(is.character(stat))
             stopifnot(length(stat) == 1)
             stopifnot(stat %in% c("bootstrap", "basic"))
-
-			gr <- self$get_regions()[[gene_name]]
-			range <- c(1, sum(width(gr)))
 
             # 1. Get the correctly formatted matrices
             if (length(private$matrices) == 0) {
@@ -457,24 +455,29 @@ metagene <- R6Class("metagene",
                     stat <- Basic_Stat
                 }
 
-                regions <- m[[gene_name]]
-                get_statistics <- function(x) {
-                    group_name <- paste(gene_name, x, sep = "_")
-                    message(group_name)
-                    data <- regions[[x]][["input"]]
-                    current_stat <- stat$new(data = data,
-                                             sample_size = sample_size,
-                                             range = range)
-                    current_df <- current_stat$get_statistics()
-                    current_df <- cbind(rep(group_name, nrow(current_df)),
-                                        current_df)
-                    colnames(current_df)[1] <- "group"
-                    current_df
+                df_list <- list()
+                for (gene_name in names(m)) {
+                    gr <- self$get_regions()[[gene_name]]
+                    range <- c(1, sum(width(gr)))
+                    regions <- m[[gene_name]]
+                    get_statistics <- function(x) {
+                        group_name <- paste(gene_name, x, sep = "_")
+                        message(group_name)
+                        data <- regions[[x]][["input"]]
+                        current_stat <- stat$new(data = data,
+                                                 sample_size = sample_size,
+                                                 range = range)
+                        current_df <- current_stat$get_statistics()
+                        current_df <- cbind(rep(group_name, nrow(current_df)),
+                                            current_df)
+                        colnames(current_df)[1] <- "group"
+                        current_df
+                    }
+                    df <- private$parallel_job$launch_job(data = names(regions),
+                                                          FUN = get_statistics)
+                    df_list[[gene_name]] <- do.call("rbind", df)
                 }
-                df <- private$parallel_job$launch_job(data = names(regions),
-                                                      FUN = get_statistics)
-                df <- do.call("rbind", df)
-                private$df <- df
+                private$df <- do.call("rbind", df_list)
             }
             invisible(self)
 		},
@@ -543,6 +546,7 @@ metagene <- R6Class("metagene",
                     current_df
                 }
                 df <- private$parallel_job$launch_job(data = combinations,
+
                                                       FUN = get_statistics)
                 df <- do.call("rbind", df)
                 private$df <- df
@@ -561,13 +565,31 @@ metagene <- R6Class("metagene",
             }
             df <- self$get_data_frame(region_names = region_names,
                                       exp_names = exp_names)
-            # 3. Produce the graph
-            if (is.null(title)) {
-                title <- paste(unique(private$df[["group"]]), collapse=" vs ")
+            if (private$type == "rna-seq") {
+                region_names <- names(self$get_regions())
+                group_names <- vapply(strsplit(as.character(df$group), "_"), function(x) x[1], character(1))
+                i <- group_names %in% region_names
+                df <- df[i,]
+                for (n in unique(group_names[i])) {
+                    if (is.null(title)) {
+                        title <- n
+                    }
+                    if (is.null(x_label)) {
+                        x_label <- "Position in gene"
+                    }
+                    current_df <- df[grepl(n, df$group),]
+                    p <- private$plot_graphic(df = current_df, title = title, x_label = x_label)
+                    print(p)
+                }
+            } else {
+                # 3. Produce the graph
+                if (is.null(title)) {
+                    title <- paste(unique(private$df[["group"]]), collapse=" vs ")
+                }
+                p <- private$plot_graphic(df = df, title = title, x_label = x_label)
+                print(p)
+                private$graph <- p
             }
-            p <- private$plot_graphic(df = df, title = title, x_label = x_label)
-            print(p)
-            private$graph <- p
             invisible(self)
         },
         export = function(bam_file, region, file) {
