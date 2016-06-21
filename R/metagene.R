@@ -368,9 +368,7 @@ metagene <- R6Class("metagene",
                 } else {
                   coverages <- private$merge_chip(coverages, design)
                 }
-                if (!is.null(normalization)) {
-                  coverages <- private$normalize_coverages(coverages, design)
-                }
+                coverages <- private$normalize_coverages(coverages, design, normalization)
                 matrices <- list()
                 for (region in names(self$get_regions())) {
                     matrices[[region]] <- list()
@@ -800,11 +798,11 @@ metagene <- R6Class("metagene",
             }
 
             # Prepare y label
-            y_label <- "Mean coverage"
+            y_label = ""
             if (is.null(private$params[["normalization"]])) {
-                y_label <- paste(y_label, "(raw)")
+                y_label <- "Mean coverage (raw)"
             } else {
-                y_label <- paste(y_label("(RPM)"))
+                y_label <- "Coverage (RPM)"
             }
 
             # Produce plot
@@ -867,14 +865,21 @@ metagene <- R6Class("metagene",
             }
             results
         },
-        normalize_coverages = function(coverages, design) {
+        normalize_coverages = function(coverages, design, normalization) {
             for (design_name in colnames(design)[-1]) {
-                bam_files <- as.character(design[,1][1])
-                counts <- lapply(bam_files,
-                                 private$bam_handler$get_aligned_count)
-                count <- do.call("+", counts)
-                weight <- 1 / (count / 1000000)
-                coverages[[design_name]] <- coverages[[design_name]] * weight
+                if (is.null(normalization)) {
+                    i <- design[[design_name]] == 1
+                    coverages[[design_name]] <- coverages[[design_name]] / sum(i)
+                } else if (normalization == "RPM") {
+                    bam_files <- as.character(design[,1][1])
+                    counts <- lapply(bam_files,
+                                     private$bam_handler$get_aligned_count)
+                    count <- do.call("+", counts)
+                    weight <- 1 / (count / 1000000)
+                    coverages[[design_name]] <- coverages[[design_name]] * weight
+                } else {
+                    stop("Invalid normalization value.")
+                }
             }
             coverages
         },
@@ -883,9 +888,9 @@ metagene <- R6Class("metagene",
             for (design_name in colnames(design)[-1]) {
                 i <- design[[design_name]] == 1
                 bam_files <- as.character(design[,1][i])
-            bam_names <- private$get_bam_names(bam_files)
+                bam_names <- private$get_bam_names(bam_files)
                 cov <- coverages[bam_names]
-                result[[design_name]] <- Reduce("+", cov) / sum(i)
+                result[[design_name]] <- Reduce("+", cov)
             }
             result
         },
