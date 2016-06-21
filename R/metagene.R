@@ -885,7 +885,7 @@ metagene <- R6Class("metagene",
                 bam_files <- as.character(design[,1][i])
             bam_names <- private$get_bam_names(bam_files)
                 cov <- coverages[bam_names]
-                result[[design_name]] <- Reduce("+", cov)
+                result[[design_name]] <- Reduce("+", cov) / sum(i)
             }
             result
         },
