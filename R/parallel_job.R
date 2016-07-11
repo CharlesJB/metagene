@@ -21,7 +21,11 @@ Parallel_Job <- R6Class("Parallel_Job",
         },
         get_core_count = function() {
             cores <- self$parameters[["cores"]]
-            ifelse(is.numeric(cores), cores, as.numeric(bpworkers(cores)))
+            if(is.numeric(cores)) {
+                cores
+            } else {
+                bpworkers(cores)
+            }
         },
         set_core_count = function(cores) {
             # Note: cores can be numeric or BiocParallelParam instance
