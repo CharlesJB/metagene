@@ -804,7 +804,7 @@ metagene <- R6Class("metagene",
             if (is.null(private$params[["normalization"]])) {
                 y_label <- paste(y_label, "(raw)")
             } else {
-                y_label <- paste(y_label("(RPM)"))
+                y_label <- paste(y_label, "(RPM)")
             }
 
             # Produce plot
