@@ -933,6 +933,17 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 # Test the metagene$produce_matrices() function
 ##################################################
 
+## Valid usage dot bam files
+test.metagene_produce_matrices_valid_dot_bam <- function() {
+    bam_file <- get_demo_bam_files()[1]
+    bam_file <- gsub("1_r", "1.r", bam_file)
+    region <- get_demo_regions()[1]
+    mg <- metagene$new(regions = region, bam_files = bam_file)
+    mg$produce_matrices()
+    checkIdentical(is.list(mg$get_matrices()), TRUE)
+}
+
+
 test.metagene_produce_matrices_valid_default <- function() {
     mg <- demo_mg$clone()
     checkIdentical("bin_count" %in% mg$get_params(), FALSE)
