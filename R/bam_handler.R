@@ -145,7 +145,7 @@ Bam_Handler <- R6Class("Bam_Handler",
         get_bam_name = function(bam_file) {
             bam <- private$bam_files[["bam"]]
             row_names <- rownames(private$bam_files)
-            bam_name <- basename(tools::file_path_sans_ext(bam_file))
+            bam_name <- basename(gsub(".bam$", "", bam_file))
             if (bam_file %in% bam) {
                 i <- bam == bam_file
                 stopifnot(sum(i) == 1)
