@@ -728,6 +728,7 @@ metagene <- R6Class("metagene",
             i <- vapply(grl, length, numeric(1)) > 0
             m <- do.call("rbind", lapply(grl[i], private$get_view_means,
                                          bcount = bcount, cov = coverages))
+            m[GenomicRanges::findOverlaps(gr, unlist(grl), select="first"),]
         },
         get_view_means = function(gr, bcount, cov) {
             chr <- unique(as.character(GenomeInfoDb::seqnames(gr)))
