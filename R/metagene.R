@@ -870,7 +870,8 @@ metagene <- R6Class("metagene",
         },
         normalize_coverages = function(coverages, design) {
             for (design_name in colnames(design)[-1]) {
-                bam_files <- as.character(design[,1][1])
+                which_rows = design[[design_name]]==1
+                bam_files <- as.character(design[,1][which_rows])
                 counts <- lapply(bam_files,
                                  private$bam_handler$get_aligned_count)
                 count <- do.call("+", counts)
