@@ -874,7 +874,7 @@ metagene <- R6Class("metagene",
                 bam_files <- as.character(design[,1][which_rows])
                 counts <- lapply(bam_files,
                                  private$bam_handler$get_aligned_count)
-                count <- do.call("+", counts)
+                count <- sum(unlist(counts))
                 weight <- 1 / (count / 1000000)
                 coverages[[design_name]] <- coverages[[design_name]] * weight
             }
