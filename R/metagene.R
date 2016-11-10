@@ -728,6 +728,7 @@ metagene <- R6Class("metagene",
             i <- vapply(grl, length, numeric(1)) > 0
             m <- do.call("rbind", lapply(grl[i], private$get_view_means,
                                          bcount = bcount, cov = coverages))
+            m[GenomicRanges::findOverlaps(gr, unlist(grl), select="first"),]
         },
         get_view_means = function(gr, bcount, cov) {
             chr <- unique(as.character(GenomeInfoDb::seqnames(gr)))
@@ -869,10 +870,11 @@ metagene <- R6Class("metagene",
         },
         normalize_coverages = function(coverages, design) {
             for (design_name in colnames(design)[-1]) {
-                bam_files <- as.character(design[,1][1])
+                which_rows = design[[design_name]]==1
+                bam_files <- as.character(design[,1][which_rows])
                 counts <- lapply(bam_files,
                                  private$bam_handler$get_aligned_count)
-                count <- do.call("+", counts)
+                count <- sum(unlist(counts))
                 weight <- 1 / (count / 1000000)
                 coverages[[design_name]] <- coverages[[design_name]] * weight
             }
