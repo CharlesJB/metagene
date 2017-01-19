@@ -14,7 +14,8 @@
 #'                    object.}
 #'     \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
 #'                      indexed. i.e.: if a file is named file.bam, there must
-#'                      be a file named file.bam.bai in the same directory.}
+#'                      be a file named file.bam.bai or file.bai in the same 
+#'                      directory.}
 #'     \item{padding_size}{The regions will be extended on each side by the
 #'                         value of this parameter. The padding_size must be a
 #'                         non-negative integer. Default = 0.}
@@ -549,9 +550,6 @@ metagene <- R6Class("metagene",
             }
             if (!all(sapply(bam_files, file.exists))) {
                 stop("At least one BAM file does not exist")
-            }
-            if (!all(sapply(paste0(bam_files, ".bai"), file.exists))) {
-                stop("All BAM files must be indexed")
             }
             if (!is(regions, "GRangesList") && !is.character(regions)
                 && !is(regions, "GRanges") && !is.list(regions)) {
