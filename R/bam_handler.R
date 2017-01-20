@@ -8,7 +8,8 @@
 #'     \item{}{\code{bh <- Bam_Handler$new(bam_files, cores = SerialParam())}}
 #'     \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
 #'                      indexed. i.e.: if a file is named file.bam, there must
-#'                      be a file named file.bam.bai in the same directory.}
+#'                      be a file named file.bam.bai or file.bai in the same 
+#'                      directory.}
 #'     \item{cores}{The number of cores available to parallelize the analysis.
 #'                  Either a positive integer or a \code{BiocParallelParam}.
 #'                  Default: \code{SerialParam()}.}
@@ -88,7 +89,7 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
 
             # All BAM files must be indexed
-            if (!all(sapply(paste0(bam_files, ".bai"), file.exists))) {
+            if (any(sapply(sapply(bam_files, private$get_bam_index_filename), is.na))) {
               stop("All BAM files must be indexed")
             }
 
@@ -243,8 +244,23 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
             regions
         },
+        get_bam_index_filename = function(bam_file) {
+            # Look for a file where bai is appended (.bam.bai)
+            bai_suffix_filename = paste(bam_file, ".bai", sep="")
+            if(file.exists(bai_suffix_filename)) {
+                return(bai_suffix_filename)
+            } else {
+                # Look for a file where bai replaces bam (.bai)
+                bam_is_bai_filename = gsub("\\.bam$", ".bai", bam_file)
+                if(file.exists(bam_is_bai_filename)) {
+                    return(bam_is_bai_filename)
+                }
+            }
+            # No index file found, return NA.
+            return(NA)
+        },
         index_bam_file = function(bam_file) {
-            if (file.exists(paste(bam_file, ".bai", sep=""))  == FALSE) {
+            if (is.na(private$get_bam_index_filename(bam_file))) {
                 # If there is no index file, we sort and index the current bam
                 # file
                 # TODO: we need to check if the sorted file was previously
