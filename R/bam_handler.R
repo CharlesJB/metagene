@@ -225,7 +225,7 @@ Bam_Handler <- R6Class("Bam_Handler",
                 if (force == FALSE) {
                     stop("Some seqlevels of regions are absent in bam_file")
                 } else {
-                    GenomeInfoDb::seqlevels(regions, force = TRUE) <- bam_levels
+                    GenomeInfoDb::seqlevels(regions, pruning.mode = "coarse") <- bam_levels
                     if (length(regions) == 0) {
                         stop("No seqlevels matching between regions and bam file")
                     }
