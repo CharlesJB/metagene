@@ -344,7 +344,7 @@ metagene <- R6Class("metagene",
                                     noise_removal = NA, normalization = NA,
                                     flip_regions = FALSE) {
             design = private$fetch_design(design)
-            private$check_produce_matrices_params(bin_count = bin_count,
+            private$check_produce_table_params(bin_count = bin_count,
                                                   bin_size = bin_size,
                                                   design = design,
                                                   noise_removal = noise_removal,
@@ -410,64 +410,14 @@ metagene <- R6Class("metagene",
         produce_matrices = function(design = NA, bin_count = NA, bin_size = NA,
                                     noise_removal = NA, normalization = NA,
                                     flip_regions = FALSE) {
-            design = private$fetch_design(design)
-            private$check_produce_matrices_params(bin_count = bin_count,
-                                                  bin_size = bin_size,
-                                                  design = design,
-                                                  noise_removal = noise_removal,
-                                                  normalization = normalization,
-                                                  flip_regions = flip_regions)
-            bin_count <- private$get_param_value(bin_count, "bin_count")
-            bin_size <- private$get_param_value(bin_size, "bin_size")
-            noise_removal <- private$get_param_value(noise_removal,
-                                                     "noise_removal")
-            normalization <- private$get_param_value(normalization,
-                                                     "normalization")
-            if (is.null(bin_count) & is.null(bin_size)) {
-                bin_count = 100
-            }
-            if (private$matrices_need_update(design = design,
-                                             bin_count = bin_count,
-                                             bin_size = bin_size,
-                                             noise_removal = noise_removal,
-                                             normalization = normalization)) {
-                if (!is.null(bin_size)) {
-                    width <- width(private$regions[[1]][1])
-                    bin_count <- floor(width / bin_size)
-                }
-                coverages <- private$coverages
-                if (!is.null(noise_removal)) {
-                  coverages <- private$remove_controls(coverages, design)
-                } else {
-                  coverages <- private$merge_chip(coverages, design)
-                }
-                if (!is.null(normalization)) {
-                  coverages <- private$normalize_coverages(coverages, design)
-                }
-                matrices <- list()
-                for (region in names(self$get_regions())) {
-                    matrices[[region]] <- list()
-                    for (design_name in colnames(design)[-1]) {
-                        matrices[[region]][[design_name]] <- list()
 
-                        matrices[[region]][[design_name]][["input"]] <-
-                        private$get_table(coverages[[design_name]], region,
-                                           bin_count)
-                    }
-                }
-                private$matrices <- matrices
-                private$params[["bin_size"]] <- bin_size
-                private$params[["bin_count"]] <- bin_count
-                private$params[["noise_removal"]] <- noise_removal
-                private$params[["normalization"]] <- normalization
-                private$design <- design
-            }
-            if (flip_regions == TRUE) {
-                self$flip_regions()
-            } else {
-                self$unflip_regions()
-            }
-            invisible(self)
+            warn <- "Please note that the produce_matrices function is now "
+            warn <- paste0("deprecated and will be remove in BioC 3.7 release")
+            warning(warn)
+            self$produce_table(design = design, bin_count = bin_count,
+                               bin_size = bin_size, noise_removal = noise_removal,
+                               normalization = normalization,
+                               flip_regions = flip_regions)
         },
         produce_data_frame = function(range = c(-1, 1), stat = "bootstrap",
                                       ...) {
@@ -673,7 +623,7 @@ metagene <- R6Class("metagene",
                 }
             }
         },
-        check_produce_matrices_params = function(bin_count, bin_size, design,
+        check_produce_table_params = function(bin_count, bin_size, design,
                                                  noise_removal, normalization,
                                                  flip_regions) {
             # At least one file must be used in the design
