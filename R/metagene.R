@@ -340,6 +340,73 @@ metagene <- R6Class("metagene",
         add_design = function(design, check_bam_files = FALSE) {
             private$design = private$fetch_design(design, check_bam_files)
         },
+        produce_table = function(design = NA, bin_count = NA, bin_size = NA,
+                                    noise_removal = NA, normalization = NA,
+                                    flip_regions = FALSE) {
+            design = private$fetch_design(design)
+            private$check_produce_matrices_params(bin_count = bin_count,
+                                                  bin_size = bin_size,
+                                                  design = design,
+                                                  noise_removal = noise_removal,
+                                                  normalization = normalization,
+                                                  flip_regions = flip_regions)
+            bin_count <- private$get_param_value(bin_count, "bin_count")
+            bin_size <- private$get_param_value(bin_size, "bin_size")
+            noise_removal <- private$get_param_value(noise_removal,
+                                                     "noise_removal")
+            normalization <- private$get_param_value(normalization,
+                                                     "normalization")
+            if (is.null(bin_count) & is.null(bin_size)) {
+                bin_count = 100
+            }
+            if (private$matrices_need_update(design = design,
+                                             bin_count = bin_count,
+                                             bin_size = bin_size,
+                                             noise_removal = noise_removal,
+                                             normalization = normalization)) {
+                if (!is.null(bin_size)) {
+                    width <- width(private$regions[[1]][1])
+                    bin_count <- floor(width / bin_size)
+                }
+                coverages <- private$coverages
+                if (!is.null(noise_removal)) {
+                  coverages <- private$remove_controls(coverages, design)
+                } else {
+                  coverages <- private$merge_chip(coverages, design)
+                }
+                if (!is.null(normalization)) {
+                  coverages <- private$normalize_coverages(coverages, design)
+                }
+
+                region_length <- vapply(self$get_regions(), length, numeric(1))
+                col_regions <- names(self$get_regions()) %>%
+                    map(~ rep(.x, length(coverages) * bin_count * region_length[.x])) %>%
+                    unlist()
+                col_designs <- rep(names(coverages), each = bin_count * sum(region_length))
+                col_bins <- rep(1:bin_count,
+                                length(coverages) * sum(region_length))
+                pairs <- expand.grid(colnames(design)[-1], names(self$get_regions()), stringsAsFactors = FALSE)
+                col_values <- map2(pairs$Var1, pairs$Var2,
+                                   ~ private$get_table(coverages[[.x]], .y, bin_count)) %>%
+                                  unlist
+
+                private$data_table <- data.table(region = col_regions,
+                                                 design = col_designs,
+                                                 bin = col_bins,
+                                                 value = col_values)
+                private$params[["bin_size"]] <- bin_size
+                private$params[["bin_count"]] <- bin_count
+                private$params[["noise_removal"]] <- noise_removal
+                private$params[["normalization"]] <- normalization
+                private$design <- design
+            }
+            if (flip_regions == TRUE) {
+                self$flip_regions()
+            } else {
+                self$unflip_regions()
+            }
+            invisible(self)
+        },
         produce_matrices = function(design = NA, bin_count = NA, bin_size = NA,
                                     noise_removal = NA, normalization = NA,
                                     flip_regions = FALSE) {
@@ -384,7 +451,7 @@ metagene <- R6Class("metagene",
                         matrices[[region]][[design_name]] <- list()
 
                         matrices[[region]][[design_name]][["input"]] <-
-                        private$get_matrix(coverages[[design_name]], region,
+                        private$get_table(coverages[[design_name]], region,
                                            bin_count)
                     }
                 }
@@ -408,8 +475,8 @@ metagene <- R6Class("metagene",
             stopifnot(length(stat) == 1)
             stopifnot(stat %in% c("bootstrap", "basic"))
             # 1. Get the correctly formatted matrices
-            if (length(private$matrices) == 0) {
-                self$produce_matrices()
+            if (nrow(private$data_table) == 0) {
+                self$produce_tables()
             }
 
             # 2. Produce the data.frame
@@ -533,7 +600,7 @@ metagene <- R6Class("metagene",
         private = list(
         params = list(),
         regions = GRangesList(),
-        matrices = list(),
+        data_table = data.table(),
         design = data.frame(),
         coverages = list(),
         df = data.frame(),
@@ -773,19 +840,19 @@ metagene <- R6Class("metagene",
                 cat(paste0(to_print, "\n"))
             }
         },
-        get_matrix = function(coverages, region, bcount) {
+        get_table = function(coverages, region, bcount) {
             gr <- private$regions[[region]]
             grl <- split(gr, GenomeInfoDb::seqnames(gr))
             i <- vapply(grl, length, numeric(1)) > 0
-            m <- do.call("rbind", lapply(grl[i], private$get_view_means,
-                                         bcount = bcount, cov = coverages))
+            do.call("c", lapply(grl[i], private$get_view_means,
+                                bcount = bcount, cov = coverages))
         },
         get_view_means = function(gr, bcount, cov) {
             chr <- unique(as.character(GenomeInfoDb::seqnames(gr)))
             gr <- intoNbins(gr, bcount)
             stopifnot(length(chr) == 1)
             views <- Views(cov[[chr]], start(gr), end(gr))
-            matrix(viewMeans(views), ncol = bcount, byrow = TRUE)
+            viewMeans(views)
         },
         prepare_regions = function(regions) {
             if (class(regions) == "character") {
@@ -823,6 +890,7 @@ metagene <- R6Class("metagene",
         }
             # TODO: Check if there is a id column in the mcols of every ranges.
             #       If not, add one by merging seqnames, start and end.
+
             GRangesList(lapply(regions, function(x) {
                 # Add padding
                 start(x) <- start(x) - private$params$padding_size

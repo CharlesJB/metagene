@@ -43,7 +43,10 @@ Imports:
     muStat,
     Rsamtools,
     DBChIP,
-    matrixStats
+    matrixStats,
+    purrr,
+    data.table,
+    magrittr
 Suggests:
     RUnit,
     BiocGenerics,
