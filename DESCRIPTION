@@ -46,10 +46,12 @@ Imports:
     matrixStats,
     purrr,
     data.table,
-    magrittr
+    magrittr,
+    methods
 Suggests:
     RUnit,
     BiocGenerics,
     knitr,
     BiocStyle,
     rmarkdown
+RoxygenNote: 6.0.1

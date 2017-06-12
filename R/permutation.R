@@ -21,6 +21,7 @@
 #'         permutation.
 #'
 #' @examples
+#' \dontrun{
 #' # Get some matrices
 #' mg <- get_demo_metagene()
 #' mg$produce_matrices()
@@ -33,6 +34,7 @@
 #' # A sample_count >= 1000 should be used in a real analysis
 #' permutation_results <- permutation_test(m1, m2, sample_size = sample_size,
 #'                                         sample_count = 10, FUN = FUN)
+#' }
 #'
 #' @export
 permutation_test <- function(matrix1, matrix2, sample_size, sample_count, FUN,

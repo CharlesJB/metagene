@@ -194,6 +194,7 @@
 #' }
 #'
 #' @importFrom R6 R6Class
+#' @importFrom data.table data.table
 #' @export
 #' @format A metagene experiment manager
 
