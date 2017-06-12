@@ -363,6 +363,7 @@ metagene <- R6Class("metagene",
             if (is.null(bin_count) & is.null(bin_size)) {
                 bin_count = 100
             }
+            # Replace with table_need_update
             if (private$matrices_need_update(design = design,
                                              bin_count = bin_count,
                                              bin_size = bin_size,
@@ -431,7 +432,7 @@ metagene <- R6Class("metagene",
             stopifnot(stat %in% c("bootstrap", "basic"))
             # 1. Get the correctly formatted matrices
             if (nrow(private$data_table) == 0) {
-                self$produce_tables()
+                self$produce_table()
             }
 
             # 2. Produce the data.frame
@@ -439,9 +440,9 @@ metagene <- R6Class("metagene",
                 sample_size = NULL
                 if (stat == "bootstrap") {
                     stat <- Bootstrap_Stat
-                    sample_size <- sapply(private$matrices, sapply, sapply,
-                                          nrow)
-                    sample_size <- as.integer(min(unlist(sample_size)))
+                    tbl <- self$get_table()
+                    tbl[bin == 1,.(region, design)][,.N, by = .(region, design)][, .(min(N))]
+                    sample_size <- as.integer(tbl)
                 } else {
                     stat <- Basic_Stat
                 }
@@ -493,7 +494,7 @@ metagene <- R6Class("metagene",
 
             # 1. Get the correctly formatted matrices
             if (length(private$matrices) == 0) {
-                self$produce_matrices()
+                self$produce_table()
             }
 
             # 2. Produce the data frame
