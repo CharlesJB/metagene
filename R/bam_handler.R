@@ -289,6 +289,9 @@ Bam_Handler <- R6Class("Bam_Handler",
             # The seqlevels of regions must all be present in bam_file
             regions <- private$check_bam_levels(bam_file, regions,
                             force = force_seqlevels)
+            to_remove <- seqlevels(regions)[!(seqlevels(regions) %in%
+                                          unique(seqnames(regions)))]
+            regions <- dropSeqlevels(regions, to_remove)
 
             # The regions must not be empty
             if (length(regions) == 0) {
