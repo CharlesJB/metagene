@@ -254,6 +254,9 @@ metagene <- R6Class("metagene",
                 private$regions[region_names]
             }
         },
+	get_table = function() {
+            return(private$data_table)
+        },
         get_matrices = function(region_names = NULL, exp_names = NULL) {
             if (length(private$matrices) == 0) {
                 NULL
@@ -389,7 +392,7 @@ metagene <- R6Class("metagene",
                                 length(coverages) * sum(region_length))
                 pairs <- expand.grid(colnames(design)[-1], names(self$get_regions()), stringsAsFactors = FALSE)
                 col_values <- map2(pairs$Var1, pairs$Var2,
-                                   ~ private$get_table(coverages[[.x]], .y, bin_count)) %>%
+                                   ~ private$get_subtable(coverages[[.x]], .y, bin_count)) %>%
                                   unlist
 
                 private$data_table <- data.table(region = col_regions,
@@ -792,7 +795,7 @@ metagene <- R6Class("metagene",
                 cat(paste0(to_print, "\n"))
             }
         },
-        get_table = function(coverages, region, bcount) {
+        get_subtable = function(coverages, region, bcount) {
             gr <- private$regions[[region]]
             grl <- split(gr, GenomeInfoDb::seqnames(gr))
             i <- vapply(grl, length, numeric(1)) > 0
