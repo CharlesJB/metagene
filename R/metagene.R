@@ -383,7 +383,8 @@ metagene <- R6Class("metagene",
                 col_regions <- names(self$get_regions()) %>%
                     map(~ rep(.x, length(coverages) * bin_count * region_length[.x])) %>%
                     unlist()
-                col_designs <- rep(names(coverages), each = bin_count * sum(region_length))
+		col_designs <- map(region_length, ~ rep(names(coverages), each = bin_count * .x)) %>%
+                                   unlist
                 col_bins <- rep(1:bin_count,
                                 length(coverages) * sum(region_length))
                 pairs <- expand.grid(colnames(design)[-1], names(self$get_regions()), stringsAsFactors = FALSE)
