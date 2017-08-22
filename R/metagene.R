@@ -326,9 +326,9 @@ metagene <- R6Class("metagene",
         add_design = function(design, check_bam_files = FALSE) {
             private$design = private$fetch_design(design, check_bam_files)
         },
-        produce_table = function(design = NA, bin_count = NA, bin_size = NA,
-                                    noise_removal = NA, normalization = NA,
-                                    flip_regions = FALSE, bin_size = NULL) {
+        produce_table = function(design = NA, bin_count = NA, bin_size = NULL,
+                                 noise_removal = NA, normalization = NA,
+                                 flip_regions = FALSE) {
             if (!is.null(bin_size)) {
                 warning("bin_size is now deprecated. Please use bin_count.")
                 bin_size <- NULL
