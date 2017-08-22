@@ -54,7 +54,7 @@
 #'                    metagene will use generic label. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'     \item{}{\code{mg$produce_matrices(design, bin_count, noise_removal,
+#'     \item{}{\code{mg$produce_table(design, bin_count, noise_removal,
 #'                   normalization, flip_regions, bin_size = NULL}}
 #'     \item{design}{A \code{data.frame} that describe to experiment to plot.
 #'                   see \code{plot} function for more details. \code{NA} can be
@@ -67,14 +67,14 @@
 #'                          values are \code{NA}, \code{NULL} or "NCIS". By
 #'                          default, value is \code{NULL}. Use \code{NA} keep
 #'                          previous \code{noise_removal} value (i.e. if
-#'                          \code{produce_matrices} was called before). See
+#'                          \code{produce_table} was called before). See
 #'                          Liand and Keles 2012 for the NCIS algorithm.}
 #'     \item{normalization}{The algorithm to use to normalize samples. Possible
 #;                          values are \code{NA}, \code{NULL} or "RPM". By
 #'                          default, value is \code{NULL} and no normalization
 #'                          will be performed. Use \code{NA} keep
 #'                          previous \code{normalization} value (i.e. if
-#'                          \code{produce_matrices} was called before).}
+#'                          \code{produce_table} was called before).}
 #'     \item{flip_regions}{Should regions on negative strand be flip_regions?
 #'                         Default: \code{FALSE}.}
 #'     \item{bin_size}{Deprecated.}
@@ -370,18 +370,6 @@ metagene <- R6Class("metagene",
             }
             invisible(self)
         },
-        produce_matrices = function(design = NA, bin_count = NA, bin_size = NA,
-                                    noise_removal = NA, normalization = NA,
-                                    flip_regions = FALSE) {
-
-            warn <- "Please note that the produce_matrices function is now "
-            warn <- paste0("deprecated and will be remove in BioC 3.7 release")
-            warning(warn)
-            self$produce_table(design = design, bin_count = bin_count,
-                               bin_size = bin_size, noise_removal = noise_removal,
-                               normalization = normalization,
-                               flip_regions = flip_regions)
-        },
         produce_data_frame = function(alpha = 0.05, sample_count = 1000) {
             stopifnot(is.numeric(alpha))
             stopifnot(is.numeric(sample_count))
@@ -421,8 +409,8 @@ metagene <- R6Class("metagene",
             invisible(self)
         },
         plot = function(region_names = NULL, exp_names = NULL, title = NULL, x_label = NULL) {
-            # 1. Get the correctly formatted matrices
-            if (length(private$matrices) == 0) {
+            # 1. Get the correctly formatted table
+            if (length(private$table) == 0) {
                 self$produce_table()
             }
 
