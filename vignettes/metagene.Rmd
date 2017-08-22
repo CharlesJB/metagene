@@ -412,14 +412,9 @@ function provided with the `metagene` package. Please note that the permutation
 tests functionality is still in development and is expected to change in future
 releases.
 
-The first step is to decide which profiles we want to compare and extract the
-corresponding matrices:
+The first step is to decide which profiles we want to compare :
 
-```{r extractMatrices}
-matrices <- mg$get_matrices()
-m1 <- matrices[["list1"]][["align1"]][["input"]]
-m2 <- matrices[["list1"]][["align2"]][["input"]]
-```
+```to complete
 
 Then we defined to function to use to compare the two profiles. For this, a
 companion package of `metagene` named `r Biocpkg("similaRpeak")` provides

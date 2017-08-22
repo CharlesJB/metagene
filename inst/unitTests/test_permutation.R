@@ -15,9 +15,9 @@ if(FALSE) {
 ###################################################
 
 #mg <- get_demo_metagene()
-#mg$produce_matrices()
-#m1 <- mg$get_matrices()$list1$align1_rep1$input
-#m2 <- mg$get_matrices()$list1$align2_rep1$input
+#mg$produce_table()
+#m1 <- mg$get_table()$list1$align1_rep1$input
+#m2 <- mg$get_table()$list1$align2_rep1$input
 #
 ### Valid use
 #test.permutation_test_valid_use <- function() {
