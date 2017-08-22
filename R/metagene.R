@@ -239,31 +239,7 @@ metagene <- R6Class("metagene",
         get_table = function() {
             return(private$data_table)
         },
-        get_matrices = function(region_names = NULL, exp_names = NULL) {
-            if (length(private$matrices) == 0) {
-                NULL
-            } else if (is.null(region_names) & is.null(exp_names)) {
-                private$matrices
-            } else {
-                if (!is.null(region_names)) {
-                    stopifnot(is.character(region_names))
-                    region_names <-
-                        tools::file_path_sans_ext(basename(region_names))
-                    stopifnot(all(region_names %in% names(private$matrices)))
-                } else {
-                    region_names <- names(private$regions)
-                }
-                if (!is.null(exp_names)) {
-                    stopifnot(is.character(exp_names))
-                    exp_names <- private$get_bam_names(exp_names)
-                    stopifnot(all(exp_names %in% names(private$matrices[[1]])))
-                } else {
-                    exp_names <- colnames(private$design)[-1]
-                }
-                matrices <- private$matrices[region_names]
-                lapply(matrices, `[`, exp_names)
-            }
-        },
+        
         get_data_frame = function(region_names = NULL, exp_names = NULL) {
             if (nrow(private$df) == 0) {
                 NULL

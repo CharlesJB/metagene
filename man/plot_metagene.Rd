@@ -25,4 +25,3 @@ mg$produce_data_frame()
 df <- mg$get_data_frame()
 p <- plot_metagene(df)
 }
-
