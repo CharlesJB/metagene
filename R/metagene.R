@@ -84,27 +84,12 @@
 #'                         Default: \code{FALSE}.}
 #' }
 #' \describe{
-#'     \item{}{\code{mg$produce_data_frame(range = c(-1, 1), stat = "bootstrap",
-#'                   ...)}}
-#'     \item{range}{The values for the x axis. Must be a numeric vector of size
-#'                  2. Default: \code{c(-1, 1)}.}
-#'     \item{stat}{The stat to use to calculate the values of the ribbon in the
-#'                 metagene plot. Must be "bootstrap" or "basic". "bootstrap"
-#'                 will estimate the range of average ("mean" or "median") that
-#'                 could have produce the observed distribution of values for
-#'                 each bin. With the "basic" approach, the ribbon will
-#'                 represent the range of the values between
-#'                 \code{1 - alpha / 2} and \code{alpha / 2} (see \code{...}
-#'                 param.}
-#'     \item{...}{Extra params for the calculation of the ribbon values. See
-#'                following param descriptions.}
+#'     \item{}{\code{mg$produce_data_frame(alpha = 0.05, sample_count = 1000)}}
 #'     \item{alpha}{The range of the estimation to be shown with the ribbon.
 #'                  \code{1 - alpha / 2} and \code{alpha / 2} will be used.
 #'                  Default: 0.05.}
-#'     \item{average}{The function to use to summarize the values of each
-#'                    bins. "mean" or "median". Default: "mean".}
-#'     \item{sample_count}{With "bootstrap" only. The number of draw to do
-#'                         in the bootstrap calculation. Default: 1000.}
+#'     \item{sample_count}{The number of draw to do in the bootstrap
+#'                         calculation. Default: 1000.}
 #' }
 #' \describe{
 #'     \item{}{mg$get_params()}
@@ -254,7 +239,7 @@ metagene <- R6Class("metagene",
                 private$regions[region_names]
             }
         },
-	get_table = function() {
+        get_table = function() {
             return(private$data_table)
         },
         get_matrices = function(region_names = NULL, exp_names = NULL) {
@@ -387,7 +372,7 @@ metagene <- R6Class("metagene",
                 col_regions <- names(self$get_regions()) %>%
                     map(~ rep(.x, length(coverages) * bin_count * region_length[.x])) %>%
                     unlist()
-		col_designs <- map(region_length, ~ rep(names(coverages), each = bin_count * .x)) %>%
+                col_designs <- map(region_length, ~ rep(names(coverages), each = bin_count * .x)) %>%
                                    unlist
                 col_bins <- rep(1:bin_count,
                                 length(coverages) * sum(region_length))
@@ -425,65 +410,41 @@ metagene <- R6Class("metagene",
                                normalization = normalization,
                                flip_regions = flip_regions)
         },
-        produce_data_frame = function(range = c(-1, 1), stat = "bootstrap",
-                                      ...) {
-            stopifnot(is.character(stat))
-            stopifnot(length(stat) == 1)
-            stopifnot(stat %in% c("bootstrap", "basic"))
+        produce_data_frame = function(alpha = 0.05, sample_count = 1000) {
+            stopifnot(is.numeric(alpha))
+            stopifnot(is.numeric(sample_count))
+            stopifnot(alpha >= 0 & alpha <= 1)
+            stopifnot(sample_count > 0)
+            sample_count <- as.integer(sample_count)
+
             # 1. Get the correctly formatted matrices
-            if (nrow(private$data_table) == 0) {
+            if (nrow(self$get_table()) == 0) {
                 self$produce_table()
             }
 
             # 2. Produce the data.frame
-            if (private$data_frame_need_update(stat, ...) == TRUE) {
-                sample_size = NULL
-                if (stat == "bootstrap") {
-                    stat <- Bootstrap_Stat
-                    tbl <- self$get_table()
-                    tbl[bin == 1,.(region, design)][,.N, by = .(region, design)][, .(min(N))]
-                    sample_size <- as.integer(tbl)
-                } else {
-                    stat <- Basic_Stat
+            if (private$data_frame_need_update(alpha, sample_count) == TRUE) {
+                sample_size <- self$get_table()[bin == 1,][
+                                              ,.N, by = .(region, design)][
+                                              , .(min(N))]
+                sample_size <- as.integer(sample_size)
+
+                out_cols <- c("value", "qinf", "qsup")
+                bootstrap <- function(df) {
+                    sampling <- matrix(df$value[sample(seq_along(df$value),
+                                            sample_size * sample_count,
+                                            replace = TRUE)],
+                                   ncol = sample_size)
+                    values <- colMeans(sampling)
+                    res <- quantile(values, c(alpha/2, 1-(alpha/2)))
+                    res <- c(mean(df$value), res)
+                    names(res) <- out_cols
+                    as.list(res)
                 }
-                df <- data.frame(group = character(), position = numeric(),
-                                 value = numeric(), qinf = numeric(),
-                                 qsup = numeric())
 
-				m <- private$matrices
-                regions <- names(m)
-				stopifnot(length(unique(lapply(m, names))) == 1)
-				exp_names <- unique(lapply(m, names))[[1]]
-
-                combinations <- expand.grid(regions, exp_names)
-                combinations <- split(combinations, 1:nrow(combinations))
-
-                get_statistics <- function(combination) {
-                    region <- as.character(combination[1,1])
-                    exp_name <- as.character(combination[1,2])
-                    group_name <- paste(exp_name, region, sep = "_")
-                    message(group_name)
-                    data <- m[[region]][[exp_name]][["input"]]
-                    ctrl <- m[[region]][[exp_name]][["ctrl"]]
-                    current_stat <- ""
-                    if (! is.null(sample_size)) {
-                        current_stat <- stat$new(data = data, ctrl = ctrl,
-                                                 sample_size = sample_size,
-                                                 range = range, ...)
-                    } else {
-                        current_stat <- stat$new(data = data, ctrl = ctrl,
-                                                 range = range, ...)
-                    }
-                    current_df <- current_stat$get_statistics()
-                    current_df <- cbind(rep(group_name, nrow(current_df)),
-                                        current_df)
-                    colnames(current_df)[1] <- "group"
-                    current_df
-                }
-                df <- private$parallel_job$launch_job(data = combinations,
-                                                      FUN = get_statistics)
-                df <- do.call("rbind", df)
-                private$df <- df
+                df <- data.table::copy(self$get_table())
+                df <- df[, c(out_cols) := bootstrap(.SD), by = .(region, design, bin)]
+                private$df <- unique(df)
             }
             invisible(self)
         },
@@ -730,50 +691,30 @@ metagene <- R6Class("metagene",
             }
             return(FALSE)
         },
-        data_frame_need_update = function(stat = NA, alpha = NA, average = NA,
-                                          sample_count = NA) {
+        data_frame_need_update = function(alpha = NA, sample_count = NA) {
             need_update = FALSE
             # Fetch saved values
-            stat = private$get_param_value(stat, "stat")
             alpha = private$get_param_value(alpha, "alpha")
-            average = private$get_param_value(average, "average")
             sample_count = private$get_param_value(sample_count, "sample_count")
 
             # Add default, if needed
-            if (is.null(stat)) {
-                stat <- "bootstrap"
-            }
             if (is.null(alpha)) {
-                alpha <- 0.05
-            }
-            if (is.null(average)) {
-                average <- "mean"
+                alpha <- 0.95
             }
             if (is.null(sample_count)) {
-                sample_count <- 1000
+                sample_count <- "basic"
             }
             if (nrow(private$df) == 0) {
                 need_update <- TRUE
-                private$params[["sample_count"]] <- sample_count
-                private$params[["average"]] <- average
                 private$params[["alpha"]] <- alpha
-                private$params[["stat"]] <- stat
+                private$params[["sample_count"]] <- sample_count
             } else {
                 # Check if data frame need update
-                if (!identical(private$params[["stat"]], stat)) {
-                    need_update <- TRUE
-                    private$params[["stat"]] <- stat
-                }
                 if (!identical(private$params[["alpha"]], alpha)) {
                     need_update <- TRUE
                     private$params[["alpha"]] <- alpha
                 }
-                if (!identical(private$params[["average"]], average)) {
-                    need_update <- TRUE
-                    private$params[["average"]] <- average
-                }
-                if (!identical(private$params[["sample_count"]],
-                               sample_count)) {
+                if (!identical(private$params[["sample_count"]], sample_count)) {
                     need_update <- TRUE
                     private$params[["sample_count"]] <- sample_count
                 }

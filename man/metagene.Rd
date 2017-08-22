@@ -95,27 +95,12 @@ metagene plots on the data (or a subset of the data).
                         Default: \code{FALSE}.}
 }
 \describe{
-    \item{}{\code{mg$produce_data_frame(range = c(-1, 1), stat = "bootstrap",
-                  ...)}}
-    \item{range}{The values for the x axis. Must be a numeric vector of size
-                 2. Default: \code{c(-1, 1)}.}
-    \item{stat}{The stat to use to calculate the values of the ribbon in the
-                metagene plot. Must be "bootstrap" or "basic". "bootstrap"
-                will estimate the range of average ("mean" or "median") that
-                could have produce the observed distribution of values for
-                each bin. With the "basic" approach, the ribbon will
-                represent the range of the values between
-                \code{1 - alpha / 2} and \code{alpha / 2} (see \code{...}
-                param.}
-    \item{...}{Extra params for the calculation of the ribbon values. See
-               following param descriptions.}
+    \item{}{\code{mg$produce_data_frame(alpha = 0.05, sample_count = 1000)}}
     \item{alpha}{The range of the estimation to be shown with the ribbon.
                  \code{1 - alpha / 2} and \code{alpha / 2} will be used.
                  Default: 0.05.}
-    \item{average}{The function to use to summarize the values of each
-                   bins. "mean" or "median". Default: "mean".}
-    \item{sample_count}{With "bootstrap" only. The number of draw to do
-                        in the bootstrap calculation. Default: 1000.}
+    \item{sample_count}{The number of draw to do in the bootstrap
+                        calculation. Default: 1000.}
 }
 \describe{
     \item{}{mg$get_params()}
