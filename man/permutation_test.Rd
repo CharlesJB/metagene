@@ -49,7 +49,6 @@ FUN = function(a, b) { mean(a) - mean(b) } # Dummy function for demo purpose
 # A sample_count >= 1000 should be used in a real analysis
 permutation_results <- permutation_test(m1, m2, sample_size = sample_size,
                                         sample_count = 10, FUN = FUN)
-
 }
 
 }
