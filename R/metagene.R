@@ -325,7 +325,7 @@ metagene <- R6Class("metagene",
                 bin_count = 100
             }
             # Replace with table_need_update
-            if (private$matrices_need_update(design = design,
+            if (private$table_need_update(design = design,
                                              bin_count = bin_count,
                                              bin_size = bin_size,
                                              noise_removal = noise_removal,
@@ -592,7 +592,7 @@ metagene <- R6Class("metagene",
                 stop(msg)
             }
         },
-        matrices_need_update = function(design, bin_count, bin_size,
+        table_need_update = function(design, bin_count, bin_size,
                                         noise_removal, normalization) {
             if (!identical(private$design, design)) {
                 return(TRUE)

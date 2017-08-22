@@ -383,14 +383,14 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 
 
 ##################################################
-# Test the metagene$get_matrices() function
+# Test the metagene$get_table() function
 ##################################################
 # TODO: replace with get_tables()
 ### Valid usage default
-#test.metagene_get_matrices_valid_usage_default <- function() {
+#test.metagene_get_table_valid_usage_default <- function() {
 #    mg <- demo_mg$clone()
-#    mg$produce_matrices()
-#    matrices <- mg$get_matrices()
+#    mg$produce_table()
+#    matrices <- mg$get_table()
 #    exp_regions <- tools::file_path_sans_ext(basename(get_demo_regions()))
 #    checkIdentical(names(matrices), exp_regions)
 #    exp_bam <- tools::file_path_sans_ext(basename(get_demo_bam_files()))
@@ -401,10 +401,10 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 #}
 #
 ### Valid usage subset
-#test.metagene_get_matrices_valid_usage_subset <- function() {
+#test.metagene_get_table_valid_usage_subset <- function() {
 #    mg <- demo_mg$clone()
-#    mg$produce_matrices()
-#    matrices <- mg$get_matrices(get_demo_regions()[1],
+#    mg$produce_table()
+#    matrices <- mg$get_table(get_demo_regions()[1],
 #                                get_demo_bam_files()[1:2])
 #    exp_regions <- tools::file_path_sans_ext(basename(get_demo_regions()[1]))
 #    checkIdentical(names(matrices), exp_regions)
@@ -416,91 +416,91 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 #}
 #
 ### Valid usage no matrices
-#test.metagene_get_matrices_valid_usage_no_matrices <- function() {
+#test.metagene_get_table_valid_usage_no_matrices <- function() {
 #    mg <- demo_mg$clone()
-#    matrices <- mg$get_matrices()
+#    matrices <- mg$get_table()
 #    checkTrue(is.null(matrices))
-#    matrices_subset <- mg$get_matrices(get_demo_regions()[1],
+#    matrices_subset <- mg$get_table(get_demo_regions()[1],
 #                                       get_demo_bam_files()[1:2])
 #    checkTrue(is.null(matrices_subset))
 #}
 #
 ### Valid usage exp_name no design
-#test.metagene_get_matrices_valid_usage_exp_names_no_design <- function() {
-#    mg <- demo_mg$clone()$produce_matrices()
+#test.metagene_get_table_valid_usage_exp_names_no_design <- function() {
+#    mg <- demo_mg$clone()$produce_table()
 #    exp_name <- tools::file_path_sans_ext(basename(get_demo_bam_files()[1]))
-#    matrices <- mg$get_matrices(exp_names = exp_name)
+#    matrices <- mg$get_table(exp_names = exp_name)
 #    checkIdentical(names(matrices[[1]]), exp_name)
 #    checkIdentical(names(matrices[[2]]), exp_name)
 #}
 #
 ### Valid usage exp_name design
-#test.metagene_get_matrices_valid_usage_exp_names_design <- function() {
-#    mg <- demo_mg$clone()$produce_matrices(design = get_demo_design())
+#test.metagene_get_table_valid_usage_exp_names_design <- function() {
+#    mg <- demo_mg$clone()$produce_table(design = get_demo_design())
 #    exp_name <- colnames(get_demo_design()[2])
-#    matrices <- mg$get_matrices(exp_names = exp_name)
+#    matrices <- mg$get_table(exp_names = exp_name)
 #    checkIdentical(names(matrices[[1]]), exp_name)
 #    checkIdentical(names(matrices[[2]]), exp_name)
 #}
 #
 ### Invalid usage exp_name bam_file design
-#test.metagene_get_matrices_invalid_usage_exp_names_bam_file_design <-
+#test.metagene_get_table_invalid_usage_exp_names_bam_file_design <-
 #    function() {
-#    mg <- demo_mg$clone()$produce_matrices(design = get_demo_design())
+#    mg <- demo_mg$clone()$produce_table(design = get_demo_design())
 #    exp_name <- tools::file_path_sans_ext(basename(get_demo_bam_files()[1]))
-#    obs <- tryCatch(mg$get_matrices(exp_names = exp_name),
+#    obs <- tryCatch(mg$get_table(exp_names = exp_name),
 #                    error = conditionMessage)
 #    exp <- "all(exp_names %in% names(private$matrices[[1]])) is not TRUE"
 #    checkIdentical(obs, exp)
 #}
 #
 ### Invalid usage region_names class
-#test.metagene_get_matrices_invalid_usage_region_names_class <- function() {
-#    mg <- demo_mg$clone()$produce_matrices()
-#    obs <- tryCatch(mg$get_matrices(region_names = 1),
+#test.metagene_get_table_invalid_usage_region_names_class <- function() {
+#    mg <- demo_mg$clone()$produce_table()
+#    obs <- tryCatch(mg$get_table(region_names = 1),
 #                    error = conditionMessage)
 #    exp <- "is.character(region_names) is not TRUE"
 #    checkIdentical(obs, exp)
 #}
 #
 ### Invalid usage region_names empty
-#test.metagene_get_matrices_invalid_usage_region_names_empty <- function() {
-#    mg <- demo_mg$clone()$produce_matrices()
-#    obs <- tryCatch(mg$get_matrices(region_names = ""),
+#test.metagene_get_table_invalid_usage_region_names_empty <- function() {
+#    mg <- demo_mg$clone()$produce_table()
+#    obs <- tryCatch(mg$get_table(region_names = ""),
 #                    error = conditionMessage)
 #    exp <- "all(region_names %in% names(private$matrices)) is not TRUE"
 #    checkIdentical(obs, exp)
 #}
 #
 ### Invalid usage region_names absent
-#test.metagene_get_matrices_invalid_usage_region_names_absent <- function() {
-#    mg <- demo_mg$clone()$produce_matrices()
-#    obs <- tryCatch(mg$get_matrices(region_names = "not_valid_name"),
+#test.metagene_get_table_invalid_usage_region_names_absent <- function() {
+#    mg <- demo_mg$clone()$produce_table()
+#    obs <- tryCatch(mg$get_table(region_names = "not_valid_name"),
 #                    error = conditionMessage)
 #    exp <- "all(region_names %in% names(private$matrices)) is not TRUE"
 #    checkIdentical(obs, exp)
 #}
 #
 ### Invalid usage exp_names class
-#test.metagene_get_matrices_invalid_usage_exp_names_class <- function() {
-#    mg <- demo_mg$clone()$produce_matrices()
-#    obs <- tryCatch(mg$get_matrices(exp_names = 1), error = conditionMessage)
+#test.metagene_get_table_invalid_usage_exp_names_class <- function() {
+#    mg <- demo_mg$clone()$produce_table()
+#    obs <- tryCatch(mg$get_table(exp_names = 1), error = conditionMessage)
 #    exp <- "is.character(exp_names) is not TRUE"
 #    checkIdentical(obs, exp)
 #}
 #
 ### Invalid usage exp_names empty
-#test.metagene_get_matrices_invalid_usage_exp_names_empty <- function() {
-#    mg <- demo_mg$clone()$produce_matrices()
-#    obs <- tryCatch(mg$get_matrices(exp_names = ""), error = conditionMessage)
+#test.metagene_get_table_invalid_usage_exp_names_empty <- function() {
+#    mg <- demo_mg$clone()$produce_table()
+#    obs <- tryCatch(mg$get_table(exp_names = ""), error = conditionMessage)
 #    exp <- "private$check_bam_files(filenames) is not TRUE"
 #    checkIdentical(obs, exp)
 #}
 #
 ### Invalid usage exp_names absent
-#test.metagene_get_matrices_invalid_usage_exp_names_absent <- function() {
-#    mg <- demo_mg$clone()$produce_matrices()
-#    obs <- tryCatch(mg$get_matrices(exp_names = "not_valid_name"),
+#test.metagene_get_table_invalid_usage_exp_names_absent <- function() {
+#    mg <- demo_mg$clone()$produce_table()
+#    obs <- tryCatch(mg$get_table(exp_names = "not_valid_name"),
 #                    error = conditionMessage)
 #    exp <- "private$check_bam_files(filenames) is not TRUE"
 #    checkIdentical(obs, exp)
@@ -513,7 +513,7 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 ### Valid usage default
 #test.metagene_get_data_frame_valid_usage_default <- function() {
 #    mg <- demo_mg$clone()
-#    mg$produce_matrices()$produce_data_frame(sample_count = 10)
+#    mg$produce_table()$produce_data_frame(sample_count = 10)
 #    df <- mg$get_data_frame()
 #    regions <- get_demo_regions()
 #    bam_files <- get_demo_bam_files()
@@ -527,7 +527,7 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 #    regions <- get_demo_regions()[1]
 #    bam_files <- get_demo_bam_files()[1:2]
 #    mg <- demo_mg$clone()
-#    mg$produce_matrices()$produce_data_frame(sample_count = 10)
+#    mg$produce_table()$produce_data_frame(sample_count = 10)
 #    df <- mg$get_data_frame(region_names = regions, exp_names = bam_files)
 #    checkTrue(is.data.frame(df))
 #    checkTrue(ncol(df) ==  5)
@@ -547,7 +547,7 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 ### Invalid usage region_names class
 #test.metagene_get_data_frame_invalid_usage_region_names_class <- function() {
 #    mg <- demo_mg$clone()
-#    mg <- mg$produce_matrices()$produce_data_frame(sample_count = 10)
+#    mg <- mg$produce_table()$produce_data_frame(sample_count = 10)
 #    obs <- tryCatch(mg$get_data_frame(region_names = 1),
 #                    error = conditionMessage)
 #    exp <- "is.character(region_names) is not TRUE"
@@ -557,7 +557,7 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 ### Invalid usage region_names empty
 #test.metagene_get_data_frame_invalid_usage_region_names_empty <- function() {
 #    mg <- demo_mg$clone()
-#    mg <- mg$produce_matrices()$produce_data_frame(sample_count = 10)
+#    mg <- mg$produce_table()$produce_data_frame(sample_count = 10)
 #    obs <- tryCatch(mg$get_data_frame(region_names = ""),
 #                    error = conditionMessage)
 #    exp <- "all(region_names %in% names(private$matrices)) is not TRUE"
@@ -567,7 +567,7 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 ### Invalid usage region_names absent
 #test.metagene_get_data_frame_invalid_usage_region_names_absent <- function() {
 #    mg <- demo_mg$clone()
-#    mg <- mg$produce_matrices()$produce_data_frame(sample_count = 10)
+#    mg <- mg$produce_table()$produce_data_frame(sample_count = 10)
 #    obs <- tryCatch(mg$get_data_frame(region_names = "not_valid_name"),
 #                    error = conditionMessage)
 #    exp <- "all(region_names %in% names(private$matrices)) is not TRUE"
@@ -576,20 +576,20 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 #
 ### Valid usage exp_name no design
 #test.metagene_get_data_frame_valid_usage_exp_names_no_design <- function() {
-#    mg <- demo_mg$clone()$produce_matrices()
+#    mg <- demo_mg$clone()$produce_table()
 #    mg$produce_data_frame(sample_count = 10)
 #    exp_name <- tools::file_path_sans_ext(basename(get_demo_bam_files()[1]))
-#    matrices <- mg$get_matrices(exp_names = exp_name)
+#    matrices <- mg$get_table(exp_names = exp_name)
 #    checkIdentical(names(matrices[[1]]), exp_name)
 #    checkIdentical(names(matrices[[2]]), exp_name)
 #}
 #
 ### Valid usage exp_name design
 #test.metagene_get_data_frame_valid_usage_exp_names_design <- function() {
-#    mg <- demo_mg$clone()$produce_matrices(design = get_demo_design())
+#    mg <- demo_mg$clone()$produce_table(design = get_demo_design())
 #    mg$produce_data_frame(sample_count = 10)
 #    exp_name <- colnames(get_demo_design()[2])
-#    matrices <- mg$get_matrices(exp_names = exp_name)
+#    matrices <- mg$get_table(exp_names = exp_name)
 #    checkIdentical(names(matrices[[1]]), exp_name)
 #    checkIdentical(names(matrices[[2]]), exp_name)
 #}
@@ -597,10 +597,10 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 ### Invalid usage exp_name bam_file design
 #test.metagene_get_data_frame_invalid_usage_exp_names_bam_file_design <-
 #    function() {
-#    mg <- demo_mg$clone()$produce_matrices(design = get_demo_design())
+#    mg <- demo_mg$clone()$produce_table(design = get_demo_design())
 #    mg$produce_data_frame(sample_count = 10)
 #    exp_name <- tools::file_path_sans_ext(basename(get_demo_bam_files()[1]))
-#    obs <- tryCatch(mg$get_matrices(exp_names = exp_name),
+#    obs <- tryCatch(mg$get_table(exp_names = exp_name),
 #                    error = conditionMessage)
 #    exp <- "all(exp_names %in% names(private$matrices[[1]])) is not TRUE"
 #    checkIdentical(obs, exp)
@@ -609,7 +609,7 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 ### Invalid usage exp_names class
 #test.metagene_get_data_frame_invalid_usage_exp_names_class <- function() {
 #    mg <- demo_mg$clone()
-#    mg <- mg$produce_matrices()$produce_data_frame(sample_count = 10)
+#    mg <- mg$produce_table()$produce_data_frame(sample_count = 10)
 #    obs <- tryCatch(mg$get_data_frame(exp_names = 1),
 #                    error = conditionMessage)
 #    exp <- "is.character(exp_names) is not TRUE"
@@ -619,7 +619,7 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 ### Invalid usage exp_names empty
 #test.metagene_get_data_frame_invalid_usage_exp_names_empty <- function() {
 #    mg <- demo_mg$clone()
-#    mg <- mg$produce_matrices()$produce_data_frame(sample_count = 10)
+#    mg <- mg$produce_table()$produce_data_frame(sample_count = 10)
 #    obs <- tryCatch(mg$get_data_frame(exp_names = ""),
 #                    error = conditionMessage)
 #    exp <- "private$check_bam_files(filenames) is not TRUE"
@@ -629,7 +629,7 @@ test.metagene_get_regions_invalid_usage_region_names_absent <- function() {
 ### Invalid usage exp_names absent
 #test.metagene_get_data_frame_invalid_usage_exp_names_absent <- function() {
 #    mg <- demo_mg$clone()
-#    mg <- mg$produce_matrices()$produce_data_frame(sample_count = 10)
+#    mg <- mg$produce_table()$produce_data_frame(sample_count = 10)
 #    obs <- tryCatch(mg$get_data_frame(exp_names = "not_valid_name"),
 #                    error = conditionMessage)
 #    exp <- "private$check_bam_files(filenames) is not TRUE"
@@ -970,19 +970,19 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 }
 
 ##################################################
-# Test the metagene$produce_matrices() function
+# Test the metagene$produce_table() function
 ##################################################
 # TODO: Replace with tests from produce_table
-#test.metagene_produce_matrices_valid_default <- function() {
+#test.metagene_produce_table_valid_default <- function() {
 #    mg <- demo_mg$clone()
 #    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
 #    checkIdentical("bin_count" %in% mg$get_params(), FALSE)
-#    mg$produce_matrices()
+#    mg$produce_table()
 #    checkIdentical(mg$get_params()[["bin_size"]], NULL)
 #    checkIdentical(mg$get_params()[["bin_count"]], 100)
-#    checkIdentical(is.list(mg$get_matrices()), TRUE)
-#    checkIdentical(length(mg$get_matrices()) ==  2, TRUE)
-#    matrices <- mg$get_matrices()
+#    checkIdentical(is.list(mg$get_table()), TRUE)
+#    checkIdentical(length(mg$get_table()) ==  2, TRUE)
+#    matrices <- mg$get_table()
 #    checkIdentical(all(sapply(matrices, class) ==  c("list", "list")), TRUE)
 #    checkIdentical(all(sapply(matrices, length) ==  c(5,5)), TRUE)
 #    checkIdentical(length(matrices[[1]][[1]]) ==  1, TRUE)
@@ -1017,14 +1017,14 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 #    checkIdentical(all(dim(matrices[[2]][[5]][[1]]) ==  c(50,100)), TRUE)
 #}
 #
-#test.metagene_produce_matrices_valid_design <- function() {
+#test.metagene_produce_table_valid_design <- function() {
 #    mg <- demo_mg$clone()
 #    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
 #    checkIdentical("bin_count" %in% mg$get_params(), FALSE)
-#    mg$produce_matrices(design = design)
+#    mg$produce_table(design = design)
 #    checkIdentical(mg$get_params()[["bin_size"]], NULL)
 #    checkIdentical(mg$get_params()[["bin_count"]], 100)
-#    matrices <- mg$get_matrices()
+#    matrices <- mg$get_table()
 #    checkIdentical(is.list(matrices), TRUE)
 #    checkIdentical(length(matrices) ==  2, TRUE)
 #    checkIdentical(all(sapply(matrices, class) ==  c("list", "list")), TRUE)
@@ -1044,14 +1044,14 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 #}
 #
 #
-#test.metagene_produce_matrices_valid_bin_count <- function() {
+#test.metagene_produce_table_valid_bin_count <- function() {
 #    mg <- demo_mg$clone()
 #    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
 #    checkIdentical("bin_count" %in% mg$get_params(), FALSE)
-#    mg$produce_matrices(bin_count = 200)
+#    mg$produce_table(bin_count = 200)
 #    checkIdentical(mg$get_params()[["bin_size"]], NULL)
 #    checkIdentical(mg$get_params()[["bin_count"]], 200)
-#    matrices <- mg$get_matrices()
+#    matrices <- mg$get_table()
 #    checkIdentical(length(matrices[[1]][[1]]) ==  1, TRUE)
 #    checkIdentical(length(matrices[[1]][[2]]) ==  1, TRUE)
 #    checkIdentical(length(matrices[[1]][[3]]) ==  1, TRUE)
@@ -1084,14 +1084,14 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 #    checkIdentical(all(dim(matrices[[2]][[5]][[1]]) ==  c(50,200)), TRUE)
 #}
 #
-#test.metagene_produce_matrices_valid_bin_size <- function() {
+#test.metagene_produce_table_valid_bin_size <- function() {
 #    mg <- demo_mg$clone()
 #    checkIdentical("bin_size" %in% mg$get_params(), FALSE)
 #    checkIdentical("bin_count" %in% mg$get_params(), FALSE)
-#    mg$produce_matrices(bin_size = 10)
+#    mg$produce_table(bin_size = 10)
 #    checkIdentical(mg$get_params()[["bin_size"]], 10)
 #    checkIdentical(mg$get_params()[["bin_count"]], 200)
-#    matrices <- mg$get_matrices()
+#    matrices <- mg$get_table()
 #    checkIdentical(length(matrices[[1]][[1]]) ==  1, TRUE)
 #    checkIdentical(length(matrices[[1]][[2]]) ==  1, TRUE)
 #    checkIdentical(length(matrices[[1]][[3]]) ==  1, TRUE)
@@ -1125,40 +1125,40 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 #}
 #
 ## Not valid design object
-#test.metagene_produce_matrices_invalid_design <- function() {
+#test.metagene_produce_table_invalid_design <- function() {
 #    mg <- demo_mg$clone()
-#    obs <- tryCatch(mg$produce_matrices(design = c(1,2)),
+#    obs <- tryCatch(mg$produce_table(design = c(1,2)),
 #                    error = conditionMessage)
 #    exp <- "design must be a data.frame object, NULL or NA"
 #    checkIdentical(obs, exp)
 #}
 #
 ## Design data.frame with not enough columns
-#test.metagene_produce_matrices_invalid_design_data_frame <- function() {
+#test.metagene_produce_table_invalid_design_data_frame <- function() {
 #    mg <- demo_mg$clone()
 #    design <- data.frame(a = c("ZOMBIE_ONE", "ZOMBIE_TWO"))
-#    obs <- tryCatch(mg$produce_matrices(design = design),
+#    obs <- tryCatch(mg$produce_table(design = design),
 #                    error = conditionMessage)
 #    exp <- "design must have at least 2 columns"
 #    checkIdentical(obs, exp)
 #}
 #
 ## Design data.frame with invalid first column
-#test.metagene_produce_matrices_invalid_design_first_column <- function() {
+#test.metagene_produce_table_invalid_design_first_column <- function() {
 #    mg <- demo_mg$clone()
 #    design <- data.frame(a = c(1,3), zombies = c("ZOMBIE_ONE", "ZOMBIE_TWO"))
-#    obs <- tryCatch(mg$produce_matrices(design = design),
+#    obs <- tryCatch(mg$produce_table(design = design),
 #                    error = conditionMessage)
 #    exp <- "The first column of design must be BAM filenames"
 #    checkIdentical(obs, exp)
 #}
 #
 ## Design data.frame with invalid second column
-#test.metagene_produce_matrices_invalid_design_second_column <- function() {
+#test.metagene_produce_table_invalid_design_second_column <- function() {
 #    mg <- demo_mg$clone()
 #    designTemp<-data.frame(a = named_bam_files,
 #                           zombies = rep("ZOMBIE_ONE", length(named_bam_files)))
-#    obs <- tryCatch(mg$produce_matrices(design = designTemp),
+#    obs <- tryCatch(mg$produce_table(design = designTemp),
 #                    error = conditionMessage)
 #    exp <- paste0("All design column, except the first one, must be in ",
 #                  "numeric format")
@@ -1166,87 +1166,87 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 #}
 #
 ## Design data.frame with invalid second column
-#test.metagene_produce_matrices_invalid_design_not_defined_file <- function() {
+#test.metagene_produce_table_invalid_design_not_defined_file <- function() {
 #    mg <- demo_mg$clone()
 #    designNew<-data.frame(a = c(bam_files, "I am not a file"),
 #                          b = rep(1, length(bam_files) + 1))
-#    obs <- tryCatch(mg$produce_matrices(design = designNew),
+#    obs <- tryCatch(mg$produce_table(design = designNew),
 #                    error = conditionMessage)
 #    exp <- "At least one BAM file does not exist"
 #    checkIdentical(obs, exp)
 #}
 #
 ## Design using zero file (0 in all rows of the design object)
-#test.metagene_produce_matrices_design_using_no_file <- function() {
+#test.metagene_produce_table_design_using_no_file <- function() {
 #    mg <- demo_mg$clone()
 #    designNew<-data.frame(a = bam_files,
 #                          b = rep(0, length(bam_files)))
-#    obs <- tryCatch(mg$produce_matrices(design = designNew),
+#    obs <- tryCatch(mg$produce_table(design = designNew),
 #                    error = conditionMessage)
 #    exp <- "At least one BAM file must be used in the design"
 #    checkIdentical(obs, exp)
 #}
 #
 ## Invalid bin_count class
-#test.metagene_produce_matrices_invalid_bin_count_class <- function() {
+#test.metagene_produce_table_invalid_bin_count_class <- function() {
 #    mg <- demo_mg$clone()
-#    obs <- tryCatch(mg$produce_matrices(bin_count = "a"),
+#    obs <- tryCatch(mg$produce_table(bin_count = "a"),
 #                    error = conditionMessage)
 #    exp <- "bin_count must be NULL or a positive integer"
 #    checkIdentical(obs, exp)
 #}
 #
 ## Invalid bin_count negative value
-#test.metagene_produce_matrices_invalid_bin_count_negative_value <- function() {
+#test.metagene_produce_table_invalid_bin_count_negative_value <- function() {
 #    mg <- demo_mg$clone()
-#    obs <- tryCatch(mg$produce_matrices(bin_count = -1),
+#    obs <- tryCatch(mg$produce_table(bin_count = -1),
 #                    error = conditionMessage)
 #    exp <- "bin_count must be NULL or a positive integer"
 #    checkIdentical(obs, exp)
 #}
 #
 ## Invalid bin_count decimals
-#test.metagene_produce_matrices_invalid_bin_count_decimals <- function() {
+#test.metagene_produce_table_invalid_bin_count_decimals <- function() {
 #    mg <- demo_mg$clone()
-#    obs <- tryCatch(mg$produce_matrices(bin_count = 1.2),
+#    obs <- tryCatch(mg$produce_table(bin_count = 1.2),
 #                   error = conditionMessage)
 #    exp <- "bin_count must be NULL or a positive integer"
 #    checkIdentical(obs, exp)
 #}
 #
 ## Invalid bin_size class
-#test.metagene_produce_matrices_invalid_bin_size_class <- function() {
+#test.metagene_produce_table_invalid_bin_size_class <- function() {
 #    mg <- demo_mg$clone()
-#    obs <- tryCatch(mg$produce_matrices(bin_size = "a"),
+#    obs <- tryCatch(mg$produce_table(bin_size = "a"),
 #                    error = conditionMessage)
 #    exp <- "bin_size must be NULL or a positive integer"
 #    checkIdentical(obs, exp)
 #}
 #
 ## Invalid bin_size negative value
-#test.metagene_produce_matrices_invalid_bin_size_negative_value <- function() {
+#test.metagene_produce_table_invalid_bin_size_negative_value <- function() {
 #    mg <- demo_mg$clone()
-#    obs <- tryCatch(mg$produce_matrices(bin_size = -1),
+#    obs <- tryCatch(mg$produce_table(bin_size = -1),
 #                    error = conditionMessage)
 #    exp <- "bin_size must be NULL or a positive integer"
 #    checkIdentical(obs, exp)
 #}
 #
 ## Invalid bin_size decimals
-#test.metagene_produce_matrices_invalid_bin_size_decimals <- function() {
+#test.metagene_produce_table_invalid_bin_size_decimals <- function() {
 #    mg <- demo_mg$clone()
-#    obs <- tryCatch(mg$produce_matrices(bin_size = 1.2),
+#    obs <- tryCatch(mg$produce_table(bin_size = 1.2),
 #                    error = conditionMessage)
 #    exp <- "bin_size must be NULL or a positive integer"
 #    checkIdentical(obs, exp)
 #}
 #
 ## Invalid bin_size regions widths
-#test.metagene_produce_matrices_invalid_bin_size_regions_width <- function() {
+#test.metagene_produce_table_invalid_bin_size_regions_width <- function() {
 #    region <- lapply(regions[1:2], rtracklayer::import)
 #    width(region[[1]]) <- 1000
 #    mg <- metagene$new(bam_files = bam_files[1], regions = region)
-#    obs <- tryCatch(mg$produce_matrices(bin_size = 100),
+#    obs <- tryCatch(mg$produce_table(bin_size = 100),
 #                    error = conditionMessage)
 #    exp <- "bin_size can only be used if all selected regions have"
 #    exp <- paste(exp, "same width")
@@ -1254,12 +1254,12 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 #}
 #
 ## Warning width not multiple of bin_size
-#test.metagene_produce_matrices_invalid_bin_size_regions_width_not_multiple <-
+#test.metagene_produce_table_invalid_bin_size_regions_width_not_multiple <-
 #    function() {
 #    mg <- demo_mg$clone()
 #    bin_size <- 1234
 #    width <- 2000
-#    obs <- tryCatch(mg$produce_matrices(bin_size = 1234),
+#    obs <- tryCatch(mg$produce_table(bin_size = 1234),
 #                    warning = conditionMessage)
 #    exp <- paste0("width (", width, ") is not a multiple of ")
 #    exp <- paste0(exp, "bin_size (", bin_size, "), last bin ")
@@ -1268,32 +1268,32 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 #}
 #
 ## Invalid noise_rate class
-#test.metagene_produce_matrices_invalid_noise_removal_class <- function() {
+#test.metagene_produce_table_invalid_noise_removal_class <- function() {
 #    mg <- demo_mg$clone()
-#    obs <- tryCatch(mg$produce_matrices(noise_removal = 1234),
+#    obs <- tryCatch(mg$produce_table(noise_removal = 1234),
 #                    error = conditionMessage)
 #    exp <- "noise_removal must be NA, NULL, \"NCIS\" or \"RPM\"."
 #    checkIdentical(obs, exp)
 #}
 #
 ## Invalid noise_rate value
-#test.metagene_produce_matrices_invalid_noise_removal_value <- function() {
+#test.metagene_produce_table_invalid_noise_removal_value <- function() {
 #    mg <- demo_mg$clone()
-#    obs <- tryCatch(mg$produce_matrices(noise_removal = "CSI"),
+#    obs <- tryCatch(mg$produce_table(noise_removal = "CSI"),
 #                    error = conditionMessage)
 #    exp <- "noise_removal must be NA, NULL, \"NCIS\" or \"RPM\"."
 #    checkIdentical(obs, exp)
 #}
 #
 ## Valid noise_removal NCIS
-#test.metagene_produce_matrices_valid_noise_removal_ncis <- function() {
+#test.metagene_produce_table_valid_noise_removal_ncis <- function() {
 #    mg <- demo_mg$clone()
 #    design <- get_demo_design()[,1:2]
 #    design[,2][2] <- 0
-#    mg$produce_matrices(noise_removal = "NCIS", design = design)
+#    mg$produce_table(noise_removal = "NCIS", design = design)
 #    checkIdentical(mg$get_params()[["bin_count"]], 100)
 #    checkIdentical(mg$get_params()[["noise_removal"]], "NCIS")
-#    matrices <- mg$get_matrices()
+#    matrices <- mg$get_table()
 #    checkIdentical(length(matrices[[1]][[1]]) ==  1, TRUE)
 #    checkIdentical(length(matrices[[2]][[1]]) ==  1, TRUE)
 #    checkIdentical(is.matrix(matrices[[1]][[1]][[1]]), TRUE)
@@ -1303,30 +1303,30 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 #}
 #
 ## Invalid normalization class
-#test.metagene_produce_matrices_invalid_normalization_class <- function() {
+#test.metagene_produce_table_invalid_normalization_class <- function() {
 #    mg <- demo_mg$clone()
-#    obs <- tryCatch(mg$produce_matrices(normalization = 1234),
+#    obs <- tryCatch(mg$produce_table(normalization = 1234),
 #                    error = conditionMessage)
 #    exp <- "normalization must be NA, NULL or \"RPM\"."
 #    checkIdentical(obs, exp)
 #}
 #
 ## Invalid normalization value
-#test.metagene_produce_matrices_invalid_normalization_value <- function() {
+#test.metagene_produce_table_invalid_normalization_value <- function() {
 #    mg <- demo_mg$clone()
-#    obs <- tryCatch(mg$produce_matrices(normalization = "CSI"),
+#    obs <- tryCatch(mg$produce_table(normalization = "CSI"),
 #                    error = conditionMessage)
 #    exp <- "normalization must be NA, NULL or \"RPM\"."
 #    checkIdentical(obs, exp)
 #}
 #
 ## Valid normalization RPM
-#test.metagene_produce_matrices_valid_normalization_rpm <- function() {
+#test.metagene_produce_table_valid_normalization_rpm <- function() {
 #    mg <- demo_mg$clone()
-#    mg$produce_matrices(normalization = "RPM")
+#    mg$produce_table(normalization = "RPM")
 #    checkIdentical(mg$get_params()[["bin_count"]], 100)
 #    checkIdentical(mg$get_params()[["normalization"]], "RPM")
-#    matrices <- mg$get_matrices()
+#    matrices <- mg$get_table()
 #    checkIdentical(length(matrices[[1]][[1]]) ==  1, TRUE)
 #    checkIdentical(length(matrices[[1]][[2]]) ==  1, TRUE)
 #    checkIdentical(length(matrices[[1]][[3]]) ==  1, TRUE)
@@ -1360,22 +1360,22 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 #}
 #
 ## Invalid flip_regions class
-#test.metagene_produce_matrices_invalid_flip_regions_class <- function() {
+#test.metagene_produce_table_invalid_flip_regions_class <- function() {
 #    mg <- demo_mg$clone()
-#    obs <- tryCatch(mg$produce_matrices(flip_regions = 1234),
+#    obs <- tryCatch(mg$produce_table(flip_regions = 1234),
 #                    error = conditionMessage)
 #    exp <- "flip_regions must be a logical."
 #    checkIdentical(obs, exp)
 #}
 #
 ## Valid flip_regions true
-#test.metagene_produce_matrices_valid_flip_regions_true <- function() {
+#test.metagene_produce_table_valid_flip_regions_true <- function() {
 #    mg <- demo_mg$clone()
 #    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    mg$produce_matrices(flip_regions = TRUE)
+#    mg$produce_table(flip_regions = TRUE)
 #    checkIdentical(mg$get_params()[["bin_count"]], 100)
 #    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
-#    matrices <- mg$get_matrices()
+#    matrices <- mg$get_table()
 #    checkIdentical(length(matrices[[1]][[1]]) ==  1, TRUE)
 #    checkIdentical(length(matrices[[1]][[2]]) ==  1, TRUE)
 #    checkIdentical(length(matrices[[1]][[3]]) ==  1, TRUE)
@@ -1409,13 +1409,13 @@ test.metagene_add_design_invalid_bam_file_check_bam_files_false <- function() {
 #}
 #
 ## Valid flip_regions false
-#test.metagene_produce_matrices_valid_flip_regions_false <- function() {
+#test.metagene_produce_table_valid_flip_regions_false <- function() {
 #    mg <- demo_mg$clone()
 #    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    mg$produce_matrices(flip_regions = FALSE)
+#    mg$produce_table(flip_regions = FALSE)
 #    checkIdentical(mg$get_params()[["bin_count"]], 100)
 #    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    matrices <- mg$get_matrices()
+#    matrices <- mg$get_table()
 #    checkIdentical(length(matrices[[1]][[1]]) ==  1, TRUE)
 #    checkIdentical(length(matrices[[1]][[2]]) ==  1, TRUE)
 #    checkIdentical(length(matrices[[1]][[3]]) ==  1, TRUE)
@@ -1524,14 +1524,14 @@ test.metagene_produce_data_frame_invalid_stat_value <- function() {
 #    mg <- metagene:::metagene$new(bam_files = bam_files[1],
 #                                  regions = regions_strand)
 #    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    mg$produce_matrices()
-#    m1 <- mg$get_matrices()[[1]][[1]][[1]]
+#    mg$produce_table()
+#    m1 <- mg$get_table()[[1]][[1]][[1]]
 #    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
 #    mg$flip_regions()
-#    m2 <- mg$get_matrices()[[1]][[1]][[1]]
+#    m2 <- mg$get_table()[[1]][[1]][[1]]
 #    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
 #    mg$flip_regions()
-#    m3 <- mg$get_matrices()[[1]][[1]][[1]]
+#    m3 <- mg$get_table()[[1]][[1]][[1]]
 #    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
 #    # Compare the matrices
 #    checkTrue(identical(m1, m2) ==  FALSE)
@@ -1546,11 +1546,11 @@ test.metagene_produce_data_frame_invalid_stat_value <- function() {
 #    mg <- metagene:::metagene$new(bam_files = bam_files[1],
 #                                  regions = regions_strand)
 #    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    mg$produce_matrices(flip_regions = TRUE)
-#    m1 <- mg$get_matrices()[[1]][[1]][[1]]
+#    mg$produce_table(flip_regions = TRUE)
+#    m1 <- mg$get_table()[[1]][[1]][[1]]
 #    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
 #    mg$flip_regions()
-#    m2 <- mg$get_matrices()[[1]][[1]][[1]]
+#    m2 <- mg$get_table()[[1]][[1]][[1]]
 #    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
 #    # Compare the matrices
 #    checkTrue(identical(m1, m2) ==  TRUE)
@@ -1566,11 +1566,11 @@ test.metagene_produce_data_frame_invalid_stat_value <- function() {
 #    mg <- metagene:::metagene$new(bam_files = bam_files[1],
 #                                  regions = regions_strand)
 #    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    mg$produce_matrices()
-#    m1 <- mg$get_matrices()[[1]][[1]][[1]]
+#    mg$produce_table()
+#    m1 <- mg$get_table()[[1]][[1]][[1]]
 #    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
 #    mg$unflip_regions()
-#    m2 <- mg$get_matrices()[[1]][[1]][[1]]
+#    m2 <- mg$get_table()[[1]][[1]][[1]]
 #    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
 #    # Compare the matrices
 #    checkTrue(identical(m1, m2) ==  TRUE)
@@ -1581,14 +1581,14 @@ test.metagene_produce_data_frame_invalid_stat_value <- function() {
 #    mg <- metagene:::metagene$new(bam_files = bam_files[1],
 #                                  regions = regions_strand)
 #    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    mg$produce_matrices(flip_regions = TRUE)
-#    m1 <- mg$get_matrices()[[1]][[1]][[1]]
+#    mg$produce_table(flip_regions = TRUE)
+#    m1 <- mg$get_table()[[1]][[1]][[1]]
 #    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
 #    mg$unflip_regions()
-#    m2 <- mg$get_matrices()[[1]][[1]][[1]]
+#    m2 <- mg$get_table()[[1]][[1]][[1]]
 #    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
 #    mg$unflip_regions()
-#    m3 <- mg$get_matrices()[[1]][[1]][[1]]
+#    m3 <- mg$get_table()[[1]][[1]][[1]]
 #    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
 #    # Compare the matrices
 #    checkTrue(identical(m1, m2) ==  FALSE)
