@@ -22,7 +22,8 @@ files/data.
     \item{}{\code{bh <- Bam_Handler$new(bam_files, cores = SerialParam())}}
     \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
                      indexed. i.e.: if a file is named file.bam, there must
-                     be a file named file.bam.bai in the same directory.}
+                     be a file named file.bam.bai or file.bai in the same 
+                     directory.}
     \item{cores}{The number of cores available to parallelize the analysis.
                  Either a positive integer or a \code{BiocParallelParam}.
                  Default: \code{SerialParam()}.}

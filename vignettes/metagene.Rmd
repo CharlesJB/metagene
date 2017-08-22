@@ -50,7 +50,7 @@ library(metagene)
 There is no hard limit in the number of BAM files that can be included in an
 analysis (but with too many BAM files, memory may become an issue). BAM files
 must be indexed. For instance, if you use a file names `file.bam`, a file
-named `file.bam.bai` must be present in the same directory.
+named `file.bam.bai` or `file.bai`must be present in the same directory.
 
 The path (relative or absolute) to the BAM files must be in a vector:
 ```{r bamFiles}
@@ -235,12 +235,9 @@ the columns represent the positions and the rows the regions. Furthermore, to
 reduce the computation time during the following steps, the positions are also
 binned.
 
-We can control the size of the bin either with the `bin_count` or the
-`bin_size` arguments. Those two parameters are linked together and we only have
-to provide the values for one of them. It is only possible to use the `bin_size`
-argument when all the regions have the same width. Otherwise, this could result
-in a different number of bins for each regions. By default, a `bin_count` of
-100 will be used during this step.
+We can control the size of the bins with the `bin_count` argument. By
+default, a `bin_count` of 100 will be used during this step.
+
 ```{r showProduceMatrices}
 #mg$produce_matrices()
 ```
@@ -375,4 +372,88 @@ To copy a metagene object, you have to use the `clone` function:
 
 ```{r copyMetagene}
 # mg_copy <- mg$clone() # TODO
+```
+
+# Managing large datasets
+
+While `metagene` try to reduce it's memory usage, it's possible to run into
+memory limits when working with multiple large datasets (especially when there
+is a lot of regions with a large width).
+
+One way to avoid this is to analyse each dataset seperately and then merge just
+before producing the metagene plot:
+
+```{r memory, collapse=TRUE}
+mg1 <- metagene$new(bam_files = bam_files, regions = regions[1])
+mg1$produce_data_frame()
+mg2 <- metagene$new(bam_files = bam_files, regions = regions[2])
+mg2$produce_data_frame()
+```
+
+Then you can extract the `data.frame`s and combine them with `rbind`:
+
+```{r extractDF}
+df1 <- mg1$get_data_frame()
+df2 <- mg2$get_data_frame()
+df <- rbind(df1, df2)
+```
+
+Finally, you can use the `plot_metagene` function to produce the metagene plot:
+
+```{r plotMetagene}
+p <- plot_metagene(df)
+p + ggplot2::ggtitle("Managing large datasets")
+```
+
+# Comparing profiles with permutations
+
+It is possible to compare two metagene profiles using the `permutation_test`
+function provided with the `metagene` package. Please note that the permutation
+tests functionality is still in development and is expected to change in future
+releases.
+
+The first step is to decide which profiles we want to compare and extract the
+corresponding matrices:
+
+```{r extractMatrices}
+matrices <- mg$get_matrices()
+m1 <- matrices[["list1"]][["align1"]][["input"]]
+m2 <- matrices[["list1"]][["align2"]][["input"]]
+```
+
+Then we defined to function to use to compare the two profiles. For this, a
+companion package of `metagene` named `r Biocpkg("similaRpeak")` provides
+multiple metrics.
+
+For this example, we will prepare a function to calculate the
+RATIO_NORMALIZED_INTERSECT between two profiles:
+
+```{r similaRpeak}
+library(similaRpeak)
+perm_fun <- function(profile1, profile2) {
+    similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+}
+```
+
+We then compare our two profiles using this metric:
+
+```{r calculateRNI}
+ratio_normalized_intersect <- perm_fun(colMeans(m1), colMeans(m2))
+ratio_normalized_intersect
+```
+
+To check if this value is significant, we can permute the two matrices that
+were used to produce the profile and calculate their
+RATIO_NORMALIZED_INTERSECT:
+
+```{r permTest}
+permutation_results <-  permutation_test(m1, m2, sample_size = nrow(m1),
+                                         sample_count = 1000, FUN = perm_fun)
+```
+
+Finally, we check how often the calculated value is greater than the results of
+the permutations:
+
+```{r perm_pval}
+sum(ratio_normalized_intersect >= permutation_results) / length(permutation_results)
 ```

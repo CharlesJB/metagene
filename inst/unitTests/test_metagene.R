@@ -158,8 +158,20 @@ test.metagene_initialize_valid_regions_supplementary_seqlevels <- function() {
     region <- rtracklayer::import(regions[1])
     GenomeInfoDb::seqlevels(region) <- c(GenomeInfoDb::seqlevels(region),
                                          "extra_seqlevels")
-    mg <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1]),
-                   error = conditionMessage)
+    obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1]),
+                    error = conditionMessage)
+    exp <- "Some seqlevels of regions are absent in bam_file"
+    checkIdentical(obs, exp)
+}
+
+# Valid regions with extra seqlevels force
+test.metagene_initialize_valid_regions_supplementary_seqlevels_force <- function() {
+    region <- rtracklayer::import(regions[1])
+    GenomeInfoDb::seqlevels(region) <- c(GenomeInfoDb::seqlevels(region),
+                                         "extra_seqlevels")
+    obs <- tryCatch(mg <- metagene$new(regions = region, bam_files = bam_files[1],
+				 force_seqlevels = TRUE),
+                    error = conditionMessage)
     checkIdentical(class(mg), c("metagene", "R6"))
 }
 
@@ -169,7 +181,7 @@ test.metagene_initialize_invalid_extra_seqnames <- function() {
     GenomeInfoDb::seqlevels(region) <- "extra_seqlevels"
     obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1]),
                     error = conditionMessage)
-    exp <- "Some seqnames of regions are absent in bam_file"
+    exp <- "Some seqlevels of regions are absent in bam_file"
     checkIdentical(obs, exp)
 }
 
@@ -192,7 +204,7 @@ test.metagene_initialize_all_extra_seqnames_force_seqlevels <- function() {
     obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1],
                                  force_seqlevels = TRUE),
                     error = conditionMessage)
-    exp <- "Parameter regions must not be an empty GRanges object"
+    exp <- "No seqlevels matching between regions and bam file"
     checkIdentical(obs, exp)
 }
 

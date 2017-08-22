@@ -14,7 +14,8 @@
 #'                    object.}
 #'     \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
 #'                      indexed. i.e.: if a file is named file.bam, there must
-#'                      be a file named file.bam.bai in the same directory.}
+#'                      be a file named file.bam.bai or file.bai in the same 
+#'                      directory.}
 #'     \item{padding_size}{The regions will be extended on each side by the
 #'                         value of this parameter. The padding_size must be a
 #'                         non-negative integer. Default = 0.}
@@ -38,8 +39,7 @@
 #' @section Methods:
 #' \describe{
 #'     \item{}{\code{mg$plot(region_names = NULL, exp_names = NULL,
-#'                   range c(-1, 1), title = NULL, show_friedman = FALSE)}
-#'                   stat = c("bootstrap", "basic", ...))}
+#'                   title = NULL, x_label = NULL)}}
 #'     \item{region_names}{The names of the regions to extract. If \code{NULL},
 #'                         all the regions are returned. Default: \code{NULL}.}
 #'     \item{exp_names}{The names of the experiments to extract. If a design was
@@ -48,27 +48,21 @@
 #'                      \code{exp_names} corresponds to the BAM name or the BAM
 #'                      filename. If \code{NULL}, all the experiments are
 #'                      returned. Default: \code{NULL}.}
-#'     \item{range}{The values for the x axis. Must be a numeric vector of size
-#'                  2. Default: \code{c(-1, 1)}.}
 #'     \item{title}{A title to add to the graph. If \code{NULL}, will be
 #'                         automatically created. Default: NULL}
-#'     \item{show_friedman}{Show result of Friedman statistic. Default: FALSE}
+#'     \item{x_label}{X-axis label to add to the metagene plot. If \code{NULL},
+#'                    metagene will use generic label. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'     \item{}{\code{mg$produce_matrices(design, bin_count, bin_size,
-#'                   noise_removal, normalization, flip_regions}}
+#'     \item{}{\code{mg$produce_matrices(design, bin_count, noise_removal,
+#'                   normalization, flip_regions, bin_size = NULL}}
 #'     \item{design}{A \code{data.frame} that describe to experiment to plot.
 #'                   see \code{plot} function for more details. \code{NA} can be
 #'                   used keep previous design value. Default: \code{NA}.}
 #'     \item{bin_count}{The number of bin to create. \code{NA} can be used to
-#'                      keep previous bin_count value. If both bin_count and
-#'                      bin_size are \code{NA}, a bin_count value of 100 will be
-#'                      used. Default: \code{NA}.}
-#'     \item{bin_size}{The size of bin to create. Can only be used if all the
-#'                     regions have the same size. \code{NA} can be used to keep
-#'                   previous bin_size value. If both bin_count and bin_size
-#'                   are \code{NA}, a bin_count value of 100 will be used.
-#'                   Default: \code{NA}.}
+#'                      keep previous bin_count value. A bin_count value of 100
+#'                      will be used if no value is specified. Default:
+#'                      \code{NA}.}
 #'     \item{noise_removal}{The algorithm to use to remove control(s). Possible
 #'                          values are \code{NA}, \code{NULL} or "NCIS". By
 #'                          default, value is \code{NULL}. Use \code{NA} keep
@@ -77,11 +71,13 @@
 #'                          Liand and Keles 2012 for the NCIS algorithm.}
 #'     \item{normalization}{The algorithm to use to normalize samples. Possible
 #;                          values are \code{NA}, \code{NULL} or "RPM". By
-#'                          default, value is \code{NULL}. Use \code{NA} keep
+#'                          default, value is \code{NULL} and no normalization
+#'                          will be performed. Use \code{NA} keep
 #'                          previous \code{normalization} value (i.e. if
 #'                          \code{produce_matrices} was called before).}
 #'     \item{flip_regions}{Should regions on negative strand be flip_regions?
 #'                         Default: \code{FALSE}.}
+#'     \item{bin_size}{Deprecated.}
 #' }
 #' \describe{
 #'     \item{}{\code{mg$produce_data_frame(alpha = 0.05, sample_count = 1000)}}
@@ -202,6 +198,7 @@ metagene <- R6Class("metagene",
                 new_names <- tools::file_path_sans_ext(basename(bam_files))
                 names(bam_files) <- new_names
             }
+            private$params[["bin_count"]] <- 100
             private$params[["bam_files"]] <- bam_files
             private$params[["force_seqlevels"]] <- force_seqlevels
             private$params[["flip_regions"]] <- FALSE
@@ -331,7 +328,11 @@ metagene <- R6Class("metagene",
         },
         produce_table = function(design = NA, bin_count = NA, bin_size = NA,
                                     noise_removal = NA, normalization = NA,
-                                    flip_regions = FALSE) {
+                                    flip_regions = FALSE, bin_size = NULL) {
+            if (!is.null(bin_size)) {
+                warning("bin_size is now deprecated. Please use bin_count.")
+                bin_size <- NULL
+            }
             design = private$fetch_design(design)
             private$check_produce_table_params(bin_count = bin_count,
                                                   bin_size = bin_size,
@@ -340,12 +341,11 @@ metagene <- R6Class("metagene",
                                                   normalization = normalization,
                                                   flip_regions = flip_regions)
             bin_count <- private$get_param_value(bin_count, "bin_count")
-            bin_size <- private$get_param_value(bin_size, "bin_size")
             noise_removal <- private$get_param_value(noise_removal,
                                                      "noise_removal")
             normalization <- private$get_param_value(normalization,
                                                      "normalization")
-            if (is.null(bin_count) & is.null(bin_size)) {
+            if (is.null(bin_count)) {
                 bin_count = 100
             }
             # Replace with table_need_update
@@ -354,10 +354,6 @@ metagene <- R6Class("metagene",
                                              bin_size = bin_size,
                                              noise_removal = noise_removal,
                                              normalization = normalization)) {
-                if (!is.null(bin_size)) {
-                    width <- width(private$regions[[1]][1])
-                    bin_count <- floor(width / bin_size)
-                }
                 coverages <- private$coverages
                 if (!is.null(noise_removal)) {
                   coverages <- private$remove_controls(coverages, design)
@@ -448,11 +444,7 @@ metagene <- R6Class("metagene",
             }
             invisible(self)
         },
-        plot = function(region_names = NULL, exp_names = NULL, range = c(-1,1),
-                        title = NULL, show_friedman = FALSE) {
-            stopifnot(is.logical(show_friedman))
-            stopifnot(length(show_friedman) == 1)
-
+        plot = function(region_names = NULL, exp_names = NULL, title = NULL, x_label = NULL) {
             # 1. Get the correctly formatted matrices
             if (length(private$matrices) == 0) {
                 self$produce_table()
@@ -464,24 +456,11 @@ metagene <- R6Class("metagene",
             }
             df <- self$get_data_frame(region_names = region_names,
                                       exp_names = exp_names)
-
-            # 3. Test de Friedman
-            # Friedman only done when more than 1 curve is present
-            friedman <- NULL
-            if (show_friedman == TRUE) {
-                if (length(unique(df[["group"]])) > 1) {
-                    private$friedman <- mu.friedman.test(df[["value"]],
-                                                         group=df[["group"]],
-                                                         block=df[["position"]])
-                }
-            }
-
-            # 4. Produce the graph
+            # 3. Produce the graph
             if (is.null(title)) {
                 title <- paste(unique(private$df[["group"]]), collapse=" vs ")
             }
-            p <- private$plot_graphic(df = df, title = title, binSize = 1,
-                                      friedman=private$friedman_test)
+            p <- private$plot_graphic(df = df, title = title, x_label = x_label)
             print(p)
             private$graph <- p
             invisible(self)
@@ -522,7 +501,6 @@ metagene <- R6Class("metagene",
         coverages = list(),
         df = data.frame(),
         graph = "",
-        friedman_test = "",
         bam_handler = "",
         parallel_job = "",
         check_param = function(regions, bam_files, padding_size,
@@ -550,9 +528,6 @@ metagene <- R6Class("metagene",
             }
             if (!all(sapply(bam_files, file.exists))) {
                 stop("At least one BAM file does not exist")
-            }
-            if (!all(sapply(paste0(bam_files, ".bai"), file.exists))) {
-                stop("All BAM files must be indexed")
             }
             if (!is(regions, "GRangesList") && !is.character(regions)
                 && !is(regions, "GRanges") && !is.list(regions)) {
@@ -619,37 +594,6 @@ metagene <- R6Class("metagene",
                     }
                 }
             }
-            # bin_size should be a numeric value without digits
-            if (!identical(bin_size, NA)) {
-                if (!is.null(bin_size)) {
-                    if (!is.numeric(bin_size) || bin_size < 0 ||
-                        as.integer(bin_size) != bin_size) {
-                        stop("bin_size must be NULL or a positive integer")
-                    }
-                }
-            }
-            # bin_size should be used only if all regions have the same width
-            if (!identical(bin_size, NA)) {
-                if (!is.null(bin_size)) {
-                    regions <- names(self$get_regions())
-                    widths <- width(private$regions[regions])
-                    widths <- unique(unlist(widths))
-                    if (length(widths) != 1) {
-                        msg <- "bin_size can only be used if all selected"
-                        msg <- paste(msg, "regions have same width")
-                        stop(msg)
-                    } else {
-                        modulo <- widths %% bin_size
-                        if (modulo != 0) {
-                            msg <- paste0("width (", widths, ") is not a ")
-                            msg <- paste0(msg, "multiple of bin_size (")
-                            msg <- paste0(msg, bin_size, "), last bin will be ")
-                            msg <- paste0(msg, "removed.")
-                            warning(msg)
-                        }
-                    }
-                }
-            }
             if (!identical(noise_removal, NA)) {
                 if (!is.null(noise_removal)) {
                     if (!noise_removal %in% c("NCIS", "RPM")) {
@@ -675,9 +619,6 @@ metagene <- R6Class("metagene",
         matrices_need_update = function(design, bin_count, bin_size,
                                         noise_removal, normalization) {
             if (!identical(private$design, design)) {
-                return(TRUE)
-            }
-            if (!identical(private$params[["bin_size"]], bin_size)) {
                 return(TRUE)
             }
             if (!identical(private$params[["bin_count"]], bin_count)) {
@@ -809,37 +750,24 @@ metagene <- R6Class("metagene",
             names(res) <- names(private$params[["bam_files"]])
             lapply(res, GenomeInfoDb::sortSeqlevels)
         },
-        # Produce a plot with based on a data.frame
-        #
-        # Input:
-        #    df:       The data frame produced by the plot.getDataFrame function
-        #    title:    The title of the graph
-        #    binSize:  The number of nucleotides in each bin
-        #    friedman: The Friedman test result or NULL if not test done
-        # Ouput:
-        #    The graph that is printed on the current device.
-        plot_graphic = function(df, title, binSize, friedman=NULL) {
-            # Prepare y label
-            if (binSize > 1) {
-                yLabel <- paste("Mean RPM for each", binSize, "positions")
-            } else {
-                yLabel <- paste("Mean RPM for each position")
+        plot_graphic = function(df, title, x_label) {
+            # Prepare x label
+            if (is.null(x_label)) {
+                x_label <- "Distance in bins from regions center"
             }
-            friedmanLabel <- ifelse(friedman == "", "",
-                                paste0("Friedman p-value \n",
-                                signif(friedman$p.value, digits = 6), " "))
-            # TODO: add x label
-            p <- ggplot(df, aes(x=position, y=value, ymin=qinf, ymax=qsup)) +
-                geom_ribbon(aes(fill=group), alpha=0.3) +
-                geom_line(aes(color=group), size=1) +
-                theme(panel.grid.major = element_line()) +
-                theme(panel.grid.minor = element_line()) +
-                theme(panel.background = element_blank()) +
-                theme(panel.background = element_rect()) +
-                theme_bw(base_size = 20) +
-                theme(axis.title.x = element_blank()) +
-                ylab(yLabel) + annotate("text", label = friedmanLabel,
-                                x = Inf, y = Inf, vjust=1, hjust=1, size=4) +
+
+            # Prepare y label
+            y_label <- "Mean coverage"
+            if (is.null(private$params[["normalization"]])) {
+                y_label <- paste(y_label, "(raw)")
+            } else {
+                y_label <- paste(y_label, "(RPM)")
+            }
+
+            # Produce plot
+            p <- plot_metagene(df) +
+                ylab(y_label) +
+                xlab(x_label) +
                 ggtitle(title)
             p
         },
@@ -898,10 +826,11 @@ metagene <- R6Class("metagene",
         },
         normalize_coverages = function(coverages, design) {
             for (design_name in colnames(design)[-1]) {
-                bam_files <- as.character(design[,1][1])
+                which_rows = design[[design_name]]==1
+                bam_files <- as.character(design[,1][which_rows])
                 counts <- lapply(bam_files,
                                  private$bam_handler$get_aligned_count)
-                count <- do.call("+", counts)
+                count <- sum(unlist(counts))
                 weight <- 1 / (count / 1000000)
                 coverages[[design_name]] <- coverages[[design_name]] * weight
             }

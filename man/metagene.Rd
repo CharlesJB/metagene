@@ -28,7 +28,8 @@ metagene plots on the data (or a subset of the data).
                    object.}
     \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
                      indexed. i.e.: if a file is named file.bam, there must
-                     be a file named file.bam.bai in the same directory.}
+                     be a file named file.bam.bai or file.bai in the same 
+                     directory.}
     \item{padding_size}{The regions will be extended on each side by the
                         value of this parameter. The padding_size must be a
                         non-negative integer. Default = 0.}
@@ -50,8 +51,7 @@ metagene plots on the data (or a subset of the data).
 
 \describe{
     \item{}{\code{mg$plot(region_names = NULL, exp_names = NULL,
-                  range c(-1, 1), title = NULL, show_friedman = FALSE)}
-                  stat = c("bootstrap", "basic", ...))}
+                  title = NULL, x_label = NULL)}}
     \item{region_names}{The names of the regions to extract. If \code{NULL},
                         all the regions are returned. Default: \code{NULL}.}
     \item{exp_names}{The names of the experiments to extract. If a design was
@@ -60,27 +60,21 @@ metagene plots on the data (or a subset of the data).
                      \code{exp_names} corresponds to the BAM name or the BAM
                      filename. If \code{NULL}, all the experiments are
                      returned. Default: \code{NULL}.}
-    \item{range}{The values for the x axis. Must be a numeric vector of size
-                 2. Default: \code{c(-1, 1)}.}
     \item{title}{A title to add to the graph. If \code{NULL}, will be
                         automatically created. Default: NULL}
-    \item{show_friedman}{Show result of Friedman statistic. Default: FALSE}
+    \item{x_label}{X-axis label to add to the metagene plot. If \code{NULL},
+                   metagene will use generic label. Default: \code{NULL}.}
 }
 \describe{
-    \item{}{\code{mg$produce_matrices(design, bin_count, bin_size,
-                  noise_removal, normalization, flip_regions}}
+    \item{}{\code{mg$produce_matrices(design, bin_count, noise_removal,
+                  normalization, flip_regions, bin_size = NULL}}
     \item{design}{A \code{data.frame} that describe to experiment to plot.
                   see \code{plot} function for more details. \code{NA} can be
                   used keep previous design value. Default: \code{NA}.}
     \item{bin_count}{The number of bin to create. \code{NA} can be used to
-                     keep previous bin_count value. If both bin_count and
-                     bin_size are \code{NA}, a bin_count value of 100 will be
-                     used. Default: \code{NA}.}
-    \item{bin_size}{The size of bin to create. Can only be used if all the
-                    regions have the same size. \code{NA} can be used to keep
-                  previous bin_size value. If both bin_count and bin_size
-                  are \code{NA}, a bin_count value of 100 will be used.
-                  Default: \code{NA}.}
+                     keep previous bin_count value. A bin_count value of 100
+                     will be used if no value is specified. Default:
+                     \code{NA}.}
     \item{noise_removal}{The algorithm to use to remove control(s). Possible
                          values are \code{NA}, \code{NULL} or "NCIS". By
                          default, value is \code{NULL}. Use \code{NA} keep
@@ -88,11 +82,13 @@ metagene plots on the data (or a subset of the data).
                          \code{produce_matrices} was called before). See
                          Liand and Keles 2012 for the NCIS algorithm.}
     \item{normalization}{The algorithm to use to normalize samples. Possible
-                         default, value is \code{NULL}. Use \code{NA} keep
+                         default, value is \code{NULL} and no normalization
+                         will be performed. Use \code{NA} keep
                          previous \code{normalization} value (i.e. if
                          \code{produce_matrices} was called before).}
     \item{flip_regions}{Should regions on negative strand be flip_regions?
                         Default: \code{FALSE}.}
+    \item{bin_size}{Deprecated.}
 }
 \describe{
     \item{}{\code{mg$produce_data_frame(alpha = 0.05, sample_count = 1000)}}

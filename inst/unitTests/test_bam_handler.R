@@ -337,7 +337,7 @@ test.bam_handler_get_coverage_invalid_regions_all_seqnames_not_in_bam <-
     obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file,
                                              regions = region),
                     error = conditionMessage)
-    exp <- "Some seqnames of regions are absent in bam_file"
+    exp <- "Some seqlevels of regions are absent in bam_file"
     checkIdentical(obs, exp)
 }
 
@@ -353,7 +353,7 @@ test.bam_handler_get_coverage_all_seqnames_not_in_bam_force_seqlevels <-
                                              regions = region,
                                              force_seqlevels = TRUE),
                     error = conditionMessage)
-    exp <- "Parameter regions must not be an empty GRanges object"
+    exp <- "No seqlevels matching between regions and bam file"
     checkIdentical(obs, exp)
 }
 
@@ -368,12 +368,12 @@ test.bam_handler_get_coverage_invalid_regions_one_seqnames_not_in_bam <-
     obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file,
                                              regions = region),
                     error = conditionMessage)
-    exp <- "Some seqnames of regions are absent in bam_file"
+    exp <- "Some seqlevels of regions are absent in bam_file"
     checkIdentical(obs, exp)
 }
 
-## Valid regions seqlevels not in bam
-test.bam_handler_get_coverage_valid_regions_seqlevels_not_in_bam_force <-
+## Invalid regions seqlevels not in bam
+test.bam_handler_get_coverage_invalid_regions_seqlevels_not_in_bam <-
     function() {
     bam_handler <- demo_bh$clone()
     bam_file <- bam_files[1]
@@ -382,7 +382,8 @@ test.bam_handler_get_coverage_valid_regions_seqlevels_not_in_bam_force <-
     obs <- tryCatch(bam_handler$get_coverage(bam_file = bam_file,
                                              regions = region),
                     error = conditionMessage)
-    checkTrue(class(obs) == "SimpleRleList")
+    exp <- "Some seqlevels of regions are absent in bam_file"
+    checkIdentical(obs, exp)
 }
 
 ## Seqnames not in bam force seqlevels
@@ -515,7 +516,7 @@ test.bam_handler_get_normalized_coverage_invalid_all_seqnames_not_in_bam <-
     obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file,
                                                         regions = region),
                     error = conditionMessage)
-    exp <- "Some seqnames of regions are absent in bam_file"
+    exp <- "Some seqlevels of regions are absent in bam_file"
     checkIdentical(obs, exp)
 }
 
@@ -531,7 +532,7 @@ test.bam_handler_get_normalized_coverage_seqnames_not_in_bam_force_seqlevels <-
                                                         regions = region,
                                                         force_seqlevels = TRUE),
                     error = conditionMessage)
-    exp <- "Parameter regions must not be an empty GRanges object"
+    exp <- "No seqlevels matching between regions and bam file"
     checkIdentical(obs, exp)
 }
 
@@ -546,12 +547,12 @@ test.bam_handler_get_normalized_coverage_invalid_regions_seqnames_not_in_bam <-
     obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file,
                                                         regions = region),
                     error = conditionMessage)
-    exp <- "Some seqnames of regions are absent in bam_file"
+    exp <- "Some seqlevels of regions are absent in bam_file"
     checkIdentical(obs, exp)
 }
 
 ## Valid regions seqlevels not in bam
-test.bam_handler_get_normalized_coverage_regions_seqlevels_not_in_bam_force <-
+test.bam_handler_get_normalized_coverage_regions_seqlevels_not_in_bam_no_regions <-
     function() {
     bam_handler <- demo_bh$clone()
     bam_file <- bam_files[1]
@@ -559,6 +560,20 @@ test.bam_handler_get_normalized_coverage_regions_seqlevels_not_in_bam_force <-
     seqlevels(region) <- c(seqlevels(region), "invalid_level")
     obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file,
                                                         regions = region),
+                    error = conditionMessage)
+    checkTrue(obs == "Some seqlevels of regions are absent in bam_file")
+}
+
+## Valid regions seqlevels not in bam force
+test.bam_handler_get_normalized_coverage_regions_seqlevels_not_in_bam__no_regions_force <-
+    function() {
+    bam_handler <- demo_bh$clone()
+    bam_file <- bam_files[1]
+    region <- regions[[1]]
+    seqlevels(region) <- c(seqlevels(region), "invalid_level")
+    obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file,
+                                                        regions = region,
+							force_seqlevels = TRUE),
                     error = conditionMessage)
     checkTrue(class(obs) == "SimpleRleList")
 }
@@ -576,6 +591,20 @@ test.bam_handler_get_normalized_coverage_seqnames_not_in_bam_force <-
                                                         force_seqlevels = TRUE),
                     error = conditionMessage)
     checkTrue(class(obs) == "SimpleRleList")
+}
+
+## No matching seqnames force
+test.bam_handler_get_normalized_coverage_no_matching_seqnames_force <-
+    function() {
+    bam_handler <- demo_bh$clone()
+    bam_file <- bam_files[1]
+    region <- regions[[1]]
+    seqlevels(region) <- "invalid_level"
+    obs <- tryCatch(bam_handler$get_normalized_coverage(bam_file = bam_file,
+                                                        regions = region,
+                                                        force_seqlevels = TRUE),
+                    error = conditionMessage)
+    checkTrue(obs == "No seqlevels matching between regions and bam file")
 }
 
 ###################################################

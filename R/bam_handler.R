@@ -8,7 +8,8 @@
 #'     \item{}{\code{bh <- Bam_Handler$new(bam_files, cores = SerialParam())}}
 #'     \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
 #'                      indexed. i.e.: if a file is named file.bam, there must
-#'                      be a file named file.bam.bai in the same directory.}
+#'                      be a file named file.bam.bai or file.bai in the same 
+#'                      directory.}
 #'     \item{cores}{The number of cores available to parallelize the analysis.
 #'                  Either a positive integer or a \code{BiocParallelParam}.
 #'                  Default: \code{SerialParam()}.}
@@ -88,7 +89,7 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
 
             # All BAM files must be indexed
-            if (!all(sapply(paste0(bam_files, ".bai"), file.exists))) {
+            if (any(sapply(sapply(bam_files, private$get_bam_index_filename), is.na))) {
               stop("All BAM files must be indexed")
             }
 
@@ -145,7 +146,7 @@ Bam_Handler <- R6Class("Bam_Handler",
         get_bam_name = function(bam_file) {
             bam <- private$bam_files[["bam"]]
             row_names <- rownames(private$bam_files)
-            bam_name <- basename(tools::file_path_sans_ext(bam_file))
+            bam_name <- basename(gsub(".bam$", "", bam_file))
             if (bam_file %in% bam) {
                 i <- bam == bam_file
                 stopifnot(sum(i) == 1)
@@ -220,19 +221,46 @@ Bam_Handler <- R6Class("Bam_Handler",
             invisible(bam_name)
         },
         check_bam_levels = function(bam_file, regions, force) {
-            bam_levels <- names(scanBamHeader(bam_file)[[1]]$targets)
-            if (!all(unique(GenomeInfoDb::seqnames(regions)) %in% bam_levels)) {
+            bam_levels <- GenomeInfoDb::seqlevels(Rsamtools::BamFile(bam_file))
+            if (!all(unique(GenomeInfoDb::seqlevels(regions)) %in% bam_levels)) {
                 if (force == FALSE) {
-                    stop("Some seqnames of regions are absent in bam_file")
+                    stop("Some seqlevels of regions are absent in bam_file")
                 } else {
-                    i <- seqlevels(regions) %in% bam_levels
-                    seqlevels(regions, force = TRUE) <- seqlevels(regions)[i]
+                    GenomeInfoDb::seqlevels(regions, force = TRUE) <- bam_levels
+                    if (length(regions) == 0) {
+                        stop("No seqlevels matching between regions and bam file")
+                    }
                 }
             }
             regions
         },
+        check_bam_length = function(bam_file, regions) {
+            bam_infos <- GenomeInfoDb::seqinfo(Rsamtools::BamFile(bam_file))
+            grl <- split(regions, as.character(seqnames(regions)))
+            gr_max <- vapply(grl, function(x) max(end(x)), numeric(1))
+            i <- match(names(gr_max), seqnames(bam_infos))
+            if (!all(seqlengths(bam_infos)[i] >= gr_max)) {
+                stop("Some regions are outside max chromosome length")
+            }
+            regions
+        },
+        get_bam_index_filename = function(bam_file) {
+            # Look for a file where bai is appended (.bam.bai)
+            bai_suffix_filename = paste(bam_file, ".bai", sep="")
+            if(file.exists(bai_suffix_filename)) {
+                return(bai_suffix_filename)
+            } else {
+                # Look for a file where bai replaces bam (.bai)
+                bam_is_bai_filename = gsub("\\.bam$", ".bai", bam_file)
+                if(file.exists(bam_is_bai_filename)) {
+                    return(bam_is_bai_filename)
+                }
+            }
+            # No index file found, return NA.
+            return(NA)
+        },
         index_bam_file = function(bam_file) {
-            if (file.exists(paste(bam_file, ".bai", sep=""))  == FALSE) {
+            if (is.na(private$get_bam_index_filename(bam_file))) {
                 # If there is no index file, we sort and index the current bam
                 # file
                 # TODO: we need to check if the sorted file was previously
@@ -297,6 +325,14 @@ Bam_Handler <- R6Class("Bam_Handler",
             if (length(regions) == 0) {
                 stop("Parameter regions must not be an empty GRanges object")
             }
+
+            # The seqlevels of regions must all be present in bam_file
+            regions <- private$check_bam_levels(bam_file, regions,
+                            force = force_seqlevels)
+
+            # The seqlengths of regions must be smaller or eqal to those in
+			# bam_file
+            regions <- private$check_bam_length(bam_file, regions)
 
             # The regions must not be overlapping
             reduce(regions)
