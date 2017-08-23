@@ -1,7 +1,7 @@
 #' Produce a metagene plot
 #' 
 #' @param df a \code{data.frame} obtained with the \code{get_data_frame}
-#' function. Must have the following columns: "group", "bin", "value",
+#' function. Must have the following columns: "region", "design", "bin", "value",
 #' "qinf" and "qsup".
 #'
 #' @return A `ggplot` object.
