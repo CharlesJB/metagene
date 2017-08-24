@@ -230,10 +230,11 @@ bam_files <- get_demo_bam_files()
 
 ### Producing the table
 
-To produce the metagene plot, the coverages must be converted in a matrix where
+To produce the metagene plot, the coverages must be converted in a data.table where
 the columns represent the positions and the rows the regions. Furthermore, to
 reduce the computation time during the following steps, the positions are also
-binned.
+binned. Regions, designs, bins, associated values and orientation of strands are pulled
+into a data.table called table and accessible thanks to the getter `get_table`.
 
 We can control the size of the bins with the `bin_count` argument. By
 default, a `bin_count` of 100 will be used during this step.
@@ -283,6 +284,10 @@ columns from the design.
 
 Multiple getters functions are available to access the data that is stored in a
 `metagene` object.
+
+### `get_table`
+
+To get the data.table containing regions, designs, bins, values at bins and orientation of strands.
 
 ### `get_params`
 
