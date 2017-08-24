@@ -14,14 +14,14 @@
 #' df <- mg$get_data_frame()
 #' p <- plot_metagene(df)
 plot_metagene <- function(df) {
+	df<-as.data.frame(df)
 	df$group <- paste(df$region,df$design,sep="_")
 	df$group <- as.factor(df$group)
-	df<-df[,3:7]
-	expected_cols <- c("group", "bin", "value", "qinf", "qsup")
+	expected_cols <- c("bin", "value", "qinf", "qsup", "group")
+	df<-df[,which(colnames(df) %in% expected_cols)]
 	expected_class <- c("integer", rep("numeric", 3), "factor")
 	stopifnot(all(expected_cols %in% colnames(df)))
-	stopifnot(all(vapply(df[df,on=expected_cols], class, character(1)) == expected_class))
-	#why not : stopifnot(all(vapply(df, class, character(1)) == expected_class)) because df[df,on=expected_cols] is = to df ?
+	stopifnot(all(vapply(df, class, character(1)) == expected_class))
 
     ggplot(df, aes(x=bin, y=value, ymin=qinf, ymax=qsup)) +
         geom_ribbon(aes(fill=group), alpha=0.3) +

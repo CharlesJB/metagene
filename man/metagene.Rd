@@ -22,7 +22,7 @@ metagene plots on the data (or a subset of the data).
 \describe{
     \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
                              cores = SerialParam(), verbose = FALSE,
-                             force_seqlevels = FALSE)}}
+                             pruning_mode = "error")}}
     \item{regions}{Either a \code{vector} of BED, narrowPeak or broadPeak
                    filenames, a \code{GRanges} object or a \code{GRangesList}
                    object.}
@@ -38,7 +38,7 @@ metagene plots on the data (or a subset of the data).
                  Default: \code{SerialParam()}.}
     \item{verbose}{Print progression of the analysis. A logical constant.
                    Default: \code{FALSE}.}
-    \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
+    \item{pruning_mode}{If \code{TRUE}, Remove regions that are not found
                            in bam file header. Default: \code{FALSE}.}
 }
 
