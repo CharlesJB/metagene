@@ -344,11 +344,15 @@ metagene <- R6Class("metagene",
                 col_values <- map2(pairs$Var1, pairs$Var2,
                                    ~ private$get_subtable(coverages[[.x]], .y, bin_count)) %>%
                                   unlist
-
-                private$data_table <- data.table(region = col_regions,
+				col_strand <- c()
+				for (region_names in names(private$regions)){
+					col_strand <- c(col_strand,rep(rep(as.vector(strand(private$regions[region_names])[[region_names]]),each=bin_count),dim(design)[1]))
+				}
+				                private$table <- data.table(region = col_regions,
                                                  design = col_designs,
                                                  bin = col_bins,
-                                                 value = col_values)
+                                                 value = col_values,
+												 strand = col_strand)
                 private$params[["bin_size"]] <- bin_size
                 private$params[["bin_count"]] <- bin_count
                 private$params[["noise_removal"]] <- noise_removal
@@ -436,23 +440,23 @@ metagene <- R6Class("metagene",
         },
         flip_regions = function() {
             if (private$params[["flip_regions"]] == FALSE) {
-                private$flip_matrices()
+                private$flip_table()
                 private$params[["flip_regions"]] <- TRUE
             }
             invisible(self)
         },
         unflip_regions = function() {
             if (private$params[["flip_regions"]] == TRUE) {
-                private$flip_matrices()
+                private$flip_table()
                 private$params[["flip_regions"]] <- FALSE
             }
             invisible(self)
         }
-    ),
+	),
         private = list(
         params = list(),
         regions = GRangesList(),
-        data_table = data.table(),
+        table = data.table(),
         design = data.frame(),
         coverages = list(),
         df = data.frame(),
@@ -803,18 +807,9 @@ metagene <- R6Class("metagene",
             }
             result
         },
-        flip_matrices = function() {
-            for (region_name in names(private$matrices)) {
-                region <- private$regions[[region_name]]
-                i <- as.logical(strand(region) == "-")
-                flip <- function(x) {
-                    x[i,] <- x[i,ncol(x):1]
-                    x
-                }
-                m <- private$matrices[[region_name]]
-                m <- lapply(m, lapply, flip)
-                private$matrices[[region_name]] <- m
-            }
+		flip_table = function() {
+			i <- which(private$table$strand == '-')
+			private$table$bin[i] <- (self$get_params()$bin_count + 1) - private$table$bin[i]
         },
         get_bam_names = function(filenames) {
             if (all(filenames %in% colnames(private$design)[-1])) {
