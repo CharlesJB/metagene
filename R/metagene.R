@@ -38,14 +38,14 @@
 #'
 #' @section Methods:
 #' \describe{
-#'     \item{}{\code{mg$plot(region_names = NULL, exp_names = NULL,
+#'     \item{}{\code{mg$plot(region_names = NULL, design_names = NULL,
 #'                   title = NULL, x_label = NULL)}}
 #'     \item{region_names}{The names of the regions to extract. If \code{NULL},
 #'                         all the regions are returned. Default: \code{NULL}.}
-#'     \item{exp_names}{The names of the experiments to extract. If a design was
-#'                      added to the \code{metagene} object, \code{exp_names}
+#'     \item{design_names}{The names of the experiments to extract. If a design was
+#'                      added to the \code{metagene} object, \code{design_names}
 #'                      correspond to the column names in the design, otherwise
-#'                      \code{exp_names} corresponds to the BAM name or the BAM
+#'                      \code{design_names} corresponds to the BAM name or the BAM
 #'                      filename. If \code{NULL}, all the experiments are
 #'                      returned. Default: \code{NULL}.}
 #'     \item{title}{A title to add to the graph. If \code{NULL}, will be
@@ -110,13 +110,13 @@
 #'                      returned. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'     \item{}{mg$get_data_frame(region_names = NULL, exp_name = NULL)}
+#'     \item{}{mg$get_data_frame(region_names = NULL, design_names = NULL)}
 #'     \item{region_names}{The names of the regions to extract. If \code{NULL},
 #'                         all the regions are returned. Default: \code{NULL}.}
-#'     \item{exp_names}{The names of the experiments to extract. If a design was
-#'                      added to the \code{metagene} object, \code{exp_names}
+#'     \item{design_names}{The names of the experiments to extract. If a design was
+#'                      added to the \code{metagene} object, \code{design_names}
 #'                      correspond to the column names in the design, otherwise
-#'                      \code{exp_names} corresponds to the BAM name or the BAM
+#'                      \code{design_names} corresponds to the BAM name or the BAM
 #'                      filename. If \code{NULL}, all the experiments are
 #'                      returned. Default: \code{NULL}.}
 #' }
@@ -237,31 +237,31 @@ metagene <- R6Class("metagene",
             }
         },
         get_table = function() {
-            return(private$data_table)
+            return(private$table)
         },
         
-        get_data_frame = function(region_names = NULL, exp_names = NULL) {
-            if (nrow(private$df) == 0) {
+        get_data_frame = function(region_names = NULL, design_names = NULL) {
+			if (nrow(private$df) == 0) {
                 NULL
-            } else if (is.null(region_names) & is.null(exp_names)) {
+            } else if (is.null(region_names) & is.null(design_names)) {
                 private$df
             } else {
                 if (!is.null(region_names)) {
                     stopifnot(is.character(region_names))
                     region_names <- basename(region_names)
                     region_names <- tools::file_path_sans_ext(region_names)
-                    stopifnot(all(region_names %in% names(private$matrices)))
+                    stopifnot(all(region_names %in% unique(private$table$region)))
                 } else {
                     region_names <- names(private$regions)
                 }
-                if (!is.null(exp_names)) {
-                    stopifnot(is.character(exp_names))
-                    exp_names <- private$get_bam_names(exp_names)
-                    stopifnot(all(exp_names %in% names(private$matrices[[1]])))
+                if (!is.null(design_names)) {
+                    stopifnot(is.character(design_names))
+                    design_names <- private$get_bam_names(design_names)
+                    stopifnot(all(design_names %in% unique(private$table$design)))
                 } else {
-                    exp_names <- colnames(private$design)[-1]
+                    design_names <- colnames(private$design)[-1]
                 }
-                eg <- expand.grid(exp_names, region_names)
+                eg <- expand.grid(design_names, region_names)
                 groups <- do.call(paste, c(eg, sep = "_"))
                 i <- private$df$group %in% groups
                 private$df[i,]
@@ -408,7 +408,7 @@ metagene <- R6Class("metagene",
             }
             invisible(self)
         },
-        plot = function(region_names = NULL, exp_names = NULL, title = NULL, x_label = NULL) {
+        plot = function(region_names = NULL, design_names = NULL, title = NULL, x_label = NULL) {
             # 1. Get the correctly formatted table
             if (length(private$table) == 0) {
                 self$produce_table()
@@ -419,7 +419,7 @@ metagene <- R6Class("metagene",
                 self$produce_data_frame()
             }
             df <- self$get_data_frame(region_names = region_names,
-                                      exp_names = exp_names)
+                                      design_names = design_names)
             # 3. Produce the graph
             if (is.null(title)) {
                 title <- paste(unique(private$df[["group"]]), collapse=" vs ")
