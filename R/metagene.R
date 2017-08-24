@@ -99,15 +99,7 @@
 #'                         all the regions are returned. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'     \item{}{mg$get_matrices(region_names = NULL, exp_name = NULL)}
-#'     \item{region_names}{The names of the regions to extract. If \code{NULL},
-#'                         all the regions are returned. Default: \code{NULL}.}
-#'     \item{exp_names}{The names of the experiments to extract. If a design was
-#'                      added to the \code{metagene} object, \code{exp_names}
-#'                      correspond to the column names in the design, otherwise
-#'                      \code{exp_names} corresponds to the BAM name or the BAM
-#'                      filename. If \code{NULL}, all the experiments are
-#'                      returned. Default: \code{NULL}.}
+#'     \item{}{mg$get_table()}
 #' }
 #' \describe{
 #'     \item{}{mg$get_data_frame(region_names = NULL, design_names = NULL)}
@@ -377,7 +369,7 @@ metagene <- R6Class("metagene",
             stopifnot(sample_count > 0)
             sample_count <- as.integer(sample_count)
 
-            # 1. Get the correctly formatted matrices
+            # 1. Get the correctly formatted table
             if (nrow(self$get_table()) == 0) {
                 self$produce_table()
             }
