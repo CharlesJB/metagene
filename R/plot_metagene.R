@@ -16,9 +16,10 @@
 plot_metagene <- function(df) {
 	df$group <- paste(df$region,df$design,sep="_")
 	df$group <- as.factor(df$group)
-	df<-df[,3:7]
-	expected_cols <- c("group", "bin", "value", "qinf", "qsup")
-	expected_class <- c("integer", rep("numeric", 3), "factor")
+	df$region <- as.factor(df$region)
+	df$design <- as.factor(df$design)
+	expected_cols <- c("region", "design", "bin", "value", "strand", "qinf", "qsup", "group")
+	expected_class <- c("factor","factor","integer", "numeric", "character", rep("numeric", 2), "factor")
 	stopifnot(all(expected_cols %in% colnames(df)))
 	stopifnot(all(vapply(df[df,on=expected_cols], class, character(1)) == expected_class))
 	#why not : stopifnot(all(vapply(df, class, character(1)) == expected_class)) because df[df,on=expected_cols] is = to df ?
