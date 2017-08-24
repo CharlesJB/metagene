@@ -45,18 +45,18 @@
 #' }
 #' \describe{
 #'     \item{}{\code{bh$get_coverage(bam_file, regions)
-#'                                force_seqlevels = FALSE)}}
+#'                                pruning_mode = "error")}}
 #'     \item{bam_file}{The name of the BAM file.}
 #'     \item{regions}{A not empty \code{GRanges} object.}
-#'     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
+#'     \item{pruning_mode}{If \code{TRUE}, Remove regions that are not found
 #'                            in bam file header. Default: \code{FALSE}.}
 #' }
 #' \describe{
 #'     \item{}{\code{bh$get_normalized_coverage(bam_file, regions)
-#'                                force_seqlevels = FALSE)}}
+#'                                pruning_mode = "error")}}
 #'     \item{bam_file}{The name of the BAM file.}
 #'     \item{regions}{A not empty \code{GRanges} object.}
-#'     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
+#'     \item{pruning_mode}{If \code{TRUE}, Remove regions that are not found
 #'                            in bam file header. Default: \code{FALSE}.}
 #' }
 #' \describe{
@@ -178,17 +178,17 @@ Bam_Handler <- R6Class("Bam_Handler",
         get_bam_files = function() {
             private$bam_files
         },
-        get_coverage = function(bam_file, regions, force_seqlevels = FALSE) {
+        get_coverage = function(bam_file, regions, pruning_mode = "error") {
             private$check_bam_file(bam_file)
             regions <- private$prepare_regions(regions, bam_file,
-                                               force_seqlevels)
+                                               pruning_mode)
             private$extract_coverage_by_regions(regions, bam_file)
         },
         get_normalized_coverage = function(bam_file, regions,
-                           force_seqlevels = FALSE) {
+                           pruning_mode = "error") {
             private$check_bam_file(bam_file)
             regions <- private$prepare_regions(regions, bam_file,
-                                               force_seqlevels)
+                                               pruning_mode)
             count <- self$get_aligned_count(bam_file)
             private$extract_coverage_by_regions(regions, bam_file, count)
         },
@@ -308,7 +308,7 @@ Bam_Handler <- R6Class("Bam_Handler",
                                 }))
 
         },
-        prepare_regions = function(regions, bam_file, force_seqlevels) {
+        prepare_regions = function(regions, bam_file, pruning_mode) {
             # The regions must be a GRanges object
             if (class(regions) != "GRanges") {
                 stop("Parameter regions must be a GRanges object.")
@@ -316,7 +316,7 @@ Bam_Handler <- R6Class("Bam_Handler",
 
             # The seqlevels of regions must all be present in bam_file
             regions <- private$check_bam_levels(bam_file, regions,
-                            force = force_seqlevels)
+                            force = pruning_mode)
             to_remove <- seqlevels(regions)[!(seqlevels(regions) %in%
                                           unique(seqnames(regions)))]
             regions <- dropSeqlevels(regions, to_remove)
@@ -328,7 +328,7 @@ Bam_Handler <- R6Class("Bam_Handler",
 
             # The seqlevels of regions must all be present in bam_file
             regions <- private$check_bam_levels(bam_file, regions,
-                            force = force_seqlevels)
+                            force = pruning_mode)
 
             # The seqlengths of regions must be smaller or eqal to those in
 			# bam_file

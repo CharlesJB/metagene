@@ -57,18 +57,18 @@ be obtain by using this object.
 }
 \describe{
     \item{}{\code{bh$get_coverage(bam_file, regions)
-                               force_seqlevels = FALSE)}}
+                               pruning_mode = "error")}}
     \item{bam_file}{The name of the BAM file.}
     \item{regions}{A not empty \code{GRanges} object.}
-    \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
+    \item{pruning_mode}{If \code{TRUE}, Remove regions that are not found
                            in bam file header. Default: \code{FALSE}.}
 }
 \describe{
     \item{}{\code{bh$get_normalized_coverage(bam_file, regions)
-                               force_seqlevels = FALSE)}}
+                               pruning_mode = "error")}}
     \item{bam_file}{The name of the BAM file.}
     \item{regions}{A not empty \code{GRanges} object.}
-    \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
+    \item{pruning_mode}{If \code{TRUE}, Remove regions that are not found
                            in bam file header. Default: \code{FALSE}.}
 }
 \describe{
