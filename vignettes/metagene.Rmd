@@ -230,7 +230,7 @@ bam_files <- get_demo_bam_files()
 
 ### Producing the table
 
-To produce the metagene plot, the coverages must be converted in a data.table where
+To produce the metagene plot, the coverages must be converted in matrices where
 the columns represent the positions and the rows the regions. Furthermore, to
 reduce the computation time during the following steps, the positions are also
 binned. Regions, designs, bins, associated values and orientation of strands are pulled
