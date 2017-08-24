@@ -38,14 +38,14 @@
 #'
 #' @section Methods:
 #' \describe{
-#'     \item{}{\code{mg$plot(region_names = NULL, exp_names = NULL,
+#'     \item{}{\code{mg$plot(region_names = NULL, design_names = NULL,
 #'                   title = NULL, x_label = NULL)}}
 #'     \item{region_names}{The names of the regions to extract. If \code{NULL},
 #'                         all the regions are returned. Default: \code{NULL}.}
-#'     \item{exp_names}{The names of the experiments to extract. If a design was
-#'                      added to the \code{metagene} object, \code{exp_names}
+#'     \item{design_names}{The names of the experiments to extract. If a design was
+#'                      added to the \code{metagene} object, \code{design_names}
 #'                      correspond to the column names in the design, otherwise
-#'                      \code{exp_names} corresponds to the BAM name or the BAM
+#'                      \code{design_names} corresponds to the BAM name or the BAM
 #'                      filename. If \code{NULL}, all the experiments are
 #'                      returned. Default: \code{NULL}.}
 #'     \item{title}{A title to add to the graph. If \code{NULL}, will be
@@ -99,24 +99,16 @@
 #'                         all the regions are returned. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'     \item{}{mg$get_matrices(region_names = NULL, exp_name = NULL)}
-#'     \item{region_names}{The names of the regions to extract. If \code{NULL},
-#'                         all the regions are returned. Default: \code{NULL}.}
-#'     \item{exp_names}{The names of the experiments to extract. If a design was
-#'                      added to the \code{metagene} object, \code{exp_names}
-#'                      correspond to the column names in the design, otherwise
-#'                      \code{exp_names} corresponds to the BAM name or the BAM
-#'                      filename. If \code{NULL}, all the experiments are
-#'                      returned. Default: \code{NULL}.}
+#'     \item{}{mg$get_table()}
 #' }
 #' \describe{
-#'     \item{}{mg$get_data_frame(region_names = NULL, exp_name = NULL)}
+#'     \item{}{mg$get_data_frame(region_names = NULL, design_names = NULL)}
 #'     \item{region_names}{The names of the regions to extract. If \code{NULL},
 #'                         all the regions are returned. Default: \code{NULL}.}
-#'     \item{exp_names}{The names of the experiments to extract. If a design was
-#'                      added to the \code{metagene} object, \code{exp_names}
+#'     \item{design_names}{The names of the experiments to extract. If a design was
+#'                      added to the \code{metagene} object, \code{design_names}
 #'                      correspond to the column names in the design, otherwise
-#'                      \code{exp_names} corresponds to the BAM name or the BAM
+#'                      \code{design_names} corresponds to the BAM name or the BAM
 #'                      filename. If \code{NULL}, all the experiments are
 #'                      returned. Default: \code{NULL}.}
 #' }
@@ -237,31 +229,31 @@ metagene <- R6Class("metagene",
             }
         },
         get_table = function() {
-            return(private$data_table)
+            return(private$table)
         },
         
-        get_data_frame = function(region_names = NULL, exp_names = NULL) {
-            if (nrow(private$df) == 0) {
+        get_data_frame = function(region_names = NULL, design_names = NULL) {
+			if (nrow(private$df) == 0) {
                 NULL
-            } else if (is.null(region_names) & is.null(exp_names)) {
+            } else if (is.null(region_names) & is.null(design_names)) {
                 private$df
             } else {
                 if (!is.null(region_names)) {
                     stopifnot(is.character(region_names))
                     region_names <- basename(region_names)
                     region_names <- tools::file_path_sans_ext(region_names)
-                    stopifnot(all(region_names %in% names(private$matrices)))
+                    stopifnot(all(region_names %in% unique(private$table$region)))
                 } else {
                     region_names <- names(private$regions)
                 }
-                if (!is.null(exp_names)) {
-                    stopifnot(is.character(exp_names))
-                    exp_names <- private$get_bam_names(exp_names)
-                    stopifnot(all(exp_names %in% names(private$matrices[[1]])))
+                if (!is.null(design_names)) {
+                    stopifnot(is.character(design_names))
+                    design_names <- private$get_bam_names(design_names)
+                    stopifnot(all(design_names %in% unique(private$table$design)))
                 } else {
-                    exp_names <- colnames(private$design)[-1]
+                    design_names <- colnames(private$design)[-1]
                 }
-                eg <- expand.grid(exp_names, region_names)
+                eg <- expand.grid(design_names, region_names)
                 groups <- do.call(paste, c(eg, sep = "_"))
                 i <- private$df$group %in% groups
                 private$df[i,]
@@ -352,11 +344,15 @@ metagene <- R6Class("metagene",
                 col_values <- map2(pairs$Var1, pairs$Var2,
                                    ~ private$get_subtable(coverages[[.x]], .y, bin_count)) %>%
                                   unlist
-
-                private$data_table <- data.table(region = col_regions,
+				col_strand <- c()
+				for (region_names in names(private$regions)){
+					col_strand <- c(col_strand,rep(rep(as.vector(strand(private$regions[region_names])[[region_names]]),each=bin_count),dim(design)[1]))
+				}
+				                private$table <- data.table(region = col_regions,
                                                  design = col_designs,
                                                  bin = col_bins,
-                                                 value = col_values)
+                                                 value = col_values,
+												 strand = col_strand)
                 private$params[["bin_size"]] <- bin_size
                 private$params[["bin_count"]] <- bin_count
                 private$params[["noise_removal"]] <- noise_removal
@@ -377,7 +373,7 @@ metagene <- R6Class("metagene",
             stopifnot(sample_count > 0)
             sample_count <- as.integer(sample_count)
 
-            # 1. Get the correctly formatted matrices
+            # 1. Get the correctly formatted table
             if (nrow(self$get_table()) == 0) {
                 self$produce_table()
             }
@@ -408,7 +404,7 @@ metagene <- R6Class("metagene",
             }
             invisible(self)
         },
-        plot = function(region_names = NULL, exp_names = NULL, title = NULL, x_label = NULL) {
+        plot = function(region_names = NULL, design_names = NULL, title = NULL, x_label = NULL) {
             # 1. Get the correctly formatted table
             if (length(private$table) == 0) {
                 self$produce_table()
@@ -419,7 +415,7 @@ metagene <- R6Class("metagene",
                 self$produce_data_frame()
             }
             df <- self$get_data_frame(region_names = region_names,
-                                      exp_names = exp_names)
+                                      design_names = design_names)
             # 3. Produce the graph
             if (is.null(title)) {
                 title <- paste(unique(private$df[["group"]]), collapse=" vs ")
@@ -444,23 +440,23 @@ metagene <- R6Class("metagene",
         },
         flip_regions = function() {
             if (private$params[["flip_regions"]] == FALSE) {
-                private$flip_matrices()
+                private$flip_table()
                 private$params[["flip_regions"]] <- TRUE
             }
             invisible(self)
         },
         unflip_regions = function() {
             if (private$params[["flip_regions"]] == TRUE) {
-                private$flip_matrices()
+                private$flip_table()
                 private$params[["flip_regions"]] <- FALSE
             }
             invisible(self)
         }
-    ),
+	),
         private = list(
         params = list(),
         regions = GRangesList(),
-        data_table = data.table(),
+        table = data.table(),
         design = data.frame(),
         coverages = list(),
         df = data.frame(),
@@ -811,18 +807,9 @@ metagene <- R6Class("metagene",
             }
             result
         },
-        flip_matrices = function() {
-            for (region_name in names(private$matrices)) {
-                region <- private$regions[[region_name]]
-                i <- as.logical(strand(region) == "-")
-                flip <- function(x) {
-                    x[i,] <- x[i,ncol(x):1]
-                    x
-                }
-                m <- private$matrices[[region_name]]
-                m <- lapply(m, lapply, flip)
-                private$matrices[[region_name]] <- m
-            }
+		flip_table = function() {
+			i <- which(private$table$strand == '-')
+			private$table$bin[i] <- (self$get_params()$bin_count + 1) - private$table$bin[i]
         },
         get_bam_names = function(filenames) {
             if (all(filenames %in% colnames(private$design)[-1])) {

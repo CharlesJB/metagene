@@ -178,7 +178,7 @@ A typical metagene analysis will consist steps:
 * Conversion in coverage.
 * Noise removal
 * Normalization of the coverage values.
-* Matrices production.
+* Table production.
 * Data frame production.
 * Generation of the metagene plot.
 
@@ -228,7 +228,7 @@ bam_files <- get_demo_bam_files()
 #mg <- metagene$new(regions = regions, bam_files = bam_files) # TODO
 ```
 
-### Producing the matrices
+### Producing the table
 
 To produce the metagene plot, the coverages must be converted in a matrix where
 the columns represent the positions and the rows the regions. Furthermore, to
@@ -239,13 +239,13 @@ We can control the size of the bins with the `bin_count` argument. By
 default, a `bin_count` of 100 will be used during this step.
 
 ```{r showProduceMatrices}
-#mg$produce_matrices()
+#mg$produce_table()
 ```
 
 We can also use the design we produced earlier to remove background signal and
 combine replicates:
 ```{r produceMatricesDesign}
-#mg$produce_matrices(design = design)
+#mg$produce_table(design = design)
 ```
 
 ### Producing the `data.frame`
@@ -267,8 +267,8 @@ of the values for each positions in each groups.
 
 During this step, metagene will use the `data.frame` to plot the calculated
 values using `ggplot2`. We show a subset of the regions by using the
-`region_names` and `exp_names` parameter. The `region_names` correspond to the
-names of the regions used during the initialization. The `exp_name` will vary
+`region_names` and `design_names` parameter. The `region_names` correspond to the
+names of the regions used during the initialization. The `design_name` will vary
 depending if a design was added. If no design was added, this param correspond
 to the BAM name or BAM filenames. Otherwise, we have to use the names of the
 columns from the design.
@@ -287,7 +287,7 @@ Multiple getters functions are available to access the data that is stored in a
 ### `get_params`
 
 The various parameters used during the initialization of the `metagene` object,
-the production of the matrices and the production of the plot are saved and can
+the production of the table and the production of the plot are saved and can
 be accessed with the `get_params` function:
 ```{r getParams}
 #mg <- get_demo_metagene()
@@ -296,12 +296,12 @@ be accessed with the `get_params` function:
 
 ### `get_design`
 
-To get the design that was used to produce the last version of the matrices,
+To get the design that was used to produce the last version of the table,
 you can use the `get_design` function:
 ```{r getDesign}
-#mg$produce_matrices(design = get_demo_design()) # TODO
+#mg$produce_table(design = get_demo_design()) # TODO
 ## Alternatively, it is also possible to add a design without producing the
-## matrices:
+## table:
 #mg$add_design(get_demo_design()) # TODO
 #mg$get_design() # TODO
 ```
@@ -363,7 +363,7 @@ to itself. This means that the functions can be chained:
 #bam <- get_demo_bam_files()
 #d <- get_demo_design()
 #title <- "Show chain"
-#mg <- metagene$new(rg, bam)$produce_matrices(design = d)$plot(title = title)
+#mg <- metagene$new(rg, bam)$produce_table(design = d)$plot(title = title)
 ```
 
 ## Copying a metagene object

@@ -50,14 +50,14 @@ metagene plots on the data (or a subset of the data).
 \section{Methods}{
 
 \describe{
-    \item{}{\code{mg$plot(region_names = NULL, exp_names = NULL,
+    \item{}{\code{mg$plot(region_names = NULL, design_names = NULL,
                   title = NULL, x_label = NULL)}}
     \item{region_names}{The names of the regions to extract. If \code{NULL},
                         all the regions are returned. Default: \code{NULL}.}
-    \item{exp_names}{The names of the experiments to extract. If a design was
-                     added to the \code{metagene} object, \code{exp_names}
+    \item{design_names}{The names of the experiments to extract. If a design was
+                     added to the \code{metagene} object, \code{design_names}
                      correspond to the column names in the design, otherwise
-                     \code{exp_names} corresponds to the BAM name or the BAM
+                     \code{design_names} corresponds to the BAM name or the BAM
                      filename. If \code{NULL}, all the experiments are
                      returned. Default: \code{NULL}.}
     \item{title}{A title to add to the graph. If \code{NULL}, will be
@@ -66,7 +66,7 @@ metagene plots on the data (or a subset of the data).
                    metagene will use generic label. Default: \code{NULL}.}
 }
 \describe{
-    \item{}{\code{mg$produce_matrices(design, bin_count, noise_removal,
+    \item{}{\code{mg$produce_table(design, bin_count, noise_removal,
                   normalization, flip_regions, bin_size = NULL}}
     \item{design}{A \code{data.frame} that describe to experiment to plot.
                   see \code{plot} function for more details. \code{NA} can be
@@ -79,13 +79,13 @@ metagene plots on the data (or a subset of the data).
                          values are \code{NA}, \code{NULL} or "NCIS". By
                          default, value is \code{NULL}. Use \code{NA} keep
                          previous \code{noise_removal} value (i.e. if
-                         \code{produce_matrices} was called before). See
+                         \code{produce_table} was called before). See
                          Liand and Keles 2012 for the NCIS algorithm.}
     \item{normalization}{The algorithm to use to normalize samples. Possible
                          default, value is \code{NULL} and no normalization
                          will be performed. Use \code{NA} keep
                          previous \code{normalization} value (i.e. if
-                         \code{produce_matrices} was called before).}
+                         \code{produce_table} was called before).}
     \item{flip_regions}{Should regions on negative strand be flip_regions?
                         Default: \code{FALSE}.}
     \item{bin_size}{Deprecated.}
@@ -110,24 +110,16 @@ metagene plots on the data (or a subset of the data).
                         all the regions are returned. Default: \code{NULL}.}
 }
 \describe{
-    \item{}{mg$get_matrices(region_names = NULL, exp_name = NULL)}
-    \item{region_names}{The names of the regions to extract. If \code{NULL},
-                        all the regions are returned. Default: \code{NULL}.}
-    \item{exp_names}{The names of the experiments to extract. If a design was
-                     added to the \code{metagene} object, \code{exp_names}
-                     correspond to the column names in the design, otherwise
-                     \code{exp_names} corresponds to the BAM name or the BAM
-                     filename. If \code{NULL}, all the experiments are
-                     returned. Default: \code{NULL}.}
+    \item{}{mg$get_table()}
 }
 \describe{
-    \item{}{mg$get_data_frame(region_names = NULL, exp_name = NULL)}
+    \item{}{mg$get_data_frame(region_names = NULL, design_names = NULL)}
     \item{region_names}{The names of the regions to extract. If \code{NULL},
                         all the regions are returned. Default: \code{NULL}.}
-    \item{exp_names}{The names of the experiments to extract. If a design was
-                     added to the \code{metagene} object, \code{exp_names}
+    \item{design_names}{The names of the experiments to extract. If a design was
+                     added to the \code{metagene} object, \code{design_names}
                      correspond to the column names in the design, otherwise
-                     \code{exp_names} corresponds to the BAM name or the BAM
+                     \code{design_names} corresponds to the BAM name or the BAM
                      filename. If \code{NULL}, all the experiments are
                      returned. Default: \code{NULL}.}
 }
