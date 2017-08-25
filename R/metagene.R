@@ -8,7 +8,7 @@
 #' \describe{
 #'     \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
 #'                              cores = SerialParam(), verbose = FALSE,
-#'                              pruning_mode = "error")}}
+#'                              force_seqlevels = FALSE)}}
 #'     \item{regions}{Either a \code{vector} of BED, narrowPeak or broadPeak
 #'                    filenames, a \code{GRanges} object or a \code{GRangesList}
 #'                    object.}
@@ -24,7 +24,7 @@
 #'                  Default: \code{SerialParam()}.}
 #'     \item{verbose}{Print progression of the analysis. A logical constant.
 #'                    Default: \code{FALSE}.}
-#'     \item{pruning_mode}{If \code{TRUE}, Remove regions that are not found
+#'     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
 #'                            in bam file header. Default: \code{FALSE}.}
 #' }
 #'
@@ -176,12 +176,12 @@ metagene <- R6Class("metagene",
     # Methods
         initialize = function(regions, bam_files, padding_size = 0,
                               cores = SerialParam(), verbose = FALSE,
-                              pruning_mode = "error") {
+                              force_seqlevels = FALSE) {
             # Check params...
             private$check_param(regions = regions, bam_files = bam_files,
                                 padding_size = padding_size,
                                 cores = cores, verbose = verbose,
-                                pruning_mode = pruning_mode)
+                                force_seqlevels = force_seqlevels)
             # Save params
             private$parallel_job <- Parallel_Job$new(cores)
             private$params[["padding_size"]] <- padding_size
@@ -192,7 +192,7 @@ metagene <- R6Class("metagene",
             }
             private$params[["bin_count"]] <- 100
             private$params[["bam_files"]] <- bam_files
-            private$params[["pruning_mode"]] <- pruning_mode
+            private$params[["force_seqlevels"]] <- force_seqlevels
             private$params[["flip_regions"]] <- FALSE
 
             # Prepare bam files
@@ -464,13 +464,13 @@ metagene <- R6Class("metagene",
         bam_handler = "",
         parallel_job = "",
         check_param = function(regions, bam_files, padding_size,
-                               cores, verbose, pruning_mode) {
+                               cores, verbose, force_seqlevels) {
             # Check parameters validity
             if (!is.logical(verbose)) {
                 stop("verbose must be a logicial value (TRUE or FALSE)")
             }
-            if (!is.logical(pruning_mode)) {
-                stop("pruning_mode must be a logicial value (TRUE or FALSE)")
+            if (!is.logical(force_seqlevels)) {
+				stop("force_seqlevels must be a logicial value (TRUE or FALSE)")
             }
             if (!(is.numeric(padding_size) || is.integer(padding_size)) ||
                 padding_size < 0 || as.integer(padding_size) != padding_size) {
@@ -706,7 +706,7 @@ metagene <- R6Class("metagene",
                         data = private$params[["bam_files"]],
                         FUN = private$bam_handler$get_coverage,
                         regions = regions,
-                        pruning_mode= private$params[["pruning_mode"]])
+                        force_seqlevels= private$params[["force_seqlevels"]])
             names(res) <- names(private$params[["bam_files"]])
             lapply(res, GenomeInfoDb::sortSeqlevels)
         },
