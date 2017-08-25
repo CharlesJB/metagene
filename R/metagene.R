@@ -229,7 +229,10 @@ metagene <- R6Class("metagene",
             }
         },
         get_table = function() {
-            return(private$table)
+            if (length(private$table) == 0) { 
+				return(NULL)
+			}
+			return(private$table)
         },
         
         get_data_frame = function(region_names = NULL, design_names = NULL) {
