@@ -27,7 +27,7 @@
 #'     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
 #'                            in bam file header. Default: \code{FALSE}. TRUE and FALSE
 #'							  respectively correspond to pruning.mode = "coarse" and "error"
-#' 							  in ?Seqinfo.}
+#' 							  in ?seqinfo.}
 #' }
 #'
 #'     \code{metagene$new} returns a \code{metagene} object that contains the

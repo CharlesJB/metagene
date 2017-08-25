@@ -51,7 +51,7 @@
 #'     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
 #'                            in bam file header. Default: \code{FALSE}. TRUE and FALSE
 #'							  respectively correspond to pruning.mode = "coarse" and "error"
-#' 							  in ?Seqinfo.}
+#' 							  in ?seqinfo.}
 #' }
 #' \describe{
 #'     \item{}{\code{bh$get_normalized_coverage(bam_file, regions)
@@ -61,7 +61,7 @@
 #'     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
 #'                            in bam file header. Default: \code{FALSE}. TRUE and FALSE
 #'							  respectively correspond to pruning.mode = "coarse" and "error"
-#' 							  in ?Seqinfo.}
+#' 							  in ?seqinfo.}
 #' }
 #' \describe{
 #'     \item{}{\code{bh$get_noise_ratio(chip_bam_file, input_bam_file)}}
