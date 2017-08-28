@@ -234,14 +234,14 @@ metagene <- R6Class("metagene",
             if (length(private$table) == 0) { 
 				return(NULL)
 			}
-			return(private$table)
+			return(copy(private$table))
         },
         
         get_data_frame = function(region_names = NULL, design_names = NULL) {
 			if (nrow(private$df) == 0) {
                 NULL
             } else if (is.null(region_names) & is.null(design_names)) {
-                private$df
+                return(copy(private$df))
             } else {
                 if (!is.null(region_names)) {
                     stopifnot(is.character(region_names))
@@ -256,7 +256,7 @@ metagene <- R6Class("metagene",
                     design_names <- colnames(private$design)[-1]
                 }
                 i <- (private$df$region %in% region_names &  private$df$design %in% design_names)
-                private$df[i,]
+                return(copy(private$df[i,]))
             }
         },
         get_plot = function() {
