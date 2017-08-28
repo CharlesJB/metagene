@@ -245,22 +245,17 @@ metagene <- R6Class("metagene",
             } else {
                 if (!is.null(region_names)) {
                     stopifnot(is.character(region_names))
-                    region_names <- basename(region_names)
-                    region_names <- tools::file_path_sans_ext(region_names)
                     stopifnot(all(region_names %in% unique(private$table$region)))
                 } else {
                     region_names <- names(private$regions)
                 }
                 if (!is.null(design_names)) {
                     stopifnot(is.character(design_names))
-                    design_names <- private$get_bam_names(design_names)
                     stopifnot(all(design_names %in% unique(private$table$design)))
                 } else {
                     design_names <- colnames(private$design)[-1]
                 }
-                eg <- expand.grid(design_names, region_names)
-                groups <- do.call(paste, c(eg, sep = "_"))
-                i <- private$df$group %in% groups
+                i <- (private$df$region %in% region_names &  private$df$design %in% design_names)
                 private$df[i,]
             }
         },
@@ -350,8 +345,8 @@ metagene <- R6Class("metagene",
                                    ~ private$get_subtable(coverages[[.x]], .y, bin_count)) %>%
                                   unlist
 				col_strand <- c()
-				for (region_names in names(private$regions)){
-					col_strand <- c(col_strand,rep(rep(as.vector(strand(private$regions[region_names])[[region_names]]),each=bin_count),dim(design)[1]))
+				for (region_names in unique(col_regions)){
+					col_strand <- c(col_strand,rep(rep(as.vector(strand(private$regions)[[region_names]]),each=bin_count),length(unique(col_designs))))
 				}
 				                private$table <- data.table(region = col_regions,
                                                  design = col_designs,
