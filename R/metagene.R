@@ -301,6 +301,7 @@ metagene <- R6Class("metagene",
                 warning("bin_size is now deprecated. Please use bin_count.")
                 bin_size <- NULL
             }
+
             design = private$fetch_design(design)
             private$check_produce_table_params(bin_count = bin_count,
                                                   bin_size = bin_size,
@@ -657,14 +658,14 @@ metagene <- R6Class("metagene",
                 names <- sapply(regions, function(x)
                     file_path_sans_ext(basename(x)))
                 import_file <- function(region) {
-            ext <- tolower(tools::file_ext(region))
+				ext <- tolower(tools::file_ext(region))
                     if (ext == "narrowpeak") {
                         extraCols <- c(signalValue = "numeric",
                                        pValue = "numeric", qValue = "numeric",
                                        peak = "integer")
                         rtracklayer::import(region, format = "BED",
                                             extraCols = extraCols)
-                } else if (ext == "broadpeak") {
+					} else if (ext == "broadpeak") {
                         extraCols <- c(signalValue = "numeric",
                                        pValue = "numeric", qValue = "numeric")
                         rtracklayer::import(region, format = "BED",
@@ -680,12 +681,12 @@ metagene <- R6Class("metagene",
                 regions <- GRangesList("regions" = regions)
             } else if (class(regions) == "list") {
                 regions <- GRangesList(regions)
-        }
+			}
             if (is.null(names(regions))) {
-            names(regions) <- sapply(seq_along(regions), function(x) {
+				names(regions) <- sapply(seq_along(regions), function(x) {
                     paste("region", x, sep = "_")
-                              })
-        }
+					})
+			}
             # TODO: Check if there is a id column in the mcols of every ranges.
             #       If not, add one by merging seqnames, start and end.
 
