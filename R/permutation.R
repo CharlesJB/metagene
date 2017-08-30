@@ -47,7 +47,9 @@ permutation_test <- function(table1, table2, sample_size, sample_count, FUN,
     stopifnot(ncol(table1) == ncol(table2))
     stopifnot(is.numeric(sample_size))
     stopifnot(is.numeric(sample_count))
-    stopifnot(sample_size <= ((nrow(table1) + nrow(table2)) / 2))
+	stopifnot(sample_size > 0)
+	stopifnot(sample_count > 0)
+    stopifnot(sample_size <= ((nrow(table1) + nrow(table2))/2))
     stopifnot(is.function(FUN))
 
     # We combine to 2 original matrices to create the pool for the permutations

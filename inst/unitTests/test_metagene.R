@@ -1261,34 +1261,23 @@ test.metagene_produce_table_valid_flip_regions_true <- function() {
 	checkIdentical(mg$get_params()[["bin_count"]], 100)
 	checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
 	
+	#modifier strand char for regions
+	
+	
+	#test expected == observed
 	tab <- mg$get_table()
-	tablength <- length(mg$get_regions())*length(mg$get_params()$bam_files)*(mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
-	checkIdentical(dim(tab)[1] == tablength, TRUE)
-	checkIdentical(dim(tab)[2] == length(c('region', 'design', 'bin', 'value', 'strand')), TRUE)
-
-	#check for presence of levels of factors (region, design, strand)
-	checkIdentical(names(mg$get_regions()), unique(tab$region))
-	checkIdentical(tools::file_path_sans_ext(basename(mg$get_params()$bam_files)), unique(tab$design))
+	# print(tab)
+	expect <- c()
 	for (region_names in names(mg$get_regions())){
-		#print(region_names)
-		checkIdentical(unique(as.vector(strand(mg$get_regions())[[region_names]])), unique(tab$strand[which(tab$region == region_names)]))
-	}
-	#check for number of line by factor region
-	reglength <- length(mg$get_params()$bam_files)*(mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
-	for (region_names in names(mg$get_regions())){
-		#print(region_names)
-		checkIdentical(length(tab$region[which(tab$region == region_names)]) == reglength , TRUE)
-	}
-	#check for number of line by factor design
-	designlength <- (mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
-	for (region_names in names(mg$get_regions())){
-		#print(region_names)
-		for (design_names in tools::file_path_sans_ext(basename(mg$get_params()$bam_files))){
-			#print(design_names)
-			checkIdentical(length(tab$design[which(tab$region == region_names & tab$design == design_names)]) == designlength , TRUE)
+		if(as.vector(strand(mg$get_regions()[[region_names]]))[1] == "-") {
+			expect <- c(expect,rep(100:1,length(names(mg$get_design())[-1])*length(as.vector(strand(mg$get_regions()[[region_names]])))))
+		} else {
+			expect <- c(expect,rep(1:100,length(names(mg$get_design())[-1])*length(as.vector(strand(mg$get_regions()[[region_names]])))))
 		}
 	}
-	print(TRUE)
+	# print(class(tab$bin))
+	# print(class(expect))
+	checkIdentical(as.numeric(tab$bin), as.numeric(expect))
 }
 #
 ## Valid flip_regions false
@@ -1298,31 +1287,24 @@ test.metagene_produce_table_valid_flip_regions_false <- function() {
 	mg$produce_table(flip_regions = FALSE)
 	checkIdentical(mg$get_params()[["bin_count"]], 100)
 	checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
+	
+	#modifier strand char dans regions
+	
+	
+	#test expected == observed
 	tab <- mg$get_table()
-
-	#check for presence of levels of factors (region, design, strand)
-	checkIdentical(names(mg$get_regions()), unique(tab$region))
-	checkIdentical(tools::file_path_sans_ext(basename(mg$get_params()$bam_files)), unique(tab$design))
+	# print(tab)
+	expect <- c()
 	for (region_names in names(mg$get_regions())){
-		#print(region_names)
-		checkIdentical(unique(as.vector(strand(mg$get_regions())[[region_names]])), unique(tab$strand[which(tab$region == region_names)]))
+		# if(as.vector(strand(mg$get_regions()[[region_names]]))[1] == "-") {
+			# expect <- c(expect,rep(100:1,length(names(mg$get_design())[-1])*length(as.vector(strand(mg$get_regions()[[region_names]])))))
+		# } else {
+			expect <- c(expect,rep(1:100,length(names(mg$get_design())[-1])*length(as.vector(strand(mg$get_regions()[[region_names]])))))
+		# }
 	}
-	#check for number of line by factor region
-	reglength <- length(mg$get_params()$bam_files)*(mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
-	for (region_names in names(mg$get_regions())){
-		#print(region_names)
-		checkIdentical(length(tab$region[which(tab$region == region_names)]) == reglength , TRUE)
-	}
-	#check for number of line by factor design
-	designlength <- (mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
-	for (region_names in names(mg$get_regions())){
-		#print(region_names)
-		for (design_names in tools::file_path_sans_ext(basename(mg$get_params()$bam_files))){
-			#print(design_names)
-			checkIdentical(length(tab$design[which(tab$region == region_names & tab$design == design_names)]) == designlength , TRUE)
-		}
-	}
-	print(TRUE)
+	# print(class(tab$bin))
+	# print(class(expect))
+	checkIdentical(as.numeric(tab$bin), as.numeric(expect))
 }
 
 ##################################################
@@ -1372,7 +1354,6 @@ test.metagene_produce_data_frame_default_arguments <- function(){
 	print(TRUE)
 }
 
-
 ### Invalid alpha class
 test.metagene_produce_data_frame_invalid_alpha_class <- function(){
 	mg <- demo_mg$clone()
@@ -1413,70 +1394,6 @@ test.metagene_produce_data_frame_invalid_sample_count_value <- function(){
 	exp <- "sample_count > 0 is not TRUE"
 	checkIdentical(obs, exp)
 }
-
-
-### Valid stat bootstrap
-#test.metagene_produce_data_frame_valid_stat_bootstrap <- function() {
-	# mg <- demo_mg$clone()
-	# mg$produce_data_frame(sample_count = 10)
-	# mg$produce_data_frame(stat = "bootstrap")
-	# df <- mg$get_data_frame()
-	# regions <- get_demo_regions()
-	# bam_files <- get_demo_bam_files()
-	# checkTrue(is.data.frame(df))
-	# checkTrue(ncol(df) ==  5)
-	# checkTrue(nrow(df) ==  length(regions) * length(bam_files) * 100)
-# }
-
-# ## Valid stat basic
-# test.metagene_produce_data_frame_valid_stat_basic <- function() {
-	# mg <- demo_mg$clone()
-	# mg$produce_data_frame(sample_count = 10)
-	# mg$produce_data_frame(stat = "basic")
-	# df <- mg$get_data_frame()
-	# regions <- get_demo_regions()
-	# bam_files <- get_demo_bam_files()
-	# checkTrue(is.data.frame(df))
-	# checkTrue(ncol(df) ==  5)
-	# checkTrue(nrow(df) ==  length(regions) * length(bam_files) * 100)
-# }
-
-# ## Invalid stat class
-# test.metagene_produce_data_frame_invalid_stat_class <- function() {
-    # mg <- demo_mg$clone()
-    # obs <- tryCatch(mg$produce_data_frame(stat = 1),
-                    # error = conditionMessage)
-    # exp <- "is.character(stat) is not TRUE"
-    # checkIdentical(obs, exp)
-# }
-
-# ## Invalid stat empty
-# test.metagene_produce_data_frame_invalid_stat_empty <- function() {
-    # mg <- demo_mg_min$clone()
-    # obs <- tryCatch(mg$produce_data_frame(stat = ""),
-                    # error = conditionMessage)
-    # exp <- "stat %in% c(\"bootstrap\", \"basic\") is not TRUE"
-    # checkIdentical(obs, exp)
-# }
-
-# ## Invalid stat length greater than one
-# test.metagene_produce_data_frame_invalid_stat_length_greater_than_one <-
-    # function() {
-    # mg <- demo_mg_min$clone()
-    # obs <- tryCatch(mg$produce_data_frame(stat = c("bootstrap", "basic")),
-                    # error = conditionMessage)
-    # exp <- "length(stat) == 1 is not TRUE"
-    # checkIdentical(obs, exp)
-# }
-
-# ## Invalid stat value
-# test.metagene_produce_data_frame_invalid_stat_value <- function() {
-    # mg <- demo_mg_min$clone()
-    # obs <- tryCatch(mg$produce_data_frame(stat = "invalid_stat_value"),
-                    # error = conditionMessage)
-    # exp <- "stat %in% c(\"bootstrap\", \"basic\") is not TRUE"
-    # checkIdentical(obs, exp)
-# }
 
 ###################################################
 ## Test the metagene$flip_regions() function
@@ -1560,4 +1477,227 @@ test.metagene_produce_data_frame_invalid_sample_count_value <- function(){
 #    checkIdentical(m1[!(i),], m2[!(i),])
 #    checkIdentical(m1[i,ncol(m1):1], m2[i,])
 #}
+
+####################################################
+### Test the metagene$permutation_test() function
+####################################################
+
+test.metagene_permutation_test_valid <- function() {
+	mg <- get_demo_metagene()
+	design <- get_demo_design()
+	mg$produce_table(design = design)
+	tab <- mg$get_table()
+	tab <- tab[which(tab$region == "list1"),]
+	tab1 <- tab[which(tab$design == "align1"),]
+	tab2 <- tab[which(tab$design == "align2"),]
+	
+	library(similaRpeak)
+	perm_fun <- function(profile1, profile2) {
+		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+	}
+	ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
+	#print(paste("ratio_normalized_intersect :", ratio_normalized_intersect))
+	permutation_results <- permutation_test(tab1, tab2, sample_size = 500,
+										sample_count = 1000, FUN = perm_fun)
+
+	#print(paste("p-value :", sum(ratio_normalized_intersect >= permutation_results) / length(permutation_results)))
+	print(TRUE)
+}
+
+test.metagene_permutation_test_unvalid_table1_table2_are_the_same <- function() {
+	mg <- get_demo_metagene()
+	design <- get_demo_design()
+	mg$produce_table(design = design)
+	tab <- mg$get_table()
+	tab <- tab[which(tab$region == "list1"),]
+	tab1 <- tab[which(tab$design == "align1"),]
+	tab2 <- tab[which(tab$design == "align2"),]
+	
+	library(similaRpeak)
+	perm_fun <- function(profile1, profile2) {
+		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+	}
+	# ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
+	obs <- tryCatch(permutation_test(tab1, tab1, sample_size = 500,
+										sample_count = 1000, FUN = perm_fun),
+					error = conditionMessage)
+	exp <- "!identical(table1, table2) is not TRUE"
+	checkIdentical(obs, exp)
+}
+
+test.metagene_permutation_test_table1_or_2_unvalid_class <- function() {
+	mg <- get_demo_metagene()
+	design <- get_demo_design()
+	mg$produce_table(design = design)
+	tab <- mg$get_table()
+	tab <- tab[which(tab$region == "list1"),]
+	tab1 <- c(1:50)
+	tab2 <- c(1:50)
+	
+	library(similaRpeak)
+	perm_fun <- function(profile1, profile2) {
+		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+	}
+	# ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 500,
+										sample_count = 1000, FUN = perm_fun),
+					error = conditionMessage)
+	exp <- "is.data.table(table1) is not TRUE"
+	checkIdentical(obs, exp)
+	
+	tab1 <- tab[which(tab$design == "align1"),]
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 500,
+										sample_count = 1000, FUN = perm_fun),
+					error = conditionMessage)
+	exp <- "is.data.table(table2) is not TRUE"
+	checkIdentical(obs, exp)
+}
+
+test.metagene_permutation_test_table1_wilder_than_table2 <- function() {
+	mg <- get_demo_metagene()
+	design <- get_demo_design()
+	mg$produce_table(design = design)
+	tab <- mg$get_table()
+	tab <- tab[which(tab$region == "list1"),]
+	tab1 <- tab[which(tab$design == "align1"),]
+	tab2 <- tab[which(tab$design == "align2"),-1]
+	
+	library(similaRpeak)
+	perm_fun <- function(profile1, profile2) {
+		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+	}
+	#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 500,
+										sample_count = 1000, FUN = perm_fun),
+					error = conditionMessage)
+	exp <- "ncol(table1) == ncol(table2) is not TRUE"
+	checkIdentical(obs, exp)
+}
+
+test.metagene_permutation_test_sample_size_unvalid_class <- function() {
+	mg <- get_demo_metagene()
+	design <- get_demo_design()
+	mg$produce_table(design = design)
+	tab <- mg$get_table()
+	tab <- tab[which(tab$region == "list1"),]
+	tab1 <- tab[which(tab$design == "align1"),]
+	tab2 <- tab[which(tab$design == "align2"),]
+	
+	library(similaRpeak)
+	perm_fun <- function(profile1, profile2) {
+		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+	}
+	#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = "test",
+										sample_count = 1000, FUN = perm_fun),
+					error = conditionMessage)
+	exp <- "is.numeric(sample_size) is not TRUE"
+	checkIdentical(obs, exp)
+}
+
+test.metagene_permutation_test_sample_size_unvalid_value <- function() {
+	mg <- get_demo_metagene()
+	design <- get_demo_design()
+	mg$produce_table(design = design)
+	tab <- mg$get_table()
+	tab <- tab[which(tab$region == "list1"),]
+	tab1 <- tab[which(tab$design == "align1"),]
+	tab2 <- tab[which(tab$design == "align2"),]
+	
+	library(similaRpeak)
+	perm_fun <- function(profile1, profile2) {
+		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+	}
+	#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = -10,
+										sample_count = 1000, FUN = perm_fun),
+					error = conditionMessage)
+	exp <- "sample_size > 0 is not TRUE"
+	checkIdentical(obs, exp)
+}
+
+test.metagene_permutation_test_sample_size_too_big <- function() {
+	mg <- get_demo_metagene()
+	design <- get_demo_design()
+	mg$produce_table(design = design)
+	tab <- mg$get_table()
+	tab <- tab[which(tab$region == "list1"),]
+	tab1 <- tab[which(tab$design == "align1"),]
+	tab2 <- tab[which(tab$design == "align2"),]
+	
+	library(similaRpeak)
+	perm_fun <- function(profile1, profile2) {
+		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+	}
+	#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = dim(tab1)[1]*2+1,
+										sample_count = 1000, FUN = perm_fun),
+					error = conditionMessage)
+	exp <- "sample_size <= ((nrow(table1) + nrow(table2))/2) is not TRUE"
+	checkIdentical(obs, exp)
+}
+
+test.metagene_permutation_test_sample_count_unvalid_class <- function() {
+	mg <- get_demo_metagene()
+	design <- get_demo_design()
+	mg$produce_table(design = design)
+	tab <- mg$get_table()
+	tab <- tab[which(tab$region == "list1"),]
+	tab1 <- tab[which(tab$design == "align1"),]
+	tab2 <- tab[which(tab$design == "align2"),]
+	
+	library(similaRpeak)
+	perm_fun <- function(profile1, profile2) {
+		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+	}
+	#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 500,
+										sample_count = "test", FUN = perm_fun),
+					error = conditionMessage)
+	exp <- "is.numeric(sample_count) is not TRUE"
+	checkIdentical(obs, exp)
+}
+
+test.metagene_permutation_test_sample_count_unvalid_value <- function() {
+	mg <- get_demo_metagene()
+	design <- get_demo_design()
+	mg$produce_table(design = design)
+	tab <- mg$get_table()
+	tab <- tab[which(tab$region == "list1"),]
+	tab1 <- tab[which(tab$design == "align1"),]
+	tab2 <- tab[which(tab$design == "align2"),]
+	
+	library(similaRpeak)
+	perm_fun <- function(profile1, profile2) {
+		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+	}
+	#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 500,
+										sample_count = -10, FUN = perm_fun),
+					error = conditionMessage)
+	exp <- "sample_count > 0 is not TRUE"
+	checkIdentical(obs, exp)
+}
+
+test.metagene_permutation_test_FUN_invalid_class <- function() {
+	mg <- get_demo_metagene()
+	design <- get_demo_design()
+	mg$produce_table(design = design)
+	tab <- mg$get_table()
+	tab <- tab[which(tab$region == "list1"),]
+	tab1 <- tab[which(tab$design == "align1"),]
+	tab2 <- tab[which(tab$design == "align2"),]
+	
+	library(similaRpeak)
+	perm_fun <- function(profile1, profile2) {
+		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+	}
+	#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 500,
+										sample_count = 1000, FUN = "test"),
+					error = conditionMessage)
+	exp <- "is.function(FUN) is not TRUE"
+	checkIdentical(obs, exp)
+}
+
 
