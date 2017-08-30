@@ -27,4 +27,3 @@ Extract Entrez genes promoters from TxDb object.
 }
 
 }
-

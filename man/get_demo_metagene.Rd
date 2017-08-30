@@ -15,4 +15,3 @@ Get a demo metagene object
 \examples{
 mg <- get_demo_metagene()
 }
-

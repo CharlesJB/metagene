@@ -22,4 +22,3 @@ start site.
 \code{\link{get_promoters_txdb}}
 }
 \keyword{datasets}
-

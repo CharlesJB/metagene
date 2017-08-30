@@ -61,7 +61,9 @@ be obtain by using this object.
     \item{bam_file}{The name of the BAM file.}
     \item{regions}{A not empty \code{GRanges} object.}
     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
-                           in bam file header. Default: \code{FALSE}.}
+                           in bam file header. Default: \code{FALSE}. TRUE and FALSE
+						  respectively correspond to pruning.mode = "coarse" and "error"
+							  in ?seqinfo.}
 }
 \describe{
     \item{}{\code{bh$get_normalized_coverage(bam_file, regions)
@@ -69,7 +71,9 @@ be obtain by using this object.
     \item{bam_file}{The name of the BAM file.}
     \item{regions}{A not empty \code{GRanges} object.}
     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
-                           in bam file header. Default: \code{FALSE}.}
+                           in bam file header. Default: \code{FALSE}. TRUE and FALSE
+						  respectively correspond to pruning.mode = "coarse" and "error"
+							  in ?seqinfo.}
 }
 \describe{
     \item{}{\code{bh$get_noise_ratio(chip_bam_file, input_bam_file)}}
@@ -77,6 +81,7 @@ be obtain by using this object.
     \item{input_bam_file}{The path to the input (control) bam file.}
 }
 }
+
 \examples{
 bam_file <- get_demo_bam_files()[1]
 bh <- metagene:::Bam_Handler$new(bam_files = bam_file)
@@ -84,4 +89,3 @@ bh$get_aligned_count(bam_file)
 
 }
 \keyword{datasets}
-

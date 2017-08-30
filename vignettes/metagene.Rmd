@@ -178,7 +178,7 @@ A typical metagene analysis will consist steps:
 * Conversion in coverage.
 * Noise removal
 * Normalization of the coverage values.
-* Matrices production.
+* Table production.
 * Data frame production.
 * Generation of the metagene plot.
 
@@ -192,9 +192,9 @@ A minimal metagene analysis can be performed in 2 steps:
 regions <- get_demo_regions()
 bam_files <- get_demo_bam_files()
 # Initialization
-mg <- metagene$new(regions = regions, bam_files = bam_files)
+#mg <- metagene$new(regions = regions, bam_files = bam_files)  # TODO
 # Plotting
-mg$plot(title = "Demo metagene plot")
+#mg$plot(range = c(-1000,1000), title = "Demo metagene plot") # TODO
 ```
 As you can see, it is not mandatory to explicitly call each step of the metagene
 analysis. For instance, in the previous example, the `plot` function call the
@@ -225,27 +225,28 @@ all the regions specified with the `regions` param of the `new` function.
 ```{r initialization}
 regions <- get_demo_regions()
 bam_files <- get_demo_bam_files()
-mg <- metagene$new(regions = regions, bam_files = bam_files)
+#mg <- metagene$new(regions = regions, bam_files = bam_files) # TODO
 ```
 
-### Producing the matrices
+### Producing the table
 
-To produce the metagene plot, the coverages must be converted in a matrix where
+To produce the metagene plot, the coverages must be converted in matrices where
 the columns represent the positions and the rows the regions. Furthermore, to
 reduce the computation time during the following steps, the positions are also
-binned.
+binned. Regions, designs, bins, associated values and orientation of strands are pulled
+into a data.table called table and accessible thanks to the getter `get_table`.
 
 We can control the size of the bins with the `bin_count` argument. By
 default, a `bin_count` of 100 will be used during this step.
 
 ```{r showProduceMatrices}
-mg$produce_matrices()
+#mg$produce_table()
 ```
 
 We can also use the design we produced earlier to remove background signal and
 combine replicates:
 ```{r produceMatricesDesign}
-mg$produce_matrices(design = design)
+#mg$produce_table(design = design)
 ```
 
 ### Producing the `data.frame`
@@ -260,20 +261,21 @@ mean of enrichment for every positions in each group of regions/BAM files.
 Another approach, called "basic" will simply use the ribbon to represent 95%
 of the values for each positions in each groups.
 ```{r produceDataFrame}
-mg$produce_data_frame(stat = "basic")
+#mg$produce_data_frame(stat = "basic") # TODO
 ```
 
 ### Plotting
 
 During this step, metagene will use the `data.frame` to plot the calculated
 values using `ggplot2`. We show a subset of the regions by using the
-`region_names` and `exp_names` parameter. The `region_names` correspond to the
-names of the regions used during the initialization. The `exp_name` will vary
+`region_names` and `design_names` parameter. The `region_names` correspond to the
+names of the regions used during the initialization. The `design_name` will vary
 depending if a design was added. If no design was added, this param correspond
 to the BAM name or BAM filenames. Otherwise, we have to use the names of the
 columns from the design.
 ```{r showPlot}
-mg$plot(region_names = "list1", title = "Demo plot subset")
+#mg$plot(region_names = "list1", title = "Demo plot subset",
+#        range = c(-1000, 1000))
 ```
 
 # Manipulating the `metagene` objects
@@ -283,26 +285,30 @@ mg$plot(region_names = "list1", title = "Demo plot subset")
 Multiple getters functions are available to access the data that is stored in a
 `metagene` object.
 
+### `get_table`
+
+To get the data.table containing regions, designs, bins, values at bins and orientation of strands.
+
 ### `get_params`
 
 The various parameters used during the initialization of the `metagene` object,
-the production of the matrices and the production of the plot are saved and can
+the production of the table and the production of the plot are saved and can
 be accessed with the `get_params` function:
 ```{r getParams}
-mg <- get_demo_metagene()
-mg$get_params()
+#mg <- get_demo_metagene()
+#mg$get_params()
 ```
 
 ### `get_design`
 
-To get the design that was used to produce the last version of the matrices,
+To get the design that was used to produce the last version of the table,
 you can use the `get_design` function:
 ```{r getDesign}
-mg$produce_matrices(design = get_demo_design())
+#mg$produce_table(design = get_demo_design()) # TODO
 ## Alternatively, it is also possible to add a design without producing the
-## matrices:
-#mg$add_design(get_demo_design())
-mg$get_design()
+## table:
+#mg$add_design(get_demo_design()) # TODO
+#mg$get_design() # TODO
 ```
 
 ### `get_bam_count`
@@ -310,20 +316,20 @@ mg$get_design()
 To get the number of aligned read in a BAM file, you can use the `get_bam_count`
 function:
 ```{r getBamCount}
-mg$get_bam_count(bam_files[1])
+#mg$get_bam_count(bam_files[1]) # TODO
 ```
 
 ### `get_regions`
 
 To get all the regions, you can use the `get_regions` function:
 ```{r getRegions}
-mg$get_regions()
+# mg$get_regions() # TODO
 ```
 
 It is also possible to extract a subset of the regions with the `get_regions`
 function:
 ```{r getRegionsSubset}
-mg$get_regions(region_names = c(regions[1]))
+# mg$get_regions(region_names = c(regions[1])) # TODO
 ```
 
 ### `get_raw_coverages`
@@ -333,17 +339,17 @@ object, you can use the `get_raw_coverages` function. Please note that to save
 space, metagene will only extract the coverages in the regions provided.
 
 ```{r getRawCoverages}
-coverages <- mg$get_raw_coverages()
-coverages[[1]]
-length(coverages)
+# coverages <- mg$get_raw_coverages() # TODO
+# coverages[[1]] # TODO
+# length(coverages) # TODO
 ```
 
 It is also possible to extract a subset of all the coverages by providing the
 filenames:
 
 ```{r getRawCoveragesSubset}
-coverages <- mg$get_raw_coverages(filenames = bam_files[1:2])
-length(coverages)
+# coverages <- mg$get_raw_coverages(filenames = bam_files[1:2]) # TODO
+# length(coverages) # TODO
 ```
 
 ### `get_normalized_coverages`
@@ -358,11 +364,11 @@ Every function of metagene (except for the getters) invisibly return a pointer
 to itself. This means that the functions can be chained:
 
 ```{r showChain}
-rg <- get_demo_regions()
-bam <- get_demo_bam_files()
-d <- get_demo_design()
-title <- "Show chain"
-mg <- metagene$new(rg, bam)$produce_matrices(design = d)$plot(title = title)
+#rg <- get_demo_regions()
+#bam <- get_demo_bam_files()
+#d <- get_demo_design()
+#title <- "Show chain"
+#mg <- metagene$new(rg, bam)$produce_table(design = d)$plot(title = title)
 ```
 
 ## Copying a metagene object
@@ -370,7 +376,7 @@ mg <- metagene$new(rg, bam)$produce_matrices(design = d)$plot(title = title)
 To copy a metagene object, you have to use the `clone` function:
 
 ```{r copyMetagene}
-mg_copy <- mg$clone()
+# mg_copy <- mg$clone() # TODO
 ```
 
 # Managing large datasets
@@ -411,14 +417,9 @@ function provided with the `metagene` package. Please note that the permutation
 tests functionality is still in development and is expected to change in future
 releases.
 
-The first step is to decide which profiles we want to compare and extract the
-corresponding matrices:
+The first step is to decide which profiles we want to compare :
 
-```{r extractMatrices}
-matrices <- mg$get_matrices()
-m1 <- matrices[["list1"]][["align1"]][["input"]]
-m2 <- matrices[["list1"]][["align2"]][["input"]]
-```
+```to complete
 
 Then we defined to function to use to compare the two profiles. For this, a
 companion package of `metagene` named `r Biocpkg("similaRpeak")` provides

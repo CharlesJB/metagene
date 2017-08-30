@@ -49,7 +49,9 @@
 #'     \item{bam_file}{The name of the BAM file.}
 #'     \item{regions}{A not empty \code{GRanges} object.}
 #'     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
-#'                            in bam file header. Default: \code{FALSE}.}
+#'                            in bam file header. Default: \code{FALSE}. TRUE and FALSE
+#'							  respectively correspond to pruning.mode = "coarse" and "error"
+#' 							  in ?seqinfo.}
 #' }
 #' \describe{
 #'     \item{}{\code{bh$get_normalized_coverage(bam_file, regions)
@@ -57,7 +59,9 @@
 #'     \item{bam_file}{The name of the BAM file.}
 #'     \item{regions}{A not empty \code{GRanges} object.}
 #'     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
-#'                            in bam file header. Default: \code{FALSE}.}
+#'                            in bam file header. Default: \code{FALSE}. TRUE and FALSE
+#'							  respectively correspond to pruning.mode = "coarse" and "error"
+#' 							  in ?seqinfo.}
 #' }
 #' \describe{
 #'     \item{}{\code{bh$get_noise_ratio(chip_bam_file, input_bam_file)}}
@@ -220,13 +224,14 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
             invisible(bam_name)
         },
-        check_bam_levels = function(bam_file, regions, force) {
+        check_bam_levels = function(bam_file, regions, force_seqlevels) {
             bam_levels <- GenomeInfoDb::seqlevels(Rsamtools::BamFile(bam_file))
             if (!all(unique(GenomeInfoDb::seqlevels(regions)) %in% bam_levels)) {
-                if (force == FALSE) {
+                if (force_seqlevels) {
                     stop("Some seqlevels of regions are absent in bam_file")
-                } else {
-                    GenomeInfoDb::seqlevels(regions, force = TRUE) <- bam_levels
+                } else { #force_seqlevels = TRUE
+					#force_seqlevels is used here but the user interface continue to use force_seqlevels an boolean mode
+                    GenomeInfoDb::seqlevels(regions, pruning.mode = 'coarse') <- bam_levels
                     if (length(regions) == 0) {
                         stop("No seqlevels matching between regions and bam file")
                     }
@@ -314,6 +319,13 @@ Bam_Handler <- R6Class("Bam_Handler",
                 stop("Parameter regions must be a GRanges object.")
             }
 
+            # The seqlevels of regions must all be present in bam_file
+            regions <- private$check_bam_levels(bam_file, regions,
+                            force_seqlevels = force_seqlevels)
+            to_remove <- seqlevels(regions)[!(seqlevels(regions) %in%
+                                          unique(seqnames(regions)))]
+            regions <- dropSeqlevels(regions, to_remove)
+
             # The regions must not be empty
             if (length(regions) == 0) {
                 stop("Parameter regions must not be an empty GRanges object")
@@ -321,7 +333,7 @@ Bam_Handler <- R6Class("Bam_Handler",
 
             # The seqlevels of regions must all be present in bam_file
             regions <- private$check_bam_levels(bam_file, regions,
-                            force = force_seqlevels)
+                            force_seqlevels = force_seqlevels)
 
             # The seqlengths of regions must be smaller or eqal to those in
 			# bam_file

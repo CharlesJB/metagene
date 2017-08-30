@@ -8,7 +8,7 @@ plot_metagene(df)
 }
 \arguments{
 \item{df}{a \code{data.frame} obtained with the \code{get_data_frame}
-function. Must have the following columns: "group", "position", "value",
+function. Must have the following columns: "region", "design", "bin", "value",
 "qinf" and "qsup".}
 }
 \value{
@@ -25,4 +25,3 @@ mg$produce_data_frame()
 df <- mg$get_data_frame()
 p <- plot_metagene(df)
 }
-
