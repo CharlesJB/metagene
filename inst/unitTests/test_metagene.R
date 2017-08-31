@@ -1442,39 +1442,39 @@ test.metagene_produce_data_frame_invalid_sample_count_value <- function(){
 ####################################################
 #
 ## Valid case not previously flipped
-#test.metagene_unflip_regions_not_previously_flipped <- function() {
-#    mg <- metagene:::metagene$new(bam_files = bam_files[1],
-#                                  regions = regions_strand)
-#    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    mg$produce_table()
-#    m1 <- mg$get_table()[[1]][[1]][[1]]
-#    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    mg$unflip_regions()
-#    m2 <- mg$get_table()[[1]][[1]][[1]]
-#    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    # Compare the matrices
-#    checkTrue(identical(m1, m2) ==  TRUE)
-#}
+test.metagene_unflip_regions_not_previously_flipped <- function() {
+   mg <- metagene:::metagene$new(bam_files = bam_files[1],
+                                 regions = regions_strand)
+   checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
+   mg$produce_table()
+   tab1 <- mg$get_table()
+   checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
+   mg$unflip_regions()
+   tab2 <- mg$get_table()
+   checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
+   # Compare the table
+   checkTrue(identical(tab1, tab2) ==  TRUE)
+}
 #
 ## Valid case previously flipped
-#test.metagene_unflip_regions_previously_flipped <- function() {
-#    mg <- metagene:::metagene$new(bam_files = bam_files[1],
-#                                  regions = regions_strand)
-#    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    mg$produce_table(flip_regions = TRUE)
-#    m1 <- mg$get_table()[[1]][[1]][[1]]
-#    checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
-#    mg$unflip_regions()
-#    m2 <- mg$get_table()[[1]][[1]][[1]]
-#    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    mg$unflip_regions()
-#    m3 <- mg$get_table()[[1]][[1]][[1]]
-#    checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
-#    # Compare the matrices
-#    checkTrue(identical(m1, m2) ==  FALSE)
-#    checkTrue(identical(m2, m3) ==  TRUE)
-#    i <- index_strand
-#    checkIdentical(m1[!(i),], m2[!(i),])
-#    checkIdentical(m1[i,ncol(m1):1], m2[i,])
-#}
+test.metagene_unflip_regions_previously_flipped <- function() {
+   mg <- metagene:::metagene$new(bam_files = bam_files[1],
+                                 regions = regions_strand)
+   checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
+   mg$produce_table(flip_regions = TRUE)
+   tab1 <- mg$get_table()
+   checkIdentical(mg$get_params()[["flip_regions"]], TRUE)
+   mg$unflip_regions()
+   tab2 <- mg$get_table()
+   checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
+   mg$unflip_regions()
+   tab3 <- mg$get_table()
+   checkIdentical(mg$get_params()[["flip_regions"]], FALSE)
+   # Compare the table
+   # print(tab1)
+   # print(tab2)
+   # print(tab3)
+   checkTrue(identical(tab1, tab2) ==  FALSE)
+   checkTrue(identical(tab2, tab3) ==  TRUE)
+}
 
