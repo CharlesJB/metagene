@@ -101,7 +101,10 @@
 #'                         all the regions are returned. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'     \item{}{mg$get_table()}
+#'     \item{}{mg$get_table = function()}
+#' }
+#' \describe{
+#'     \item{}{mg$get_matrices = function()}
 #' }
 #' \describe{
 #'     \item{}{mg$get_data_frame(region_names = NULL, design_names = NULL)}
@@ -234,34 +237,45 @@ metagene <- R6Class("metagene",
             if (length(private$table) == 0) { 
 				return(NULL)
 			}
-			return(private$table)
+			return(copy(private$table))
         },
-        
+		get_matrices = function() {
+			if (is.null(self$get_table())){
+				return(NULL)
+			}
+			matrices <- list()
+			nbcol <- private$params[["bin_count"]]
+			nbrow <- vapply(self$get_regions(), length, numeric(1))
+			for (regions in names(self$get_regions())) {
+				matrices[[regions]] <- list()
+				for (design_name in colnames(self$get_design())[-1]) {
+					matrices[[regions]][[design_name]] <- list()
+					matrices[[regions]][[design_name]][["input"]] <- 
+							matrix(private$table[region == regions & design == design_name,]$value, nrow=nbrow, ncol=nbcol, byrow=TRUE)
+				}
+			}
+			return (matrices)
+		},
         get_data_frame = function(region_names = NULL, design_names = NULL) {
 			if (nrow(private$df) == 0) {
                 NULL
             } else if (is.null(region_names) & is.null(design_names)) {
-                private$df
+                return(copy(private$df))
             } else {
                 if (!is.null(region_names)) {
                     stopifnot(is.character(region_names))
-                    region_names <- basename(region_names)
-                    region_names <- tools::file_path_sans_ext(region_names)
                     stopifnot(all(region_names %in% unique(private$table$region)))
                 } else {
                     region_names <- names(private$regions)
                 }
                 if (!is.null(design_names)) {
                     stopifnot(is.character(design_names))
-                    design_names <- private$get_bam_names(design_names)
                     stopifnot(all(design_names %in% unique(private$table$design)))
                 } else {
                     design_names <- colnames(private$design)[-1]
                 }
-                eg <- expand.grid(design_names, region_names)
-                groups <- do.call(paste, c(eg, sep = "_"))
-                i <- private$df$group %in% groups
-                private$df[i,]
+                i <- (private$df$region %in% region_names &  private$df$design %in% design_names)
+                return(copy(private$df[i,]))
             }
         },
         get_plot = function() {
@@ -306,6 +320,7 @@ metagene <- R6Class("metagene",
                 warning("bin_size is now deprecated. Please use bin_count.")
                 bin_size <- NULL
             }
+
             design = private$fetch_design(design)
             private$check_produce_table_params(bin_count = bin_count,
                                                   bin_size = bin_size,
@@ -350,8 +365,8 @@ metagene <- R6Class("metagene",
                                    ~ private$get_subtable(coverages[[.x]], .y, bin_count)) %>%
                                   unlist
 				col_strand <- c()
-				for (region_names in names(private$regions)){
-					col_strand <- c(col_strand,rep(rep(as.vector(strand(private$regions[region_names])[[region_names]]),each=bin_count),dim(design)[1]))
+				for (region_names in unique(col_regions)){
+					col_strand <- c(col_strand,rep(rep(as.vector(strand(private$regions)[[region_names]]),each=bin_count),length(unique(col_designs))))
 				}
 				                private$table <- data.table(region = col_regions,
                                                  design = col_designs,
@@ -660,16 +675,16 @@ metagene <- R6Class("metagene",
         prepare_regions = function(regions) {
             if (class(regions) == "character") {
                 names <- sapply(regions, function(x)
-                    file_path_sans_ext(basename(x)))
+                  file_path_sans_ext(basename(x)))
                 import_file <- function(region) {
-            ext <- tolower(tools::file_ext(region))
+				ext <- tolower(tools::file_ext(region))
                     if (ext == "narrowpeak") {
                         extraCols <- c(signalValue = "numeric",
                                        pValue = "numeric", qValue = "numeric",
                                        peak = "integer")
                         rtracklayer::import(region, format = "BED",
                                             extraCols = extraCols)
-                } else if (ext == "broadpeak") {
+					} else if (ext == "broadpeak") {
                         extraCols <- c(signalValue = "numeric",
                                        pValue = "numeric", qValue = "numeric")
                         rtracklayer::import(region, format = "BED",
@@ -685,12 +700,12 @@ metagene <- R6Class("metagene",
                 regions <- GRangesList("regions" = regions)
             } else if (class(regions) == "list") {
                 regions <- GRangesList(regions)
-        }
+			}
             if (is.null(names(regions))) {
-            names(regions) <- sapply(seq_along(regions), function(x) {
+				names(regions) <- sapply(seq_along(regions), function(x) {
                     paste("region", x, sep = "_")
-                              })
-        }
+					})
+			}
             # TODO: Check if there is a id column in the mcols of every ranges.
             #       If not, add one by merging seqnames, start and end.
 

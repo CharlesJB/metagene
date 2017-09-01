@@ -286,8 +286,31 @@ Multiple getters functions are available to access the data that is stored in a
 `metagene` object.
 
 ### `get_table`
-
 To get the data.table containing regions, designs, bins, values at bins and orientation of strands.
+```{r getTable}
+#mg <- get_demo_metagene()
+#mg$produce_table()
+#mg$get_table()
+```
+
+### `get_matrices`
+To get the data.table as matrices (the former data structure)
+```{r getMatrices}
+#mg <- get_demo_metagene()
+#mg$produce_table()
+#m <- mg$get_matrices()
+#m$list1$ctrl$input
+```
+
+### `get_data_frame`
+get_data_frame = function(region_names = NULL, design_names = NULL)
+To get the data.frame containing regions and design 
+```{r getDataFrame}
+#mg <- get_demo_metagene()
+#mg$produce_table()
+#mg$produce_data_frame()
+#mg$get_data_frame()
+```
 
 ### `get_params`
 
@@ -417,9 +440,14 @@ function provided with the `metagene` package. Please note that the permutation
 tests functionality is still in development and is expected to change in future
 releases.
 
-The first step is to decide which profiles we want to compare :
+The first step is to decide which profiles we want to compare and extract the corresponding tables :
 
-```to complete
+```{r extract_subtables}
+tab <- mg$get_table()
+tab <- tab[which(tab$region == "list1"),]
+tab1 <- tab[which(tab$design == "align1"),]
+tab2 <- tab[which(tab$design == "align2"),]
+```
 
 Then we defined to function to use to compare the two profiles. For this, a
 companion package of `metagene` named `r Biocpkg("similaRpeak")` provides
@@ -438,7 +466,7 @@ perm_fun <- function(profile1, profile2) {
 We then compare our two profiles using this metric:
 
 ```{r calculateRNI}
-ratio_normalized_intersect <- perm_fun(colMeans(m1), colMeans(m2))
+ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
 ratio_normalized_intersect
 ```
 
@@ -447,7 +475,7 @@ were used to produce the profile and calculate their
 RATIO_NORMALIZED_INTERSECT:
 
 ```{r permTest}
-permutation_results <-  permutation_test(m1, m2, sample_size = nrow(m1),
+permutation_results <-  permutation_test(tab1, tab2, sample_size = nrow(m1),
                                          sample_count = 1000, FUN = perm_fun)
 ```
 

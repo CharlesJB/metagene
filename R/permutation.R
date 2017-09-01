@@ -1,15 +1,15 @@
-#' Perform a permutation test on 2 matrices
+#' Perform a permutation test on 2 tables
 #'
 #' The goal of this function is to calculate the values of a test performed
 #' by \code{FUN} after each of \code{sample_count} permutations.
 #'
 #' Each round of the permutation test, two new matrices will be randomly
-#' sampled from using the combination of the two original matrices. The means
+#' sampled from using the combination of the two original tables. The means
 #' of each columns will be calculated to produce the vectors that will be sent
 #' \code{FUN}.
 #' 
-#' @param matrix1 The first matrix.
-#' @param matrix2 The second matrix.
+#' @param table1 The first table.
+#' @param table2 The second table.
 #' @param sample_size The number of element to draw for each matrix.
 #' @param sample_count The number of permutations.
 #' @param FUN The function to use to compare the 2 matrices. First two params
@@ -22,14 +22,16 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Get some matrices
+#' # Get some tables
 #' mg <- get_demo_metagene()
-#' mg$produce_matrices()
-#' m1 <- mg$get_matrices()$list1$align1_rep1$input
-#' m2 <- mg$get_matrices()$list1$align2_rep1$input
+#' mg$produce_table()
+#' tab <- mg$get_table()
+#' tab <- tab[which(tab$region == "list1"),]
+#' tab1 <- tab[which(tab$design == "align1_rep1"),]
+#' tab2 <- tab[which(tab$design == "align2_rep2"),]
 #'
 #' # Perform permutation test
-#' sample_size <- min(nrow(m1), nrow(m2))
+#' sample_size <- min(nrow(tab1), nrow(tab2))
 #' FUN = function(a, b) { mean(a) - mean(b) } # Dummy function for demo purpose
 #' # A sample_count >= 1000 should be used in a real analysis
 #' permutation_results <- permutation_test(m1, m2, sample_size = sample_size,
@@ -37,19 +39,27 @@
 #' }
 #'
 #' @export
-permutation_test <- function(matrix1, matrix2, sample_size, sample_count, FUN,
+permutation_test <- function(table1, table2, sample_size, sample_count, FUN,
                              ...) {
-    stopifnot(is.matrix(matrix1))
-    stopifnot(is.matrix(matrix2))
-    stopifnot(ncol(matrix1) == ncol(matrix2))
+    stopifnot(is.data.table(table1))
+    stopifnot(is.data.table(table2))
+	stopifnot(!identical(table1, table2))
+    stopifnot(ncol(table1) == ncol(table2))
     stopifnot(is.numeric(sample_size))
     stopifnot(is.numeric(sample_count))
-    stopifnot(sample_size <= ((nrow(matrix1) + nrow(matrix2)) / 2))
+	stopifnot(sample_size > 0)
+	stopifnot(sample_count > 0)
+	bincount <- length(unique(table1$bin))
+    stopifnot(sample_size <= ((nrow(table1)/bincount + nrow(table2)/bincount)/2))
     stopifnot(is.function(FUN))
 
     # We combine to 2 original matrices to create the pool for the permutations
-    new_matrix <- rbind(matrix1, matrix2)
+    new_table <- rbind(table1, table2)
 
+	#to new_table to new_matrix in order to get value in row and bin in columns
+	#to facilitate following sample and mean computations
+	new_matrix <- matrix(new_table$value, ncol=bincount, byrow=TRUE)
+	
     # We create 2 matrices of index with sample_count number of columns and
     # sample_size number of rows. The same column of the 2 matrices cannot
     # contain the same index (i.e.: a sampling without replacement).
@@ -62,11 +72,15 @@ permutation_test <- function(matrix1, matrix2, sample_size, sample_count, FUN,
         i2[,i] <- split(j, 1:2)[[2]]
     }
 
-    # We generate a matrix of profiles corresponding to the mean of the columns
-    # of the matrices generated during each permutation round.
+	
+	# We generate a matrix of profiles corresponding to the mean by bin
+	# from the matrices i1 and i2 generated during each permutation round.
     get_means <- function(i) {
+		# "2" indicates column
+		# apply gets row of new_table selected during the sampling
         replicates <- apply(i, 2, function(j) new_matrix[j,])
-        colmeans <- function(x) {
+        #compute the mean of each replicates
+		colmeans <- function(x) {
             colMeans(matrix(x, ncol = ncol(new_matrix)))
         }
         apply(replicates, 2, colmeans)
@@ -77,4 +91,5 @@ permutation_test <- function(matrix1, matrix2, sample_size, sample_count, FUN,
     # We calculate the scores for each combination of profiles.
     stopifnot(identical(dim(m1), dim(m2)))
     vapply(1:ncol(m1), function(x) FUN(m1[,x], m2[,x], ...), numeric(1))
+
 }

@@ -112,7 +112,10 @@ metagene plots on the data (or a subset of the data).
                         all the regions are returned. Default: \code{NULL}.}
 }
 \describe{
-    \item{}{mg$get_table()}
+    \item{}{mg$get_table = function()}
+}
+\describe{
+    \item{}{mg$get_matrices = function()}
 }
 \describe{
     \item{}{mg$get_data_frame(region_names = NULL, design_names = NULL)}
