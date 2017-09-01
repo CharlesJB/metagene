@@ -101,7 +101,10 @@
 #'                         all the regions are returned. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'     \item{}{mg$get_table()}
+#'     \item{}{mg$get_table = function()}
+#' }
+#' \describe{
+#'     \item{}{mg$get_matrices = function()}
 #' }
 #' \describe{
 #'     \item{}{mg$get_data_frame(region_names = NULL, design_names = NULL)}
@@ -236,7 +239,23 @@ metagene <- R6Class("metagene",
 			}
 			return(copy(private$table))
         },
-        
+		get_matrices = function() {
+			if (is.null(self$get_table())){
+				return(NULL)
+			}
+			matrices <- list()
+			nbcol <- private$params[["bin_count"]]
+			nbrow <- vapply(self$get_regions(), length, numeric(1))
+			for (regions in names(self$get_regions())) {
+				matrices[[regions]] <- list()
+				for (design_name in colnames(self$get_design())[-1]) {
+					matrices[[regions]][[design_name]] <- list()
+					matrices[[regions]][[design_name]][["input"]] <- 
+							matrix(private$table[region == regions & design == design_name,]$value, nrow=nbrow, ncol=nbcol, byrow=TRUE)
+				}
+			}
+			return (matrices)
+		},
         get_data_frame = function(region_names = NULL, design_names = NULL) {
 			if (nrow(private$df) == 0) {
                 NULL
@@ -656,7 +675,7 @@ metagene <- R6Class("metagene",
         prepare_regions = function(regions) {
             if (class(regions) == "character") {
                 names <- sapply(regions, function(x)
-                    file_path_sans_ext(basename(x)))
+                  file_path_sans_ext(basename(x)))
                 import_file <- function(region) {
 				ext <- tolower(tools::file_ext(region))
                     if (ext == "narrowpeak") {

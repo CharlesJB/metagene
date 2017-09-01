@@ -286,8 +286,31 @@ Multiple getters functions are available to access the data that is stored in a
 `metagene` object.
 
 ### `get_table`
-
 To get the data.table containing regions, designs, bins, values at bins and orientation of strands.
+```{r getTable}
+#mg <- get_demo_metagene()
+#mg$produce_table()
+#mg$get_table()
+```
+
+### `get_matrices`
+To get the data.table as matrices (the former data structure)
+```{r getMatrices}
+#mg <- get_demo_metagene()
+#mg$produce_table()
+#m <- mg$get_matrices()
+#m$list1$ctrl$input
+```
+
+### `get_data_frame`
+get_data_frame = function(region_names = NULL, design_names = NULL)
+To get the data.frame containing regions and design 
+```{r getDataFrame}
+#mg <- get_demo_metagene()
+#mg$produce_table()
+#mg$produce_data_frame()
+#mg$get_data_frame()
+```
 
 ### `get_params`
 

@@ -416,6 +416,32 @@ test.metagene_get_table_check_copy_of_table <- function() {
 }
 
 ##################################################
+# Test the metagene$get_matrice() function
+##################################################
+
+test.metagene_get_matrices_valid_usage_default =  function(){
+	mg <- demo_mg$clone()
+	mg$produce_table()
+	m <- mg$get_matrices()
+	checkIdentical(dim(m$list1$align1_rep1$input) == c(50,100), c(TRUE,TRUE))
+	checkIdentical(dim(m$list1$align1_rep2$input) == c(50,100), c(TRUE,TRUE))
+	checkIdentical(dim(m$list1$align2_rep1$input) == c(50,100), c(TRUE,TRUE))
+	checkIdentical(dim(m$list1$align2_rep2$input) == c(50,100), c(TRUE,TRUE))
+	checkIdentical(dim(m$list1$ctrl$input) == c(50,100), c(TRUE,TRUE))
+	checkIdentical(dim(m$list2$align1_rep1$input) == c(50,100), c(TRUE,TRUE))
+	checkIdentical(dim(m$list2$align1_rep2$input) == c(50,100), c(TRUE,TRUE))
+	checkIdentical(dim(m$list2$align2_rep1$input) == c(50,100), c(TRUE,TRUE))
+	checkIdentical(dim(m$list2$align2_rep2$input) == c(50,100), c(TRUE,TRUE))
+	checkIdentical(dim(m$list2$ctrl$input) == c(50,100), c(TRUE,TRUE))
+}
+
+test.metagene_get_matrices_without_producing_table_before <- function() {
+   mg <- demo_mg$clone()
+   m <- mg$get_matrices()
+   checkIdentical(m, NULL)
+}
+
+##################################################
 # Test the metagene$get_data_frame() function
 ##################################################
 
@@ -1477,4 +1503,5 @@ test.metagene_unflip_regions_previously_flipped <- function() {
    checkTrue(identical(tab1, tab2) ==  FALSE)
    checkTrue(identical(tab2, tab3) ==  TRUE)
 }
+
 
