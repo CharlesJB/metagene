@@ -41,8 +41,8 @@
 #' @export
 permutation_test <- function(table1, table2, sample_size, sample_count, FUN,
                              ...) {
-    stopifnot(is.data.table(table1))
-    stopifnot(is.data.table(table2))
+    stopifnot(is.data.frame(table1))
+    stopifnot(is.data.frame(table2))
 	stopifnot(!identical(table1, table2))
     stopifnot(ncol(table1) == ncol(table2))
     stopifnot(is.numeric(sample_size))

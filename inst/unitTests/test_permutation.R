@@ -73,14 +73,14 @@ test.metagene_permutation_test_table1_or_2_unvalid_class <- function() {
 	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = 1000, FUN = perm_fun),
 					error = conditionMessage)
-	exp <- "is.data.table(table1) is not TRUE"
+	exp <- "is.data.frame(table1) is not TRUE"
 	checkIdentical(obs, exp)
 	
 	tab1 <- tab[which(tab$design == "align1"),]
 	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = 1000, FUN = perm_fun),
 					error = conditionMessage)
-	exp <- "is.data.table(table2) is not TRUE"
+	exp <- "is.data.frame(table2) is not TRUE"
 	checkIdentical(obs, exp)
 }
 
