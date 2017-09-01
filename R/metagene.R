@@ -394,7 +394,7 @@ metagene <- R6Class("metagene",
             sample_count <- as.integer(sample_count)
 
             # 1. Get the correctly formatted table
-            if (nrow(self$get_table()) == 0) {
+            if (self$get_table() == NULL | nrow(self$get_table()) == 0) {
                 self$produce_table()
             }
 

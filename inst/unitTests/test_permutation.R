@@ -27,12 +27,12 @@ test.metagene_permutation_test_valid <- function() {
 	}
 	ratio_normalized_intersect <- 
 		perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, tab2[, .(moy=mean(value)), by=bin]$moy)
-	print(paste("ratio_normalized_intersect :", ratio_normalized_intersect))
+	#print(paste("ratio_normalized_intersect :", ratio_normalized_intersect))
 	permutation_results <- permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = 1000, FUN = perm_fun)
 
-	print(paste("p-value :", sum(ratio_normalized_intersect >= permutation_results) / length(permutation_results)))
-	print(TRUE)
+	#print(paste("p-value :", sum(ratio_normalized_intersect >= permutation_results) / length(permutation_results)))
+	#print(TRUE)
 }
 
 test.metagene_permutation_test_unvalid_table1_table2_are_the_same <- function() {
