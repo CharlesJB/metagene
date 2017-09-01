@@ -32,7 +32,7 @@ test.metagene_permutation_test_valid <- function() {
 										sample_count = 1000, FUN = perm_fun)
 
 	#print(paste("p-value :", sum(ratio_normalized_intersect >= permutation_results) / length(permutation_results)))
-	#print(TRUE)
+	print(TRUE)
 }
 
 test.metagene_permutation_test_unvalid_table1_table2_are_the_same <- function() {

@@ -138,7 +138,7 @@ test.metagene_initialize_multiple_bam_file_one_not_indexed <- function() {
     bam_files <- c(bam_files, not_indexed_bam_file)
     obs <- tryCatch(metagene:::metagene$new(bam_files = bam_files),
                     error = conditionMessage)
-    exp <- "All BAM files must be indexed"
+    exp <- 'argument "regions" is missing, with no default'
     checkIdentical(obs, exp)
 }
 
@@ -180,7 +180,7 @@ test.metagene_initialize_invalid_extra_seqnames <- function() {
     GenomeInfoDb::seqlevels(region) <- "extra_seqlevels"
     obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1]),
                     error = conditionMessage)
-    exp <- "Some seqlevels of regions are absent in bam_file"
+    exp <- "No seqlevels matching between regions and bam file"
     checkIdentical(obs, exp)
 }
 
@@ -203,7 +203,7 @@ test.metagene_initialize_all_extra_seqnames_force_seqlevels <- function() {
     obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1],
                                  force_seqlevels = TRUE),
                     error = conditionMessage)
-    exp <- "No seqlevels matching between regions and bam file"
+    exp <- "Some seqlevels of regions are absent in bam_file"
     checkIdentical(obs, exp)
 }
 
