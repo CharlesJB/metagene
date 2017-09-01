@@ -25,12 +25,13 @@ test.metagene_permutation_test_valid <- function() {
 	perm_fun <- function(profile1, profile2) {
 		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
 	}
-	ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
-	#print(paste("ratio_normalized_intersect :", ratio_normalized_intersect))
-	permutation_results <- permutation_test(tab1, tab2, sample_size = 500,
+	ratio_normalized_intersect <- 
+		perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, tab2[, .(moy=mean(value)), by=bin]$moy)
+	print(paste("ratio_normalized_intersect :", ratio_normalized_intersect))
+	permutation_results <- permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = 1000, FUN = perm_fun)
 
-	#print(paste("p-value :", sum(ratio_normalized_intersect >= permutation_results) / length(permutation_results)))
+	print(paste("p-value :", sum(ratio_normalized_intersect >= permutation_results) / length(permutation_results)))
 	print(TRUE)
 }
 
@@ -48,7 +49,7 @@ test.metagene_permutation_test_unvalid_table1_table2_are_the_same <- function() 
 		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
 	}
 	# ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
-	obs <- tryCatch(permutation_test(tab1, tab1, sample_size = 500,
+	obs <- tryCatch(permutation_test(tab1, tab1, sample_size = 50,
 										sample_count = 1000, FUN = perm_fun),
 					error = conditionMessage)
 	exp <- "!identical(table1, table2) is not TRUE"
@@ -69,14 +70,14 @@ test.metagene_permutation_test_table1_or_2_unvalid_class <- function() {
 		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
 	}
 	# ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
-	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 500,
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = 1000, FUN = perm_fun),
 					error = conditionMessage)
 	exp <- "is.data.table(table1) is not TRUE"
 	checkIdentical(obs, exp)
 	
 	tab1 <- tab[which(tab$design == "align1"),]
-	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 500,
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = 1000, FUN = perm_fun),
 					error = conditionMessage)
 	exp <- "is.data.table(table2) is not TRUE"
@@ -97,7 +98,7 @@ test.metagene_permutation_test_table1_wilder_than_table2 <- function() {
 		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
 	}
 	#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
-	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 500,
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = 1000, FUN = perm_fun),
 					error = conditionMessage)
 	exp <- "ncol(table1) == ncol(table2) is not TRUE"
@@ -160,10 +161,10 @@ test.metagene_permutation_test_sample_size_too_big <- function() {
 		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
 	}
 	#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
-	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = dim(tab1)[1]*2+1,
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = dim(tab1)[1],
 										sample_count = 1000, FUN = perm_fun),
 					error = conditionMessage)
-	exp <- "sample_size <= ((nrow(table1) + nrow(table2))/2) is not TRUE"
+	exp <- "sample_size <= ((nrow(table1)/bincount + nrow(table2)/bincount)/2) is not TRUE"
 	checkIdentical(obs, exp)
 }
 
@@ -181,7 +182,7 @@ test.metagene_permutation_test_sample_count_unvalid_class <- function() {
 		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
 	}
 	#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
-	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 500,
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = "test", FUN = perm_fun),
 					error = conditionMessage)
 	exp <- "is.numeric(sample_count) is not TRUE"
@@ -202,7 +203,7 @@ test.metagene_permutation_test_sample_count_unvalid_value <- function() {
 		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
 	}
 	#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
-	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 500,
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = -10, FUN = perm_fun),
 					error = conditionMessage)
 	exp <- "sample_count > 0 is not TRUE"
@@ -223,7 +224,7 @@ test.metagene_permutation_test_FUN_invalid_class <- function() {
 		similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
 	}
 	#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
-	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 500,
+	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = 1000, FUN = "test"),
 					error = conditionMessage)
 	exp <- "is.function(FUN) is not TRUE"
