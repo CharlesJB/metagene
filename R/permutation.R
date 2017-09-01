@@ -55,12 +55,10 @@ permutation_test <- function(table1, table2, sample_size, sample_count, FUN,
 
     # We combine to 2 original matrices to create the pool for the permutations
     new_table <- rbind(table1, table2)
-	print(new_table)
 
 	#to new_table to new_matrix in order to get value in row and bin in columns
 	#to facilitate following sample and mean computations
 	new_matrix <- matrix(new_table$value, ncol=bincount, byrow=TRUE)
-	print(new_matrix)
 	
     # We create 2 matrices of index with sample_count number of columns and
     # sample_size number of rows. The same column of the 2 matrices cannot
@@ -73,8 +71,6 @@ permutation_test <- function(table1, table2, sample_size, sample_count, FUN,
         i1[,i] <- split(j, 1:2)[[1]]
         i2[,i] <- split(j, 1:2)[[2]]
     }
-	print(i2)
-	print(i2)
 
 	
 	# We generate a matrix of profiles corresponding to the mean by bin
@@ -83,21 +79,17 @@ permutation_test <- function(table1, table2, sample_size, sample_count, FUN,
 		# "2" indicates column
 		# apply gets row of new_table selected during the sampling
         replicates <- apply(i, 2, function(j) new_matrix[j,])
-		print(replicates)
         #compute the mean of each replicates
 		colmeans <- function(x) {
-            colMeans(matrix(x, ncol = sample_count))
+            colMeans(matrix(x, ncol = ncol(new_matrix)))
         }
         apply(replicates, 2, colmeans)
     }
     m1 <- get_means(i1)
-	print(m1)
     m2 <- get_means(i2)
-	print(m2)
 
     # We calculate the scores for each combination of profiles.
     stopifnot(identical(dim(m1), dim(m2)))
-    x <- vapply(1:ncol(m1), function(x) FUN(m1[,x], m2[,x], ...), numeric(1))
-	print(x)
-	x
+    vapply(1:ncol(m1), function(x) FUN(m1[,x], m2[,x], ...), numeric(1))
+
 }
