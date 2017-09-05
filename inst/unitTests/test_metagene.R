@@ -127,7 +127,7 @@ test.metagene_initialize_invalid_list_bam_files_value <- function() {
 }
 # Not indexed bam in bam_files value
 test.metagene_initialize_invalid_no_index_bam_files_value <- function() {
-    obs <- tryCatch(metagene:::metagene$new(bam_files = not_indexed_bam_file),
+    obs <- tryCatch(metagene:::metagene$new(regions = regions, bam_files = not_indexed_bam_file),
                     error = conditionMessage)
     exp <- "All BAM files must be indexed"
     checkIdentical(obs, exp)
@@ -136,9 +136,25 @@ test.metagene_initialize_invalid_no_index_bam_files_value <- function() {
 # Multiple bam files, only one not indexed in bam_files value
 test.metagene_initialize_multiple_bam_file_one_not_indexed <- function() {
     bam_files <- c(bam_files, not_indexed_bam_file)
+    obs <- tryCatch(metagene:::metagene$new(regions = regions, bam_files = bam_files),
+                    error = conditionMessage)
+	exp <- "All BAM files must be indexed"
+    checkIdentical(obs, exp)
+}
+
+# not value for argument region
+test.metagene_invalid_initialize_without_region_argument <- function() {
     obs <- tryCatch(metagene:::metagene$new(bam_files = bam_files),
                     error = conditionMessage)
     exp <- 'argument "regions" is missing, with no default'
+    checkIdentical(obs, exp)
+}
+
+# not value for argument region
+test.metagene_invalid_initialize_without_bam_files_argument <- function() {
+    obs <- tryCatch(metagene:::metagene$new(regions = regions),
+                    error = conditionMessage)
+    exp <- 'argument "bam_files" is missing, with no default'
     checkIdentical(obs, exp)
 }
 
@@ -180,7 +196,7 @@ test.metagene_initialize_invalid_extra_seqnames <- function() {
     GenomeInfoDb::seqlevels(region) <- "extra_seqlevels"
     obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1]),
                     error = conditionMessage)
-    exp <- "No seqlevels matching between regions and bam file"
+    exp <- "Some seqlevels of regions are absent in bam_file"
     checkIdentical(obs, exp)
 }
 
@@ -203,7 +219,7 @@ test.metagene_initialize_all_extra_seqnames_force_seqlevels <- function() {
     obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1],
                                  force_seqlevels = TRUE),
                     error = conditionMessage)
-    exp <- "Some seqlevels of regions are absent in bam_file"
+    exp <- "No seqlevels matching between regions and bam file"
     checkIdentical(obs, exp)
 }
 
