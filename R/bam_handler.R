@@ -237,8 +237,8 @@ Bam_Handler <- R6Class("Bam_Handler",
                     GenomeInfoDb::seqlevels(regions, 
                                     pruning.mode = 'coarse') <- bam_levels
                     if (length(regions) == 0) {
-                        stop("No seqlevels matching between 
-                                        regions and bam file")
+                        stop(paste("No seqlevels matching between ",
+                                        "regions and bam file", sep=''))
                     }
                 }
             }

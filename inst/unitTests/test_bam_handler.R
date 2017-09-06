@@ -45,9 +45,11 @@ test.bam_handler_different_seqnames_bam_file_warning <- function() {
     msg <- paste0(msg, "This could also be caused by ")
     msg <- paste0(msg, "discrepancies in the seqlevels style")
     msg <- paste0(msg, " (i.e.: UCSC:chr1 versus NCBI:1)\n\n")
+	print(msg)
     obs <- tryCatch(metagene:::Bam_Handler$new(different_seqnames),
                     warning = conditionMessage)
-    checkIdentical(obs, exp)
+	print(obs)
+    checkIdentical(obs, msg)
 }
 
 ## Invalid bam file - not indexed
@@ -354,6 +356,7 @@ test.bam_handler_get_coverage_all_seqnames_not_in_bam_force_seqlevels <-
                                              regions = region,
                                              force_seqlevels = TRUE),
                     error = conditionMessage)
+	print(obs)
     exp <- "No seqlevels matching between regions and bam file"
     checkIdentical(obs, exp)
 }

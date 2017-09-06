@@ -503,8 +503,8 @@ metagene <- R6Class("metagene",
                 stop("verbose must be a logicial value (TRUE or FALSE)")
             }
             if (!is.logical(force_seqlevels)) {
-                stop("force_seqlevels must be a logicial 
-                            value (TRUE or FALSE)")
+                stop(paste("force_seqlevels must be a logicial ",
+                            "value (TRUE or FALSE)",sep=""))
             }
             if (!(is.numeric(padding_size) || is.integer(padding_size)) ||
                 padding_size < 0 || as.integer(padding_size) != padding_size) {
@@ -566,8 +566,8 @@ metagene <- R6Class("metagene",
             if (!identical(design, NA)) {
                 if (!is.null(design)) {
                     if (sum(rowSums(design[ , -1, drop=FALSE]) > 0) == 0) {
-                        stop("At least one BAM file must be 
-                                used in the design")
+                        stop(paste("At least one BAM file must be ",
+                                "used in the design",sep=""))
                     }
                 }
             }
