@@ -8,13 +8,13 @@ read.BAM <- function(bam_file) {
         flag_p <- Rsamtools::scanBamFlag(isNotPassingQualityControls = FALSE,
                                         isMinusStrand = FALSE)
         flag_m <- Rsamtools::scanBamFlag(isNotPassingQualityControls = FALSE,
-                                         isMinusStrand = TRUE)
+                                        isMinusStrand = TRUE)
         param_p <- Rsamtools::ScanBamParam(flag = flag_p, which = gr)
         param_m <- Rsamtools::ScanBamParam(flag = flag_m, which = gr)
         plus <- GenomicAlignments::readGAlignments(bam_file, param = param_p)
         minus <- GenomicAlignments::readGAlignments(bam_file, param = param_m)
         list("-" = BiocGenerics::end(minus),
-             "+" = BiocGenerics::start(plus) - 1L)
+            "+" = BiocGenerics::start(plus) - 1L)
     }
 
     chr <- GenomeInfoDb::seqlevels(Rsamtools::BamFile(bam_file))

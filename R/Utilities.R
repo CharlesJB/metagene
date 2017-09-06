@@ -10,11 +10,11 @@
 # param n Number of bins to produce.
 #
 # return
-#   A GRanges object splitted into N bins
+# A GRanges object splitted into N bins
 #
 # examples
-#   gr <- GRanges("chr1", IRanges(c(100, 300), c(200, 500))
-#   gr <- intoNbins(gr)
+# gr <- GRanges("chr1", IRanges(c(100, 300), c(200, 500))
+# gr <- intoNbins(gr)
 intoNbins <- function(gr, n = 10) {
     stopifnot(class(gr) == "GRanges")
     stopifnot(length(gr) > 0)
@@ -56,5 +56,5 @@ intoNbins <- function(gr, n = 10) {
 get_promoters_txdb <- function(txdb, upstream = 1000, downstream = 1000) {
     stopifnot(is(txdb, "TxDb"))
     GenomicFeatures::promoters(GenomicFeatures::genes(txdb),
-                               upstream = upstream, downstream = downstream)
+                            upstream = upstream, downstream = downstream)
 }

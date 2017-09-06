@@ -3,17 +3,18 @@
 
 Stat <- R6Class("Stat",
     public = list(
-        initialize = function(data, ctrl = NULL, alpha = 0.05, average = "mean",
-                              range = c(-1, 1)) {
+        initialize = function(data, ctrl = NULL, alpha = 0.05, 
+                                average = "mean",
+                                range = c(-1, 1)) {
 
             private$check_param(data = data, ctrl = ctrl, alpha = alpha,
-                          average = average, range = range)
+                            average = average, range = range)
 
             # Save parameters
             private$parameters[["average"]] <- average
             private$parameters[["alpha"]] <- alpha
             private$parameters[["range"]] <- range
-      
+    
             private$data <- data
             if (!is.null(ctrl)) {
                 private$ctrl <- ctrl
@@ -66,7 +67,7 @@ Stat <- R6Class("Stat",
                 reason = "statistics must be a data.frame."
                 stop(paste(error, reason))
             }
-      
+    
             # Check columns
             expected <- c("position", "value", "qinf", "qsup")
             if (!identical(colnames(private$statistics), expected)) {
@@ -126,13 +127,14 @@ Basic_Stat <- R6Class("Basic_Stat",
 Bootstrap_Stat <- R6Class("Bootstrap_Stat",
     inherit = Stat,
     public = list(
-        initialize = function(data, ctrl = NULL, alpha = 0.05, average = "mean",
-                              range = c(-1, 1), sample_count = 1000,
-                              sample_size = NA, debug = FALSE) {
+        initialize = function(data, ctrl = NULL, alpha = 0.05, 
+                                average = "mean",
+                                range = c(-1, 1), sample_count = 1000,
+                                sample_size = NA, debug = FALSE) {
 
             # Check parameters validity
             super$check_param(data = data, ctrl = ctrl, alpha = alpha,
-                              average = average, range = range)
+                            average = average, range = range)
             if (!is.numeric(sample_count)
                 || as.integer(sample_count) != sample_count
                 || sample_count < 1) {
@@ -159,13 +161,13 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
 
             # Initialize and calculate statistic
             super$initialize(data = data, ctrl = ctrl, alpha = alpha,
-                             average = average, range = range)
+                            average = average, range = range)
         },
         get_statistics = function() {
             if (private$parameters[["debug"]]) {
                 list(statistics = private$statistics,
-                     values = private$values,
-                     replicates = private$replicates)
+                    values = private$values,
+                    replicates = private$replicates)
             } else {
                 private$statistics
             }
@@ -183,11 +185,13 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
             # Calculate results
             position <- seq(range[1], range[2], length.out = ncol(data))
             if (!is.null(ctrl)) {
-                res <- lapply(split(data, rep(1:ncol(data), each = nrow(data))),
-                              private$calculate_statistic, ctrl = ctrl)
+                res <- lapply(split(data, rep(1:ncol(data), 
+                            each = nrow(data))),
+                            private$calculate_statistic, ctrl = ctrl)
             } else {
-                res <- lapply(split(data, rep(1:ncol(data), each = nrow(data))),
-                              private$calculate_statistic)
+                res <- lapply(split(data, rep(1:ncol(data), 
+                            each = nrow(data))),
+                            private$calculate_statistic)
             }
             res <- data.frame(do.call(rbind, res))
             cbind(position, res, row.names = NULL)
@@ -226,8 +230,8 @@ Bootstrap_Stat <- R6Class("Bootstrap_Stat",
 
             sample_data <- function() {
                     column_values[sample(seq_along(column_values),
-                                         sample_size * sample_count,
-                                         replace=TRUE)]
+                                        sample_size * sample_count,
+                                        replace=TRUE)]
             }
             matrix(sample_data(), ncol = sample_count)
         },

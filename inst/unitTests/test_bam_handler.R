@@ -35,15 +35,16 @@ test.bam_handler_single_valid_file <- function() {
 ## Different seqnames bam file warning
 test.bam_handler_different_seqnames_bam_file_warning <- function() {
     bam_handler <- demo_bh_one$clone()
-    exp <- "\n\n  Some bam files have discrepancies in their seqnames."
-    exp <- paste0(exp, "\n\n")
-    exp <- paste0(exp, "  This could be caused by chromosome names ")
-    exp <- paste0(exp, "present only in a subset of the bam files ")
-    exp <- paste0(exp, "(i.e.: chrY in some bam files, but absent in ")
-    exp <- paste0(exp, "others.\n\n")
-    exp <- paste0(exp, "  This could also be caused by discrepancies ")
-    exp <- paste0(exp, "in the seqlevels style (i.e.: UCSC:chr1 ")
-    exp <- paste0(exp, "versus NCBI:1)\n\n")
+	msg <- "\n\nSome bam files have discrepancies in their "
+    msg <- paste0(msg, "seqnames.")
+    msg <- paste0(msg, "\n\n")
+    msg <- paste0(msg, "This could be caused by chromosome names")
+    msg <- paste0(msg, " present only in a subset of the bam ")
+    msg <- paste0(msg, "files (i.e.: chrY in some bam files, but ")
+    msg <- paste0(msg, "absent in others.\n\n")
+    msg <- paste0(msg, "This could also be caused by ")
+    msg <- paste0(msg, "discrepancies in the seqlevels style")
+    msg <- paste0(msg, " (i.e.: UCSC:chr1 versus NCBI:1)\n\n")
     obs <- tryCatch(metagene:::Bam_Handler$new(different_seqnames),
                     warning = conditionMessage)
     checkIdentical(obs, exp)
