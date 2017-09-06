@@ -10,9 +10,9 @@
 #' 
 #' @param table1 The first table.
 #' @param table2 The second table.
-#' @param sample_size The number of element to draw for each matrix.
+#' @param sample_size The number of element to draw for each table.
 #' @param sample_count The number of permutations.
-#' @param FUN The function to use to compare the 2 matrices. First two params
+#' @param FUN The function to use to compare the 2 table. First two params
 #'            must be \code{numeric} vector and the return must be a single
 #'            \code{numeric} value.
 #' @param ... Extra param for \code{FUN}.

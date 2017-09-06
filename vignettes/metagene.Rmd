@@ -192,9 +192,9 @@ A minimal metagene analysis can be performed in 2 steps:
 regions <- get_demo_regions()
 bam_files <- get_demo_bam_files()
 # Initialization
-#mg <- metagene$new(regions = regions, bam_files = bam_files) # TODO
+mg <- metagene$new(regions = regions, bam_files = bam_files)
 # Plotting
-#mg$plot(range = c(-1000,1000), title = "Demo metagene plot") # TODO
+mg$plot(title = "Demo metagene plot")
 ```
 As you can see, it is not mandatory to explicitly call each step of the 
 metagene analysis. For instance, in the previous example, the `plot` function 
@@ -225,7 +225,7 @@ all the regions specified with the `regions` param of the `new` function.
 ```{r initialization}
 regions <- get_demo_regions()
 bam_files <- get_demo_bam_files()
-#mg <- metagene$new(regions = regions, bam_files = bam_files) # TODO
+mg <- metagene$new(regions = regions, bam_files = bam_files)
 ```
 
 ### Producing the table
@@ -240,13 +240,13 @@ We can control the size of the bins with the `bin_count` argument. By
 default, a `bin_count` of 100 will be used during this step.
 
 ```{r showProduceTable}
-#mg$produce_table()
+mg$produce_table()
 ```
 
 We can also use the design we produced earlier to remove background signal and
 combine replicates:
 ```{r produceTableDesign}
-#mg$produce_table(design = design)
+mg$produce_table(design = design)
 ```
 
 ### Producing the `data.frame`
@@ -261,7 +261,7 @@ mean of enrichment for every positions in each group of regions/BAM files.
 Another approach, called "basic" will simply use the ribbon to represent 95%
 of the values for each positions in each groups.
 ```{r produceDataFrame}
-#mg$produce_data_frame(stat = "basic") # TODO
+mg$produce_data_frame()
 ```
 
 ### Plotting
@@ -274,8 +274,7 @@ will vary depending if a design was added. If no design was added, this param
 correspond to the BAM name or BAM filenames. Otherwise, we have to use the 
 names of the columns from the design.
 ```{r showPlot}
-#mg$plot(region_names = "list1", title = "Demo plot subset",
-#        range = c(-1000, 1000))
+mg$plot(region_names = "list1", title = "Demo plot subset")
 ```
 
 # Manipulating the `metagene` objects
@@ -289,28 +288,28 @@ Multiple getters functions are available to access the data that is stored in a
 To get the data.table containing regions, designs, bins, values at bins and 
 orientation of strands.
 ```{r getTable}
-#mg <- get_demo_metagene()
-#mg$produce_table()
-#mg$get_table()
+mg <- get_demo_metagene()
+mg$produce_table()
+mg$get_table()
 ```
 
 ### `get_matrices`
 To get the data.table as matrices (the former data structure)
 ```{r getMatrices}
-#mg <- get_demo_metagene()
-#mg$produce_table()
-#m <- mg$get_matrices()
-#m$list1$ctrl$input
+mg <- get_demo_metagene()
+mg$produce_table()
+m <- mg$get_matrices()
+# m$list1$ctrl$input to access to region 'list1' and 'ctrl' design
 ```
 
 ### `get_data_frame`
 get_data_frame = function(region_names = NULL, design_names = NULL)
 To get the data.frame containing regions and design 
 ```{r getDataFrame}
-#mg <- get_demo_metagene()
-#mg$produce_table()
-#mg$produce_data_frame()
-#mg$get_data_frame()
+mg <- get_demo_metagene()
+mg$produce_table()
+mg$produce_data_frame()
+mg$get_data_frame()
 ```
 
 ### `get_params`
@@ -319,8 +318,8 @@ The various parameters used during the initialization of the `metagene` object,
 the production of the table and the production of the plot are saved and can
 be accessed with the `get_params` function:
 ```{r getParams}
-#mg <- get_demo_metagene()
-#mg$get_params()
+mg <- get_demo_metagene()
+mg$get_params()
 ```
 
 ### `get_design`
@@ -328,11 +327,11 @@ be accessed with the `get_params` function:
 To get the design that was used to produce the last version of the table,
 you can use the `get_design` function:
 ```{r getDesign}
-#mg$produce_table(design = get_demo_design()) # TODO
+mg$produce_table(design = get_demo_design())
 ## Alternatively, it is also possible to add a design without producing the
 ## table:
-#mg$add_design(get_demo_design()) # TODO
-#mg$get_design() # TODO
+mg$add_design(get_demo_design())
+mg$get_design()
 ```
 
 ### `get_bam_count`
@@ -341,20 +340,20 @@ To get the number of aligned read in a BAM file, you can use the
 `get_bam_count`
 function:
 ```{r getBamCount}
-#mg$get_bam_count(bam_files[1]) # TODO
+mg$get_bam_count(bam_files[1])
 ```
 
 ### `get_regions`
 
 To get all the regions, you can use the `get_regions` function:
 ```{r getRegions}
-# mg$get_regions() # TODO
+mg$get_regions()
 ```
 
 It is also possible to extract a subset of the regions with the `get_regions`
 function:
 ```{r getRegionsSubset}
-# mg$get_regions(region_names = c(regions[1])) # TODO
+mg$get_regions(region_names = c(regions[1]))
 ```
 
 ### `get_raw_coverages`
@@ -364,17 +363,17 @@ object, you can use the `get_raw_coverages` function. Please note that to save
 space, metagene will only extract the coverages in the regions provided.
 
 ```{r getRawCoverages}
-# coverages <- mg$get_raw_coverages() # TODO
-# coverages[[1]] # TODO
-# length(coverages) # TODO
+coverages <- mg$get_raw_coverages()
+coverages[[1]]
+length(coverages)
 ```
 
 It is also possible to extract a subset of all the coverages by providing the
 filenames:
 
 ```{r getRawCoveragesSubset}
-# coverages <- mg$get_raw_coverages(filenames = bam_files[1:2]) # TODO
-# length(coverages) # TODO
+coverages <- mg$get_raw_coverages(filenames = bam_files[1:2])
+length(coverages)
 ```
 
 ### `get_normalized_coverages`
@@ -389,11 +388,11 @@ Every function of metagene (except for the getters) invisibly return a pointer
 to itself. This means that the functions can be chained:
 
 ```{r showChain}
-#rg <- get_demo_regions()
-#bam <- get_demo_bam_files()
-#d <- get_demo_design()
-#title <- "Show chain"
-#mg <- metagene$new(rg, bam)$produce_table(design = d)$plot(title = title)
+rg <- get_demo_regions()
+bam <- get_demo_bam_files()
+d <- get_demo_design()
+title <- "Show chain"
+mg <- metagene$new(rg, bam)$produce_table(design = d)$plot(title = title)
 ```
 
 ## Copying a metagene object
@@ -401,7 +400,7 @@ to itself. This means that the functions can be chained:
 To copy a metagene object, you have to use the `clone` function:
 
 ```{r copyMetagene}
-# mg_copy <- mg$clone() # TODO
+mg_copy <- mg$clone()
 ```
 
 # Managing large datasets
@@ -414,25 +413,25 @@ One way to avoid this is to analyse each dataset seperately and then merge just
 before producing the metagene plot:
 
 ```{r memory, collapse=TRUE}
-# mg1 <- metagene$new(bam_files = bam_files, regions = regions[1])
-# mg1$produce_data_frame()
-# mg2 <- metagene$new(bam_files = bam_files, regions = regions[2])
-# mg2$produce_data_frame()
+mg1 <- metagene$new(bam_files = bam_files, regions = regions[1])
+mg1$produce_data_frame()
+mg2 <- metagene$new(bam_files = bam_files, regions = regions[2])
+mg2$produce_data_frame()
 ```
 
 Then you can extract the `data.frame`s and combine them with `rbind`:
 
 ```{r extractDF}
-# df1 <- mg1$get_data_frame()
-# df2 <- mg2$get_data_frame()
-# df <- rbind(df1, df2)
+df1 <- mg1$get_data_frame()
+df2 <- mg2$get_data_frame()
+df <- rbind(df1, df2)
 ```
 
 Finally, you can use the `plot_metagene` function to produce the metagene plot:
 
 ```{r plotMetagene}
-# p <- plot_metagene(df)
-# p + ggplot2::ggtitle("Managing large datasets")
+p <- plot_metagene(df)
+p + ggplot2::ggtitle("Managing large datasets")
 ```
 
 # Comparing profiles with permutations
@@ -446,10 +445,10 @@ The first step is to decide which profiles we want to compare and extract the
 corresponding tables :
 
 ```{r extract_subtables}
-#tab <- mg$get_table()
-#tab <- tab[which(tab$region == "list1"),]
-#tab1 <- tab[which(tab$design == "align1"),]
-#tab2 <- tab[which(tab$design == "align2"),]
+tab <- mg$get_table()
+tab <- tab[which(tab$region == "list1"),]
+tab1 <- tab[which(tab$design == "align1"),]
+tab2 <- tab[which(tab$design == "align2"),]
 ```
 
 Then we defined to function to use to compare the two profiles. For this, a
@@ -460,18 +459,20 @@ For this example, we will prepare a function to calculate the
 RATIO_NORMALIZED_INTERSECT between two profiles:
 
 ```{r similaRpeak}
-#library(similaRpeak)
-#perm_fun <- function(profile1, profile2) {
-#    sim <- similarity(profile1, profile2)
-#    sim[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
-#}
+library(similaRpeak)
+perm_fun <- function(profile1, profile2) {
+    sim <- similarity(profile1, profile2)
+    sim[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+}
 ```
 
 We then compare our two profiles using this metric:
 
 ```{r calculateRNI}
-#ratio_normalized_intersect <- perm_fun(tab1$value, tab2$value)
-#ratio_normalized_intersect
+ratio_normalized_intersect <- 
+  perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, 
+		   tab2[, .(moy=mean(value)), by=bin]$moy)
+ratio_normalized_intersect
 ```
 
 To check if this value is significant, we can permute the two tables that
@@ -479,14 +480,14 @@ were used to produce the profile and calculate their
 RATIO_NORMALIZED_INTERSECT:
 
 ```{r permTest}
-#permutation_results <- permutation_test(tab1, tab2, sample_size = nrow(m1),
-#                                        sample_count = 1000, FUN = perm_fun)
+permutation_results <- permutation_test(tab1, tab2, sample_size = 50,
+                                        sample_count = 1000, FUN = perm_fun)
 ```
 
 Finally, we check how often the calculated value is greater than the results of
 the permutations:
 
 ```{r perm_pval}
-#sum(ratio_normalized_intersect >= permutation_results) / 
-#                                length(permutation_results)
+sum(ratio_normalized_intersect >= permutation_results) / 
+                                length(permutation_results)
 ```

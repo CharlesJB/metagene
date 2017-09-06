@@ -23,7 +23,7 @@ must be \code{numeric} vector and the return must be a single
 }
 \value{
 A \code{vector} of numeric corresponding to the result of each
-       permutation.
+    permutation.
 }
 \description{
 The goal of this function is to calculate the values of a test performed
@@ -50,7 +50,7 @@ sample_size <- min(nrow(tab1), nrow(tab2))
 FUN = function(a, b) { mean(a) - mean(b) } # Dummy function for demo purpose
 # A sample_count >= 1000 should be used in a real analysis
 permutation_results <- permutation_test(m1, m2, sample_size = sample_size,
-                                       sample_count = 10, FUN = FUN)
+                                    sample_count = 10, FUN = FUN)
 }
 
 }
