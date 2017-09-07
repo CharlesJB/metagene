@@ -127,7 +127,7 @@ test.metagene_initialize_invalid_list_bam_files_value <- function() {
 }
 # Not indexed bam in bam_files value
 test.metagene_initialize_invalid_no_index_bam_files_value <- function() {
-    obs <- tryCatch(metagene:::metagene$new(bam_files = not_indexed_bam_file),
+    obs <- tryCatch(metagene:::metagene$new(regions = regions, bam_files = not_indexed_bam_file),
                     error = conditionMessage)
     exp <- "All BAM files must be indexed"
     checkIdentical(obs, exp)
@@ -136,9 +136,25 @@ test.metagene_initialize_invalid_no_index_bam_files_value <- function() {
 # Multiple bam files, only one not indexed in bam_files value
 test.metagene_initialize_multiple_bam_file_one_not_indexed <- function() {
     bam_files <- c(bam_files, not_indexed_bam_file)
+    obs <- tryCatch(metagene:::metagene$new(regions = regions, bam_files = bam_files),
+                    error = conditionMessage)
+	exp <- "All BAM files must be indexed"
+    checkIdentical(obs, exp)
+}
+
+# not value for argument region
+test.metagene_invalid_initialize_without_region_argument <- function() {
     obs <- tryCatch(metagene:::metagene$new(bam_files = bam_files),
                     error = conditionMessage)
-    exp <- "All BAM files must be indexed"
+    exp <- 'argument "regions" is missing, with no default'
+    checkIdentical(obs, exp)
+}
+
+# not value for argument region
+test.metagene_invalid_initialize_without_bam_files_argument <- function() {
+    obs <- tryCatch(metagene:::metagene$new(regions = regions),
+                    error = conditionMessage)
+    exp <- 'argument "bam_files" is missing, with no default'
     checkIdentical(obs, exp)
 }
 
@@ -390,7 +406,7 @@ test.metagene_get_table_valid_usage_default <- function() {
    mg <- demo_mg$clone()
    mg$produce_table()
    tab <- mg$get_table()
-   checkTrue(is.data.table(tab))
+   checkTrue(is.data.frame(tab))
    checkTrue(dim(tab)[1] > 0)
    checkTrue(dim(tab)[2] == 5)
    checkIdentical(colnames(tab), c('region', 'design', 'bin', 'value', 'strand'))
@@ -926,7 +942,7 @@ test.metagene_produce_table_valid_without_design <- function() {
 	checkIdentical("bin_count" %in% mg$get_params(), FALSE)
 	mg$produce_table()
 	checkIdentical(mg$get_params()[["bin_count"]], 100)
-	checkIdentical(is.data.table(mg$get_table()), TRUE)
+	checkIdentical(is.data.frame(mg$get_table()), TRUE)
 	#length of table : number of region * number of design * number of bin * number of range by region (demo = 50,000 lines)
 	tablength <- length(mg$get_regions())*length(mg$get_params()$bam_files)*(mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
 	checkIdentical(dim(mg$get_table())[1] == tablength, TRUE)
@@ -963,7 +979,7 @@ test.metagene_produce_table_valid_with_design <- function() {
 	demo_design <- get_demo_design()
 	mg$produce_table(design = demo_design)
 	checkIdentical(mg$get_params()[["bin_count"]], 100)
-	checkIdentical(is.data.table(mg$get_table()), TRUE)
+	checkIdentical(is.data.frame(mg$get_table()), TRUE)
 	#length of table : number of region * number of design * number of bin * number of range by region (demo = 50,000 lines)
 	tablength <- length(mg$get_regions())*(dim(demo_design)[2]-1)*(mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
 	checkIdentical(dim(mg$get_table())[1] == tablength, TRUE)
@@ -1000,7 +1016,7 @@ test.metagene_produce_table_valid_without_design_bin_count_50 <- function() {
 	checkIdentical("bin_count" %in% mg$get_params(), FALSE)
 	mg$produce_table(bin_count = 50)
 	checkIdentical(mg$get_params()[["bin_count"]], 50)
-	checkIdentical(is.data.table(mg$get_table()), TRUE)
+	checkIdentical(is.data.frame(mg$get_table()), TRUE)
 	#length of table : number of region * number of design * number of bin * number of range by region (demo = 50,000 lines)
 	tablength <- length(mg$get_regions())*length(mg$get_params()$bam_files)*(mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
 	checkIdentical(dim(mg$get_table())[1] == tablength, TRUE)
@@ -1037,7 +1053,7 @@ test.metagene_produce_table_valid_with_design_bin_count_50 <- function() {
 	demo_design <- get_demo_design()
 	mg$produce_table(design = demo_design, bin_count = 50)
 	checkIdentical(mg$get_params()[["bin_count"]], 50)
-	checkIdentical(is.data.table(mg$get_table()), TRUE)
+	checkIdentical(is.data.frame(mg$get_table()), TRUE)
 	#length of table : number of region * number of design * number of bin * number of range by region (demo = 50,000 lines)
 	tablength <- length(mg$get_regions())*(dim(demo_design)[2]-1)*(mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
 	checkIdentical(dim(mg$get_table())[1] == tablength, TRUE)

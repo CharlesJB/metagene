@@ -10,7 +10,7 @@
 #' @return A \code{GRanges}.
 #'
 #' @examples
-#'   data(promoters_hg19)
+#' data(promoters_hg19)
 "promoters_hg19"
 
 #' Promoters regions of hg18 Entrez genes.
@@ -25,7 +25,7 @@
 #' @return A \code{GRanges}.
 #'
 #' @examples
-#'   data(promoters_hg18)
+#' data(promoters_hg18)
 "promoters_hg18"
 
 #' Promoters regions of mm10 Entrez genes.
@@ -40,7 +40,7 @@
 #' @return A \code{GRanges}.
 #'
 #' @examples
-#'   data(promoters_mm10)
+#' data(promoters_mm10)
 "promoters_mm10"
 
 #' Promoters regions of mm9 Entrez genes.
@@ -55,5 +55,5 @@
 #' @return A \code{GRanges}.
 #'
 #' @examples
-#'   data(promoters_mm9)
+#' data(promoters_mm9)
 "promoters_mm9"

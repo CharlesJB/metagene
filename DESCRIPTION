@@ -27,7 +27,7 @@ LazyData: true
 BugReports: https://github.com/CharlesJB/metagene/issues
 VignetteBuilder: knitr
 Depends:
-    R (>= 3.2.0),
+    R (>= 3.4.0),
     R6 (>= 2.0),
     GenomicRanges,
     BiocParallel
@@ -47,7 +47,8 @@ Imports:
     purrr,
     data.table,
     magrittr,
-    methods
+    methods,
+	utils
 Suggests:
     RUnit,
     BiocGenerics,

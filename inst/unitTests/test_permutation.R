@@ -27,11 +27,11 @@ test.metagene_permutation_test_valid <- function() {
 	}
 	ratio_normalized_intersect <- 
 		perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, tab2[, .(moy=mean(value)), by=bin]$moy)
-	print(paste("ratio_normalized_intersect :", ratio_normalized_intersect))
+	#print(paste("ratio_normalized_intersect :", ratio_normalized_intersect))
 	permutation_results <- permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = 1000, FUN = perm_fun)
 
-	print(paste("p-value :", sum(ratio_normalized_intersect >= permutation_results) / length(permutation_results)))
+	#print(paste("p-value :", sum(ratio_normalized_intersect >= permutation_results) / length(permutation_results)))
 	print(TRUE)
 }
 
@@ -73,14 +73,14 @@ test.metagene_permutation_test_table1_or_2_unvalid_class <- function() {
 	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = 1000, FUN = perm_fun),
 					error = conditionMessage)
-	exp <- "is.data.table(table1) is not TRUE"
+	exp <- "is.data.frame(table1) is not TRUE"
 	checkIdentical(obs, exp)
 	
 	tab1 <- tab[which(tab$design == "align1"),]
 	obs <- tryCatch(permutation_test(tab1, tab2, sample_size = 50,
 										sample_count = 1000, FUN = perm_fun),
 					error = conditionMessage)
-	exp <- "is.data.table(table2) is not TRUE"
+	exp <- "is.data.frame(table2) is not TRUE"
 	checkIdentical(obs, exp)
 }
 
