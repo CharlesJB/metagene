@@ -80,7 +80,7 @@
 Bam_Handler <- R6Class("Bam_Handler",
     public = list(
         parameters = list(),
-        initialize = function(bam_files, cores = SerialParam()) {
+        initialize = function(bam_files, cores = SerialParam(), pair_ended = FALSE) {
             # Check prerequisites
             # bam_files must be a vector of BAM filenames
             if (!is.vector(bam_files, "character")) {
@@ -347,15 +347,17 @@ Bam_Handler <- R6Class("Bam_Handler",
             # The regions must not be overlapping
             reduce(regions)
         },
-        extract_coverage_by_regions = function(regions, bam_file, count=NULL){
-            param <- Rsamtools:::ScanBamParam(which=reduce(regions))
-            alignment <- GenomicAlignments:::readGAlignments(bam_file,
-                                                            param=param)
-            if (!is.null(count)) {
-                weight <- 1 / (count / 1000000)
-                GenomicAlignments::coverage(alignment) * weight
+        extract_coverage_by_regions = function(regions, bam_file, count=NULL, pair_ended = FALSE){
+            if(!pair_ended){
+                param <- Rsamtools:::ScanBamParam(which=reduce(regions))
+                alignment <- GenomicAlignments:::readGAlignments(bam_file,
+                                                                param=param)
             } else {
-                GenomicAlignments::coverage(alignment)
+                param <- ScanBamParam(flag=scanBamFlag(isProperPair=TRUE,
+                                                        isDuplicate=FALSE,
+                                                        isSecondaryAlignment=FALSE))
+                alignment <- GenomicAlignments:::readGAlignmentsPairs(bam_file,
+                                                                param=param)            
             }
         }
     )

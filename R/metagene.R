@@ -181,7 +181,7 @@ metagene <- R6Class("metagene",
     # Methods
         initialize = function(regions, bam_files, padding_size = 0,
                                 cores = SerialParam(), verbose = FALSE,
-                                force_seqlevels = FALSE) {
+                                force_seqlevels = FALSE, pair_ended = FALSE) {
             # Check params...
             private$check_param(regions = regions, bam_files = bam_files,
                                 padding_size = padding_size,
@@ -202,7 +202,8 @@ metagene <- R6Class("metagene",
 
             # Prepare bam files
             private$print_verbose("Prepare bam files...")
-            private$bam_handler <- Bam_Handler$new(bam_files, cores = cores)
+            private$bam_handler <- Bam_Handler$new(bam_files, cores = cores,
+                                        pair_ended = pair_ended)
 
             # Prepare regions
             private$print_verbose("Prepare regions...")
