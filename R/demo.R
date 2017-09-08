@@ -32,7 +32,7 @@ get_demo_regions <- function() {
 get_demo_metagene <- function() {
     regions <- get_demo_regions()
     bam_files <- get_demo_bam_files()
-    metagene$new(regions = regions, bam_files = bam_files, pair_ended = TRUE)
+    metagene$new(regions = regions, bam_files = bam_files)
 }
 
 #' Get a demo design object
