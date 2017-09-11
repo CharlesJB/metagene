@@ -115,6 +115,11 @@ Bam_Handler <- R6Class("Bam_Handler",
                     "BiocParallelParam instance"))
             }
 
+            # paired_end must be logical
+            if (!is.logical(paired_end)) {
+                stop("paired_end argument must be logical")
+            }	
+			
             # Initialize the Bam_Handler object
             private$parallel_job <- Parallel_Job$new(cores)
             self$parameters[["cores"]] <- private$parallel_job$get_core_count()
@@ -347,18 +352,28 @@ Bam_Handler <- R6Class("Bam_Handler",
             # The regions must not be overlapping
             reduce(regions)
         },
-        extract_coverage_by_regions = function(regions, bam_file, count=NULL, paired_end = FALSE){
+        extract_coverage_by_regions = function(regions, bam_file, count=NULL, 
+														paired_end = FALSE){
             if(!paired_end){
                 param <- Rsamtools:::ScanBamParam(which=reduce(regions))
                 alignment <- GenomicAlignments:::readGAlignments(bam_file,
                                                                 param=param)
             } else {
-                param <- ScanBamParam(flag=scanBamFlag(isProperPair=TRUE,
-                                                        isDuplicate=FALSE,
-                                                        isSecondaryAlignment=FALSE))
+                param <- Rsamtools:::ScanBamParam(flag=scanBamFlag(
+											isProperPair=TRUE,
+                                            isDuplicate=FALSE,
+                                            isSecondaryAlignment=FALSE,
+											which=reduce(regions)))
                 alignment <- GenomicAlignments:::readGAlignmentsPairs(bam_file,
                                                                 param=param)            
             }
+			
+			if (!is.null(count)) {
+                weight <- 1 / (count / 1000000)
+                GenomicAlignments::coverage(alignment) * weight
+            } else {
+                GenomicAlignments::coverage(alignment)
+			}
         }
     )
 )
