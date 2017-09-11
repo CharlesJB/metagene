@@ -28,6 +28,8 @@
 #'                in bam file header. Default: \code{FALSE}. TRUE and FALSE
 #'                respectively correspond to pruning.mode = "coarse"
 #'                and "error" in ?seqinfo.}
+#'	  \item{paired_end}{If \code{TRUE}, metagene will deal with paired-ended 
+#'				  data. If \code{FALSE}, single-ended data are expected}
 #' }
 #'
 #'    \code{metagene$new} returns a \code{metagene} object that contains the

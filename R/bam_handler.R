@@ -13,6 +13,8 @@
 #'    \item{cores}{The number of cores available to parallelize the analysis.
 #'                Either a positive integer or a \code{BiocParallelParam}.
 #'                Default: \code{SerialParam()}.}
+#'	  \item{paired_end}{If \code{TRUE}, metagene will deal with paired-ended 
+#'				  data. If \code{FALSE}, single-ended data are expected}
 #' }
 #'
 #' \code{Bam_Handler$new} returns a \code{Bam_Handler} object that contains
@@ -123,6 +125,7 @@ Bam_Handler <- R6Class("Bam_Handler",
             # Initialize the Bam_Handler object
             private$parallel_job <- Parallel_Job$new(cores)
             self$parameters[["cores"]] <- private$parallel_job$get_core_count()
+			self$parameters[["paired_end"]] <- paired_end
             private$bam_files <- data.frame(bam = bam_files,
                                             stringsAsFactors = FALSE)
             if (is.null(names(bam_files))) {
@@ -192,7 +195,8 @@ Bam_Handler <- R6Class("Bam_Handler",
             private$check_bam_file(bam_file)
             regions <- private$prepare_regions(regions, bam_file,
                                                 force_seqlevels)
-            private$extract_coverage_by_regions(regions, bam_file)
+            private$extract_coverage_by_regions(regions, bam_file, 
+								paired_end = self$parameters[['paired_end']])
         },
         get_normalized_coverage = function(bam_file, regions,
                             force_seqlevels = FALSE) {
@@ -200,7 +204,8 @@ Bam_Handler <- R6Class("Bam_Handler",
             regions <- private$prepare_regions(regions, bam_file,
                                                 force_seqlevels)
             count <- self$get_aligned_count(bam_file)
-            private$extract_coverage_by_regions(regions, bam_file, count)
+            private$extract_coverage_by_regions(regions, bam_file, count,
+								paired_end = self$parameters[['paired_end']])
         },
         get_noise_ratio = function(chip_bam_names, input_bam_names) {
             lapply(c(chip_bam_names, input_bam_names), private$check_bam_file)
@@ -359,15 +364,10 @@ Bam_Handler <- R6Class("Bam_Handler",
                 alignment <- GenomicAlignments:::readGAlignments(bam_file,
                                                                 param=param)
             } else {
-                param <- Rsamtools:::ScanBamParam(flag=scanBamFlag(
-											isProperPair=TRUE,
-                                            isDuplicate=FALSE,
-                                            isSecondaryAlignment=FALSE,
-											which=reduce(regions)))
-                alignment <- GenomicAlignments:::readGAlignmentsPairs(bam_file,
-                                                                param=param)            
+				param <- Rsamtools:::ScanBamParam(which=reduce(regions))
+                alignment <- GenomicAlignments:::readGAlignmentPairs(bam_file,
+                                                                param=param)
             }
-			
 			if (!is.null(count)) {
                 weight <- 1 / (count / 1000000)
                 GenomicAlignments::coverage(alignment) * weight
