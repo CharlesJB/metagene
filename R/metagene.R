@@ -28,6 +28,8 @@
 #'                in bam file header. Default: \code{FALSE}. TRUE and FALSE
 #'                respectively correspond to pruning.mode = "coarse"
 #'                and "error" in ?seqinfo.}
+#'	  \item{paired_end}{If \code{TRUE}, metagene will deal with paired-ended 
+#'				  data. If \code{FALSE}, single-ended data are expected}
 #' }
 #'
 #'    \code{metagene$new} returns a \code{metagene} object that contains the
@@ -181,7 +183,7 @@ metagene <- R6Class("metagene",
     # Methods
         initialize = function(regions, bam_files, padding_size = 0,
                                 cores = SerialParam(), verbose = FALSE,
-                                force_seqlevels = FALSE) {
+                                force_seqlevels = FALSE, paired_end = FALSE) {
             # Check params...
             private$check_param(regions = regions, bam_files = bam_files,
                                 padding_size = padding_size,
@@ -202,7 +204,8 @@ metagene <- R6Class("metagene",
 
             # Prepare bam files
             private$print_verbose("Prepare bam files...")
-            private$bam_handler <- Bam_Handler$new(bam_files, cores = cores)
+            private$bam_handler <- Bam_Handler$new(bam_files, cores = cores,
+                                        paired_end = paired_end)
 
             # Prepare regions
             private$print_verbose("Prepare regions...")
