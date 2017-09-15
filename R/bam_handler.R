@@ -360,12 +360,12 @@ Bam_Handler <- R6Class("Bam_Handler",
         extract_coverage_by_regions = function(regions, bam_file, count=NULL, 
 														paired_end = FALSE){
             if(!paired_end){
-                param <- Rsamtools:::ScanBamParam(which=reduce(regions))
-                alignment <- GenomicAlignments:::readGAlignments(bam_file,
+					param <- Rsamtools:::ScanBamParam(which=reduce(regions))
+					alignment <- GenomicAlignments:::readGAlignments(bam_file,
                                                                 param=param)
             } else {
-				param <- Rsamtools:::ScanBamParam(which=reduce(regions))
-                alignment <- GenomicAlignments:::readGAlignmentPairs(bam_file,
+					param <- Rsamtools:::ScanBamParam(which=reduce(regions))
+					alignment <- GenomicAlignments:::readGAlignmentPairs(bam_file,
                                                                 param=param)
             }
 			if (!is.null(count)) {

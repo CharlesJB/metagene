@@ -183,8 +183,9 @@ metagene <- R6Class("metagene",
     # Methods
         initialize = function(regions, bam_files, padding_size = 0,
                                 cores = SerialParam(), verbose = FALSE,
-                                force_seqlevels = FALSE, paired_end = FALSE) {
-            # Check params...
+                                force_seqlevels = FALSE, paired_end = FALSE,
+								assay = 'chipseq') {
+            # Check params... ************************************************************* ajouter assay dans check_param
             private$check_param(regions = regions, bam_files = bam_files,
                                 padding_size = padding_size,
                                 cores = cores, verbose = verbose,
@@ -201,6 +202,7 @@ metagene <- R6Class("metagene",
             private$params[["bam_files"]] <- bam_files
             private$params[["force_seqlevels"]] <- force_seqlevels
             private$params[["flip_regions"]] <- FALSE
+			private$params[["assay"]] <- tolower(assay)
 
             # Prepare bam files
             private$print_verbose("Prepare bam files...")
@@ -214,7 +216,7 @@ metagene <- R6Class("metagene",
             # Parse bam files
             private$print_verbose("Parse bam files...\n")
             private$print_verbose("coverages...\n")
-            private$coverages <- private$produce_coverages()
+            private$coverages <- private$produce_coverages()			
         },
         get_bam_count = function(filename) {
             # Parameters validation are done by Bam_Handler object
@@ -360,32 +362,169 @@ metagene <- R6Class("metagene",
                 if (!is.null(normalization)) {
                     coverages <- private$normalize_coverages(coverages, design)
                 }
+				
+				if (private$params[['assay']] == 'rnaseq'){
+					print('RNAseq')
+					
+					bam_files_names <- names(private$params[["bam_files"]])
+					print(paste('bam_files_names', bam_files_names, sep = '='))
+					#useful variables for caculations of standard data table structure
+					gene_count <- length(private$regions)
+					gene_names <- names(private$regions)
+					exon_length_by_exon_by_gene <- width(private$regions)
+					exon_length_by_exon_by_gene_cum <- vapply(exon_length_by_exon_by_gene, sum, numeric(1))
 
-                region_length <- vapply(self$get_regions(), length, numeric(1))
-                col_regions <- names(self$get_regions()) %>%
-                    map(~ rep(.x, length(coverages) * bin_count * 
-                                region_length[.x])) %>% unlist()
-                col_designs <- map(region_length, ~ rep(names(coverages), 
-                                    each = bin_count * .x)) %>% unlist
-                col_bins <- rep(1:bin_count,
-                                length(coverages) * sum(region_length))
-                pairs <- expand.grid(colnames(design)[-1], 
-                                    names(self$get_regions()), 
-                                    stringsAsFactors = FALSE)
-                col_values <- map2(pairs$Var1, pairs$Var2,
-                    ~ private$get_subtable(coverages[[.x]], .y, bin_count)) %>%
-                    unlist
-                col_strand <- c()
-                for (region_names in unique(col_regions)){
-                    col_strand <- c(col_strand,rep(rep(
-                            as.vector(strand(private$regions)[[region_names]]),
-                            each=bin_count),length(unique(col_designs))))
-                }
-                            private$table <- data.table(region = col_regions,
-                                            design = col_designs,
-                                            bin = col_bins,
-                                            value = col_values,
-                                            strand = col_strand)
+					# length of first exon of first gene : exon_length_by_exon_by_gene[[1]][1]
+					exon_count_by_gene <- vapply(private$regions, length, numeric(1)) #give the number of IRanges on each GRanges
+					
+					## standard data table structure for one replicat, in one treatment/condition
+						#gene or region column (Nb of gene or region x Nb exon by gene x Nb of nucleotide by exon)
+						col_gene <- rep(gene_names, time=unlist(map(1:gene_count, ~sum(exon_length_by_exon_by_gene[[gene_names[.x]]]))))
+						#exon column (exon_names goes from 1 to nb of exon for the gene 1, then from 1 to nb of exons fro gene 2, and so forth)
+						exon_names <- unlist(map(exon_count_by_gene, ~ 1:.x))
+						col_exon <- as.vector(rep(exon_names, time=unlist(exon_length_by_exon_by_gene)))
+						#nuc_column
+						col_nuc <- unlist(map(as.vector(unlist(exon_length_by_exon_by_gene_cum)), ~ 1:.x))
+						#strand_col
+						exon_strand_by_exon_by_gene <- unlist(map(gene_names, ~as.vector(strand(private$regions[[.x]]))))
+						col_strand <- as.vector(rep(exon_strand_by_exon_by_gene, time=unlist(exon_length_by_exon_by_gene)))
+					
+						
+						length_std_dt_struct = length(col_gene)
+						print(paste('length_std_dt_struct', length_std_dt_struct, sep='='))
+					## copy of strandard data table structure depending on number of bam files, traitement and design (treatments / conditions)
+						#how many copies of standard data structure must I do 
+						print(paste('length(bam_files_names)', length(bam_files_names), sep='='))
+						if (length(private$design) == 0){ #if design does not exist
+							copies_count <- length(bam_files_names)
+						} else { # a design exists
+							# the number of not empty cases in the design param
+							copies_count <- sum(replace(unlist(private$design[,-1]),which(unlist(private$design[,-1]) == 2),1))
+						}
+						
+						print(paste('copies_count', copies_count, sep='='))
+						#multiplication of standard data table structure
+						col_gene <- rep(col_gene,copies_count)
+						col_exon <- rep(col_exon,copies_count)
+						col_nuc <- rep(col_nuc,copies_count)
+						col_strand <- rep(col_strand,copies_count)
+						
+					## creation of replicats/bam_file and treatments/conditions columns
+						#useful variables for caculations of complete data table structure
+						#how many bam file ?
+						#bfc <- self$bam_files_count
+						
+						
+						bf_names <- names(self$get_params()$bam_file)
+						#how many treatments/conditions
+						if (length(private$design) == 0){ #one bam file = one treatment/condition
+							#ttt_count <- bfc
+							ttt_names <- bf_names
+						} else {
+							#ttt_count <- dim(private$design)[2]-1
+							ttt_names <- colnames(private$design)[-1]
+						}
+						#how many replicats by treatment/condition
+						if (length(private$design) == 0){ #one bam file = one treatment/condition
+							repByttt <- cbind(ttt_names, bf_names)
+						} #else already available in get_design() : private$design[which(private$design[,2] != 0),1]
+						
+						if (length(private$design) != 0) {
+							bam_names_in_design <- tools::file_path_sans_ext(private$design[,1])
+							#list of ttt - bamfile links
+							nb_ttt_by_bam_file <- map(bf_names , ~length(which(private$design[which(bam_names_in_design == .x),-1] > 0)))
+							ttt_names_by_bam_file <- map(bf_names , ~colnames(private$design)[which(private$design[which(bam_names_in_design == .x),-1] > 0)+1])
+
+							#in the case of get_demo_design, I expect to put c('align1_rep1', 'align1_rep2', 'ctrl', 'align2_rep1', 'align2_rep2', 'ctrl')
+							bf_names_by_ttt <-  tools::file_path_sans_ext(unlist(map(ttt_names , ~private$design[which(private$design[,which(colnames(private$design) == .x)] > 0),1])))
+							col_bam <- rep(bf_names_by_ttt, each=length_std_dt_struct/copies_count)
+							
+							nb_bf_by_ttt <-  unlist(map(ttt_names , ~length(which(private$design[,which(colnames(private$design) == .x)] > 0))))
+							#for each line of design (bam file), what is the colunm where there is a number > 0 (can be > 1 column because control can serve into differents treatment/condition)?
+							col_ttt <- rep(ttt_names, times=(nb_bf_by_ttt * length_std_dt_struct/copies_count))
+							
+						## col_values
+							#I use loops here because map(unique(as.character(seqnames(grtot))), ~ unlist(lapply(Views(cov[['ce bam']][[seqname]], 
+							#                                                                 			start(grtot), end(grtot)), as.numeric)))
+							#produce : Error in getListElement(x, i, ...) : view is out of limits
+							grl <- mg$get_regions()
+							grtot <- unlist(grl)
+							col_values <- c()
+							for(bam in bam_names_in_design){
+								for (seqnames in unique(as.character(seqnames(grtot)))){
+									val <- Views(private$coverages[[bam]][[seqnames]],  start(mg$get_regions()[[1]]),  end(mg$get_regions()[[1]]))
+									col_values <- c(col_values, unlist(lapply(val, as.numeric)))
+								}
+							}
+						} else {
+							print(paste('bam_files_names', bam_files_names, sep='='))
+							
+							col_bam <- rep(bam_files_names, each = length_std_dt_struct)
+							col_ttt <- col_bam
+							
+							grl <- mg$get_regions()
+							grtot <- unlist(grl)
+							col_values <- c()
+							for(bam in bam_files_names){
+								for (seqnames in unique(as.character(seqnames(grtot)))){
+									val <- Views(private$coverages[[bam]][[seqnames]], start(mg$get_regions()[[1]]),  end(mg$get_regions()[[1]]))
+									col_values <- c(col_values, unlist(lapply(val, as.numeric)))
+								}
+							}
+						}
+						
+					
+						private$table <- data.table(
+								region = col_gene,
+								exon = col_exon,
+								bam = col_bam,
+								design = col_ttt,
+								nuc = col_nuc,
+								value = col_values,
+								strand = col_strand)
+						
+						write.csv(private$table, file="../DATA/table RNAseq.csv")
+					
+				} else { # ChIP-seq
+					#test de RNAseq a supprimer ensuite
+					#print(Views(private$coverages$ENCFF355RXX_SCRNAseq_SE.demo$chr20, start(self$get_regions()[[1]]), end(self$get_regions())[[1]])[3])
+					#print(Views(private$coverages$ENCFF355RXX_SCRNAseq_SE.demo[['chr20']], start(self$get_regions()[[1]]), end(self$get_regions())[[1]])[3])
+					
+				
+					region_length <- vapply(self$get_regions(), length, numeric(1)) #give the number of IRanges on each GRanges
+					col_regions <- names(self$get_regions()) %>%
+						map(~ rep(.x, length(coverages) * bin_count * 
+									region_length[.x])) %>% unlist()
+					col_designs <- map(region_length, ~ rep(names(coverages), 
+										each = bin_count * .x)) %>% unlist
+					col_bins <- rep(1:bin_count,
+									length(coverages) * sum(region_length))
+					pairs <- expand.grid(colnames(design)[-1], 
+										names(self$get_regions()), 
+										stringsAsFactors = FALSE)
+										
+			# print('Pairs **************************************')
+			# print(pairs)
+			# print('coverages**************************************')
+			# print(coverages$ENCFF355RXX_SCRNAseq_SE.demo$chr20)
+			
+					col_values <- map2(pairs$Var1, pairs$Var2,
+						~ private$get_subtable(coverages[[.x]], .y, bin_count)) %>%
+						unlist
+					col_strand <- c()
+					for (region_names in unique(col_regions)){
+						col_strand <- c(col_strand,rep(rep(
+								as.vector(strand(private$regions)[[region_names]]),
+								each=bin_count),length(unique(col_designs))))
+					}
+					
+					private$table <- data.table(region = col_regions,
+								design = col_designs,
+								bin = col_bins,
+								value = col_values,
+								strand = col_strand)
+				}
+
                 private$params[["bin_size"]] <- bin_size
                 private$params[["bin_count"]] <- bin_count
                 private$params[["noise_removal"]] <- noise_removal
@@ -686,7 +825,7 @@ metagene <- R6Class("metagene",
                                 bcount = bcount, cov = coverages))
         },
         get_view_means = function(gr, bcount, cov) {
-            chr <- unique(as.character(GenomeInfoDb::seqnames(gr)))
+			chr <- unique(as.character(GenomeInfoDb::seqnames(gr)))
             gr <- intoNbins(gr, bcount)
             stopifnot(length(chr) == 1)
             views <- Views(cov[[chr]], start(gr), end(gr))
@@ -697,7 +836,7 @@ metagene <- R6Class("metagene",
                 names <- sapply(regions, function(x)
                     file_path_sans_ext(basename(x)))
                 import_file <- function(region) {
-                ext <- tolower(tools::file_ext(region))
+					ext <- tolower(tools::file_ext(region))
                     if (ext == "narrowpeak") {
                         extraCols <- c(signalValue = "numeric",
                                         pValue = "numeric", qValue = "numeric",
@@ -709,9 +848,11 @@ metagene <- R6Class("metagene",
                                         pValue = "numeric", qValue = "numeric")
                         rtracklayer::import(region, format = "BED",
                                             extraCols = extraCols)
+                    } else if (ext == "gtf") {
+                        split(rtracklayer::import(region), rtracklayer::import(region)$gene_id)
                     } else {
-                        rtracklayer::import(region)
-                    }
+						rtracklayer::import(region)
+					}
                 }
                 regions <- private$parallel_job$launch_job(data = regions,
                                                         FUN = import_file)
@@ -724,8 +865,13 @@ metagene <- R6Class("metagene",
             if (is.null(names(regions))) {
                 names(regions) <- sapply(seq_along(regions), function(x) {
                     paste("region", x, sep = "_")
-                    })
+                    })		
             }
+			
+			if (private$params[['assay']] == "rnaseq"){
+				stopifnot(all(sum(width(GenomicRanges::reduce(private$regions))) == 
+						sum(width(private$regions))))
+			}
             # TODO: Check if there is a id column in the mcols of every ranges.
             #    If not, add one by merging seqnames, start and end.
 
@@ -735,9 +881,9 @@ metagene <- R6Class("metagene",
                 start(x)[start(x) < 0] <- 1
                 end(x) <- end(x) + private$params$padding_size
                 # Clean seqlevels
-            x <- sortSeqlevels(x)
-    #            seqlevels(x) <- unique(as.character(seqnames(x)))
-                x
+				x <- sortSeqlevels(x)
+				#seqlevels(x) <- unique(as.character(seqnames(x)))
+				x
             }))
         },
         produce_coverages = function() {
