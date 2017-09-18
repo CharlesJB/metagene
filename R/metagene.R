@@ -393,7 +393,7 @@ metagene <- R6Class("metagene",
 						length_std_dt_struct = length(col_gene)
 						print(paste('length_std_dt_struct', length_std_dt_struct, sep='='))
 					## copy of strandard data table structure depending on number of bam files, traitement and design (treatments / conditions)
-						#how many copies of standard data structure must I do 
+						#how many copies of standard data structure must I do ?
 						print(paste('length(bam_files_names)', length(bam_files_names), sep='='))
 						if (length(private$design) == 0){ #if design does not exist
 							copies_count <- length(bam_files_names)
@@ -409,31 +409,13 @@ metagene <- R6Class("metagene",
 						col_nuc <- rep(col_nuc,copies_count)
 						col_strand <- rep(col_strand,copies_count)
 						
-					## creation of replicats/bam_file and treatments/conditions columns
-						#useful variables for caculations of complete data table structure
-						#how many bam file ?
-						#bfc <- self$bam_files_count
 						
-						
-						bf_names <- names(self$get_params()$bam_file)
-						#how many treatments/conditions
-						if (length(private$design) == 0){ #one bam file = one treatment/condition
-							#ttt_count <- bfc
-							ttt_names <- bf_names
-						} else {
-							#ttt_count <- dim(private$design)[2]-1
+						if (length(private$design) != 0) { #if exist a design
 							ttt_names <- colnames(private$design)[-1]
-						}
-						#how many replicats by treatment/condition
-						if (length(private$design) == 0){ #one bam file = one treatment/condition
-							repByttt <- cbind(ttt_names, bf_names)
-						} #else already available in get_design() : private$design[which(private$design[,2] != 0),1]
-						
-						if (length(private$design) != 0) {
 							bam_names_in_design <- tools::file_path_sans_ext(private$design[,1])
 							#list of ttt - bamfile links
-							nb_ttt_by_bam_file <- map(bf_names , ~length(which(private$design[which(bam_names_in_design == .x),-1] > 0)))
-							ttt_names_by_bam_file <- map(bf_names , ~colnames(private$design)[which(private$design[which(bam_names_in_design == .x),-1] > 0)+1])
+							nb_ttt_by_bam_file <- map(bam_files_names , ~length(which(private$design[which(bam_names_in_design == .x),-1] > 0)))
+							ttt_names_by_bam_file <- map(bam_files_names , ~colnames(private$design)[which(private$design[which(bam_names_in_design == .x),-1] > 0)+1])
 
 							#in the case of get_demo_design, I expect to put c('align1_rep1', 'align1_rep2', 'ctrl', 'align2_rep1', 'align2_rep2', 'ctrl')
 							bf_names_by_ttt <-  tools::file_path_sans_ext(unlist(map(ttt_names , ~private$design[which(private$design[,which(colnames(private$design) == .x)] > 0),1])))
@@ -443,7 +425,7 @@ metagene <- R6Class("metagene",
 							#for each line of design (bam file), what is the colunm where there is a number > 0 (can be > 1 column because control can serve into differents treatment/condition)?
 							col_ttt <- rep(ttt_names, times=(nb_bf_by_ttt * length_std_dt_struct/copies_count))
 							
-						## col_values
+							## col_values
 							#I use loops here because map(unique(as.character(seqnames(grtot))), ~ unlist(lapply(Views(cov[['ce bam']][[seqname]], 
 							#                                                                 			start(grtot), end(grtot)), as.numeric)))
 							#produce : Error in getListElement(x, i, ...) : view is out of limits
@@ -452,22 +434,23 @@ metagene <- R6Class("metagene",
 							col_values <- c()
 							for(bam in bam_names_in_design){
 								for (seqnames in unique(as.character(seqnames(grtot)))){
-									val <- Views(private$coverages[[bam]][[seqnames]],  start(mg$get_regions()[[1]]),  end(mg$get_regions()[[1]]))
+									val <- Views(private$coverages[[bam]][[seqnames]], start(grtot[which(seqnames(grtot) == seqnames)]),  end(grtot[which(seqnames(grtot) == seqnames)]))
 									col_values <- c(col_values, unlist(lapply(val, as.numeric)))
 								}
 							}
-						} else {
+						} else { #one bam file = one treatment/condition
 							print(paste('bam_files_names', bam_files_names, sep='='))
 							
 							col_bam <- rep(bam_files_names, each = length_std_dt_struct)
 							col_ttt <- col_bam
 							
+							## col_values
 							grl <- mg$get_regions()
 							grtot <- unlist(grl)
 							col_values <- c()
 							for(bam in bam_files_names){
 								for (seqnames in unique(as.character(seqnames(grtot)))){
-									val <- Views(private$coverages[[bam]][[seqnames]], start(mg$get_regions()[[1]]),  end(mg$get_regions()[[1]]))
+									val <- Views(private$coverages[[bam]][[seqnames]], start(grtot[which(seqnames(grtot) == seqnames)]),  end(grtot[which(seqnames(grtot) == seqnames)]))
 									col_values <- c(col_values, unlist(lapply(val, as.numeric)))
 								}
 							}
@@ -486,11 +469,6 @@ metagene <- R6Class("metagene",
 						write.csv(private$table, file="../DATA/table RNAseq.csv")
 					
 				} else { # ChIP-seq
-					#test de RNAseq a supprimer ensuite
-					#print(Views(private$coverages$ENCFF355RXX_SCRNAseq_SE.demo$chr20, start(self$get_regions()[[1]]), end(self$get_regions())[[1]])[3])
-					#print(Views(private$coverages$ENCFF355RXX_SCRNAseq_SE.demo[['chr20']], start(self$get_regions()[[1]]), end(self$get_regions())[[1]])[3])
-					
-				
 					region_length <- vapply(self$get_regions(), length, numeric(1)) #give the number of IRanges on each GRanges
 					col_regions <- names(self$get_regions()) %>%
 						map(~ rep(.x, length(coverages) * bin_count * 
@@ -502,12 +480,6 @@ metagene <- R6Class("metagene",
 					pairs <- expand.grid(colnames(design)[-1], 
 										names(self$get_regions()), 
 										stringsAsFactors = FALSE)
-										
-			# print('Pairs **************************************')
-			# print(pairs)
-			# print('coverages**************************************')
-			# print(coverages$ENCFF355RXX_SCRNAseq_SE.demo$chr20)
-			
 					col_values <- map2(pairs$Var1, pairs$Var2,
 						~ private$get_subtable(coverages[[.x]], .y, bin_count)) %>%
 						unlist
