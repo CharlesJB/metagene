@@ -586,7 +586,10 @@ metagene <- R6Class("metagene",
 						names(res) <- out_cols
 						as.list(res)
 					}
-
+					
+					# provide the possibility to plot by replicate/bam without clearing
+					# the already provided design. If there is no design provided
+					# then this option is useless and can be left as default.
 					if (byReplicate == TRUE) {
 						# bootstrap will be made on bam = no bootstrap
 						# then bootstrap will produce qinf = qsup = value
