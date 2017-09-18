@@ -185,11 +185,12 @@ metagene <- R6Class("metagene",
                                 cores = SerialParam(), verbose = FALSE,
                                 force_seqlevels = FALSE, paired_end = FALSE,
 								assay = 'chipseq') {
-            # Check params... ************************************************************* ajouter assay dans check_param
+            # Check params...
             private$check_param(regions = regions, bam_files = bam_files,
                                 padding_size = padding_size,
                                 cores = cores, verbose = verbose,
-                                force_seqlevels = force_seqlevels)
+                                force_seqlevels = force_seqlevels, 
+								assay = assay)
             # Save params
             private$parallel_job <- Parallel_Job$new(cores)
             private$params[["padding_size"]] <- padding_size
@@ -243,7 +244,7 @@ metagene <- R6Class("metagene",
             if (length(private$table) == 0) { 
                 return(NULL)
             }
-			if (private$params[['assay']] == 'ChIP-seq'){
+			if (private$params[['assay']] == 'chipseq'){
 				return(copy(private$table))
 			} else if (private$params[['assay']] == 'rnaseq'){
 				returnedCol <- c("region","exon","bam","design","nuc","exonsize","value","strand")
@@ -254,7 +255,7 @@ metagene <- R6Class("metagene",
             if (is.null(self$get_table())){
                 return(NULL)
             }
-			if (private$params[['assay']] == 'ChIP-seq') {
+			if (private$params[['assay']] == 'chipseq') {
 				matrices <- list()
 				nbcol <- private$params[["bin_count"]]
 				nbrow <- vapply(self$get_regions(), length, numeric(1))
@@ -373,7 +374,7 @@ metagene <- R6Class("metagene",
                 }
 				
 				if (private$params[['assay']] == 'rnaseq'){
-					#print('RNAseq')
+					print('RNAseq')
 					
 					bam_files_names <- names(private$params[["bam_files"]])
 					#print(paste('bam_files_names', bam_files_names, sep = '='))
@@ -482,10 +483,8 @@ metagene <- R6Class("metagene",
 								startexonnuc = col_start_exon_nuc,
 								value = col_values,
 								strand = col_strand)
-						
-						write.csv(private$table, file="../DATA/table RNAseq.csv")
 					
-				} else { # ChIP-seq
+				} else { # chipseq
 					region_length <- vapply(self$get_regions(), length, numeric(1)) #give the number of IRanges on each GRanges
 					col_regions <- names(self$get_regions()) %>%
 						map(~ rep(.x, length(coverages) * bin_count * 
@@ -527,7 +526,8 @@ metagene <- R6Class("metagene",
             }
             invisible(self)
         },
-        produce_data_frame = function(alpha = 0.05, sample_count = 1000) {
+        produce_data_frame = function(alpha = 0.05, sample_count = 1000, 
+													byReplicate = FALSE) {
             stopifnot(is.numeric(alpha))
             stopifnot(is.numeric(sample_count))
             stopifnot(alpha >= 0 & alpha <= 1)
@@ -540,31 +540,74 @@ metagene <- R6Class("metagene",
             }
 
             # 2. Produce the data.frame
-            if (private$data_frame_need_update(alpha, sample_count) == TRUE) {
-                sample_size <- self$get_table()[bin == 1,][
-                                            ,.N, by = .(region, design)][
-                                            , .(min(N))]
-                sample_size <- as.integer(sample_size)
+            if (private$params[['assay']] == 'chipseq'){
+				if (private$data_frame_need_update(alpha, sample_count) == TRUE) {
+					sample_size <- self$get_table()[bin == 1,][
+												,.N, by = .(region, design)][
+												, .(min(N))]
+					sample_size <- as.integer(sample_size)
 
-                out_cols <- c("value", "qinf", "qsup")
-                bootstrap <- function(df) {
-                    sampling <- matrix(df$value[sample(seq_along(df$value),
-                                            sample_size * sample_count,
-                                            replace = TRUE)],
-                                    ncol = sample_size)
-                    values <- colMeans(sampling)
-                    res <- quantile(values, c(alpha/2, 1-(alpha/2)))
-                    res <- c(mean(df$value), res)
-                    names(res) <- out_cols
-                    as.list(res)
-                }
+					out_cols <- c("value", "qinf", "qsup")
+					bootstrap <- function(df) {
+						sampling <- matrix(df$value[sample(seq_along(df$value),
+												sample_size * sample_count,
+												replace = TRUE)],
+										ncol = sample_size)
+						values <- colMeans(sampling)
+						res <- quantile(values, c(alpha/2, 1-(alpha/2)))
+						res <- c(mean(df$value), res)
+						names(res) <- out_cols
+						as.list(res)
+					}
 
-                df <- data.table::copy(self$get_table())
-                df <- df[, c(out_cols) := bootstrap(.SD), 
-                            by = .(region, design, bin)]
-                private$df <- unique(df)
-            }
-            invisible(self)
+					df <- data.table::copy(self$get_table())
+					df <- df[, c(out_cols) := bootstrap(.SD), 
+								by = .(region, design, nuc)]
+					private$df <- unique(df)
+				}
+				invisible(self)
+			} else if (private$params[['assay']] == 'rnaseq'){
+				if (private$data_frame_need_update(alpha, sample_count) == TRUE) {
+
+					sample_size <- self$get_table()[nuc == 1,][
+												,.N, by = .(region, design)][
+												, .(min(N))]
+					sample_size <- as.integer(sample_size)
+					
+					out_cols <- c("value", "qinf", "qsup")
+					bootstrap <- function(df) {
+						sampling <- matrix(df$value[sample(seq_along(df$value),
+												sample_size * sample_count,
+												replace = TRUE)],
+										ncol = sample_size)
+						values <- colMeans(sampling)
+						res <- quantile(values, c(alpha/2, 1-(alpha/2)))
+						res <- c(mean(df$value), res)
+						names(res) <- out_cols
+						as.list(res)
+					}
+
+					if (byReplicate == TRUE) {
+						# bootstrap will be made on bam = no bootstrap
+						# then bootstrap will produce qinf = qsup = value
+						df <- data.table::copy(self$get_table())
+						df <- df[, c(out_cols) := bootstrap(.SD), 
+									by = .(region, bam, nuc)]
+						private$df <- unique(df)
+					} else {
+						# if no design or diagonal design exist, col design = bam col
+						# and bootstrap will produce qinf = qsup = value
+						# if there is a no-diagonal design (replicates exist :
+						# col design != bam col), boostrap will produce mean value
+						# among replicates and will estimate the confidence intervalle
+						df <- data.table::copy(self$get_table())
+						df <- df[, c(out_cols) := bootstrap(.SD), 
+									by = .(region, design, nuc)]
+						private$df <- unique(df)
+					}
+				}
+				invisible(self)
+			}
         },
         plot = function(region_names = NULL, design_names = NULL, title = NULL,
                         x_label = NULL) {
@@ -628,8 +671,15 @@ metagene <- R6Class("metagene",
         bam_handler = "",
         parallel_job = "",
         check_param = function(regions, bam_files, padding_size,
-                                cores, verbose, force_seqlevels) {
+                                cores, verbose, force_seqlevels, assay) {
             # Check parameters validity
+			if (!is.character(assay)) {
+                stop("verbose must be a character value")
+            }
+			assayTypeAuthorized <- c('chipseq', 'rnaseq')
+			if (!(tolower(assay) %in% assayTypeAuthorized)) {
+                stop("assay values must be one of 'chipseq' or 'rnaseq'")
+            }
             if (!is.logical(verbose)) {
                 stop("verbose must be a logicial value (TRUE or FALSE)")
             }
@@ -888,7 +938,7 @@ metagene <- R6Class("metagene",
         plot_graphic = function(df, title, x_label) {
             # Prepare x label
             if (is.null(x_label)) {
-                x_label <- "Distance in bins from regions center"
+                x_label <- "Distance in bins"
             }
 
             # Prepare y label
@@ -983,7 +1033,7 @@ metagene <- R6Class("metagene",
             result
         },
         flip_table = function() {
-            if (private$params[['assay']] == 'ChIP-seq'){
+            if (private$params[['assay']] == 'chipseq'){
 				i <- which(private$table$strand == '-')
 				private$table$bin[i] <- (self$get_params()$bin_count + 1) - 
 														private$table$bin[i]
