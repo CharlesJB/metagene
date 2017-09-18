@@ -243,7 +243,12 @@ metagene <- R6Class("metagene",
             if (length(private$table) == 0) { 
                 return(NULL)
             }
-            return(copy(private$table))
+			if (private$params[['assay']] == 'ChIP-seq'){
+				return(copy(private$table))
+			} else if (private$params[['assay']] == 'rnaseq'){
+				returnedCol <- c("region","exon","bam","design","nuc","exonsize","value","strand")
+				return(copy(private$table[,returnedCol,with=FALSE]))
+			}
         },
         get_matrices = function() {
             if (is.null(self$get_table())){
@@ -347,7 +352,7 @@ metagene <- R6Class("metagene",
             if (is.null(bin_count)) {
                 bin_count = 100
             }
-            # Replace with table_need_update
+			
             if (private$table_need_update(design = design,
                                             bin_count = bin_count,
                                             bin_size = bin_size,
@@ -364,10 +369,10 @@ metagene <- R6Class("metagene",
                 }
 				
 				if (private$params[['assay']] == 'rnaseq'){
-					print('RNAseq')
+					#print('RNAseq')
 					
 					bam_files_names <- names(private$params[["bam_files"]])
-					print(paste('bam_files_names', bam_files_names, sep = '='))
+					#print(paste('bam_files_names', bam_files_names, sep = '='))
 					#useful variables for caculations of standard data table structure
 					gene_count <- length(private$regions)
 					gene_names <- names(private$regions)
@@ -383,6 +388,11 @@ metagene <- R6Class("metagene",
 						#exon column (exon_names goes from 1 to nb of exon for the gene 1, then from 1 to nb of exons fro gene 2, and so forth)
 						exon_names <- unlist(map(exon_count_by_gene, ~ 1:.x))
 						col_exon <- as.vector(rep(exon_names, time=unlist(exon_length_by_exon_by_gene)))
+						col_exon_size <- rep(as.vector(unlist(exon_length_by_exon_by_gene)), time=as.vector(unlist(exon_length_by_exon_by_gene))) #useful for flip function
+						#col_start_exon_nuc will not be returned when get_table() will be used
+						exon_length_cum_by_gene <- cumsum(exon_length_by_exon_by_gene)
+						exon_length_cum_by_gene <- unlist(map(1:length(exon_length_cum_by_gene), ~ c(0,exon_length_cum_by_gene[[.x]][-length(exon_length_cum_by_gene[[.x]])])))
+						col_start_exon_nuc <- rep(exon_length_cum_by_gene+1, time=as.vector(unlist(exon_length_by_exon_by_gene))) #useful for flip function
 						#nuc_column
 						col_nuc <- unlist(map(as.vector(unlist(exon_length_by_exon_by_gene_cum)), ~ 1:.x))
 						#strand_col
@@ -391,10 +401,10 @@ metagene <- R6Class("metagene",
 					
 						
 						length_std_dt_struct = length(col_gene)
-						print(paste('length_std_dt_struct', length_std_dt_struct, sep='='))
+						#print(paste('length_std_dt_struct', length_std_dt_struct, sep='='))
 					## copy of strandard data table structure depending on number of bam files, traitement and design (treatments / conditions)
 						#how many copies of standard data structure must I do ?
-						print(paste('length(bam_files_names)', length(bam_files_names), sep='='))
+						#print(paste('length(bam_files_names)', length(bam_files_names), sep='='))
 						if (length(private$design) == 0){ #if design does not exist
 							copies_count <- length(bam_files_names)
 						} else { # a design exists
@@ -402,13 +412,14 @@ metagene <- R6Class("metagene",
 							copies_count <- sum(replace(unlist(private$design[,-1]),which(unlist(private$design[,-1]) == 2),1))
 						}
 						
-						print(paste('copies_count', copies_count, sep='='))
+						#print(paste('copies_count', copies_count, sep='='))
 						#multiplication of standard data table structure
 						col_gene <- rep(col_gene,copies_count)
 						col_exon <- rep(col_exon,copies_count)
 						col_nuc <- rep(col_nuc,copies_count)
+						col_exon_size <- rep(col_exon_size,copies_count)
 						col_strand <- rep(col_strand,copies_count)
-						
+						col_exon_size_exon_before <- rep(col_exon_size_exon_before, copies_count)
 						
 						if (length(private$design) != 0) { #if exist a design
 							ttt_names <- colnames(private$design)[-1]
@@ -439,7 +450,7 @@ metagene <- R6Class("metagene",
 								}
 							}
 						} else { #one bam file = one treatment/condition
-							print(paste('bam_files_names', bam_files_names, sep='='))
+							#print(paste('bam_files_names', bam_files_names, sep='='))
 							
 							col_bam <- rep(bam_files_names, each = length_std_dt_struct)
 							col_ttt <- col_bam
@@ -463,6 +474,8 @@ metagene <- R6Class("metagene",
 								bam = col_bam,
 								design = col_ttt,
 								nuc = col_nuc,
+								exonsize = col_exon_size,
+								startexonnuc = col_start_exon_nuc,
 								value = col_values,
 								strand = col_strand)
 						
@@ -966,9 +979,14 @@ metagene <- R6Class("metagene",
             result
         },
         flip_table = function() {
-            i <- which(private$table$strand == '-')
-            private$table$bin[i] <- (self$get_params()$bin_count + 1) - 
-                                                    private$table$bin[i]
+            if (private$params[['assay']] == 'ChIP-seq'){
+				i <- which(private$table$strand == '-')
+				private$table$bin[i] <- (self$get_params()$bin_count + 1) - 
+														private$table$bin[i]
+			} else if (private$params[['assay']] == 'rnaseq'){ #flip are executed exon by exon conserving the global gene numbering (col nuc in table)
+				i <- which(private$table$strand == '-')
+				private$table$nuc[i] <- private$table$nuc[i] + private$table$exonsize[i] - 1 + (private$table$startexonnuc[i] - private$table$nuc[i])*2
+			}
         },
         get_bam_names = function(filenames) {
             if (all(filenames %in% colnames(private$design)[-1])) {
