@@ -41,6 +41,9 @@
 #' @export
 permutation_test <- function(table1, table2, sample_size, sample_count, FUN,
                             ...) {
+	if (!is.null(table1$nuc)) {
+		stop("Permutation test is only available for chipseq data.")
+	}
     stopifnot(is.data.frame(table1))
     stopifnot(is.data.frame(table2))
     stopifnot(!identical(table1, table2))
