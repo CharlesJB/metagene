@@ -576,7 +576,7 @@ metagene <- R6Class("metagene",
 
 					df <- data.table::copy(self$get_table())
 					df <- df[, c(out_cols) := bootstrap(.SD), 
-								by = .(region, design, nuc)]
+								by = .(region, design, bin)]
 					private$df <- unique(df)
 				}
 			} else if (private$params[['assay']] == 'rnaseq'){
