@@ -292,7 +292,6 @@ metagene <- R6Class("metagene",
                     stopifnot(all(design_names %in% 
                                     unique(private$table$design)))
                 } else {
-					print(private$design)
                     design_names <- colnames(private$design)[-1]
                 }
                 i <- (private$df$region %in% region_names &
