@@ -29,7 +29,10 @@
 #'                respectively correspond to pruning.mode = "coarse"
 #'                and "error" in ?seqinfo.}
 #'	  \item{paired_end}{If \code{TRUE}, metagene will deal with paired-ended 
-#'				  data. If \code{FALSE}, single-ended data are expected}
+#'				  data. If \code{FALSE}, single-ended data are expected. 
+#'				  Default: \code{FALSE}}
+#'	  \item{assay}{\code{'chipseq'} or \code{'rnaseq'}, the two available 
+#'				  options. Default: \code{'chipseq'}}
 #' }
 #'
 #'    \code{metagene$new} returns a \code{metagene} object that contains the
