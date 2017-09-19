@@ -342,7 +342,7 @@ metagene <- R6Class("metagene",
                 bin_size <- NULL
             }
 
-            design = private$fetch_design(design)
+            design <- private$fetch_design(design)
             private$check_produce_table_params(bin_count = bin_count,
                                                 bin_size = bin_size,
                                                 design = design,
@@ -363,6 +363,7 @@ metagene <- R6Class("metagene",
                                             bin_size = bin_size,
                                             noise_removal = noise_removal,
                                             normalization = normalization)) {
+				private$design <- design
                 coverages <- private$coverages
                 if (!is.null(noise_removal)) {
                     coverages <- private$remove_controls(coverages, design)
@@ -410,12 +411,14 @@ metagene <- R6Class("metagene",
 					## copy of strandard data table structure depending on number of bam files, traitement and design (treatments / conditions)
 						#how many copies of standard data structure must I do ?
 						#print(paste('length(bam_files_names)', length(bam_files_names), sep='='))
-						if (length(private$design) == 0){ #if design does not exist
-							copies_count <- length(bam_files_names)
-						} else { # a design exists
-							# the number of not empty cases in the design param
-							copies_count <- sum(replace(unlist(private$design[,-1]),which(unlist(private$design[,-1]) == 2),1))
-						}
+						# if (length(private$design) == 0){ #if design does not exist
+							# copies_count <- length(bam_files_names)
+						# } else { # a design exists
+						
+						# the number of not empty cases in the design param
+						copies_count <- sum(replace(unlist(private$design[,-1]),which(unlist(private$design[,-1]) == 2),1))
+						
+						#}
 						
 						#print(paste('copies_count', copies_count, sep='='))
 						#multiplication of standard data table structure
@@ -427,8 +430,10 @@ metagene <- R6Class("metagene",
 						col_exon_size_exon_before <- rep(col_exon_size_exon_before, copies_count)
 						col_nuctot <- 1:length(col_nuc)
 						
-						if (length(private$design) != 0) { #if exist a design
+						#if (length(private$design) != 0) { #if exist a design
 							ttt_names <- colnames(private$design)[-1]
+							print(private$design)
+							print(tools::file_path_sans_ext(private$design[,1]))
 							bam_names_in_design <- tools::file_path_sans_ext(private$design[,1])
 							#list of ttt - bamfile links
 							nb_ttt_by_bam_file <- map(bam_files_names , ~length(which(private$design[which(bam_names_in_design == .x),-1] > 0)))
@@ -458,27 +463,27 @@ metagene <- R6Class("metagene",
 								}
 							}
 							col_values <- unlist(col_values)
-						} else { #one bam file = one treatment/condition
-							#print(paste('bam_files_names', bam_files_names, sep='='))
+						# } else { #one bam file = one treatment/condition
+							# #print(paste('bam_files_names', bam_files_names, sep='='))
 							
-							bam_names_in_design <- tools::file_path_sans_ext(basename(private$params[["bam_files"]]))
-							col_bam <- rep(bam_files_names, each = length_std_dt_struct)
-							col_ttt <- col_bam
+							# bam_names_in_design <- tools::file_path_sans_ext(basename(private$params[["bam_files"]]))
+							# col_bam <- rep(bam_files_names, each = length_std_dt_struct)
+							# col_ttt <- col_bam
 							
-							## col_values
-							grl <- mg$get_regions()
-							grtot <- unlist(grl)
-							col_values <- list()
-							i = 1 #index for col_values list
-							for(bam in bam_names_in_design) {
-								for (seqnames in unique(as.character(seqnames(grtot)))) {
-									val <- Views(private$coverages[[bam]][[seqnames]], start(grtot[which(seqnames(grtot) == seqnames)]),  end(grtot[which(seqnames(grtot) == seqnames)]))
-									col_values[[i]] <- unlist(lapply(val, as.numeric))
-									i = i + 1
-								}
-							}
-							col_values <- unlist(col_values)
-						}
+							# ## col_values
+							# grl <- mg$get_regions()
+							# grtot <- unlist(grl)
+							# col_values <- list()
+							# i = 1 #index for col_values list
+							# for(bam in bam_names_in_design) {
+								# for (seqnames in unique(as.character(seqnames(grtot)))) {
+									# val <- Views(private$coverages[[bam]][[seqnames]], start(grtot[which(seqnames(grtot) == seqnames)]),  end(grtot[which(seqnames(grtot) == seqnames)]))
+									# col_values[[i]] <- unlist(lapply(val, as.numeric))
+									# i = i + 1
+								# }
+							# }
+							# col_values <- unlist(col_values)
+						# }
 						
 					
 						private$table <- data.table(
