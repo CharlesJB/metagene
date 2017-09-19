@@ -247,7 +247,7 @@ metagene <- R6Class("metagene",
 			if (private$params[['assay']] == 'chipseq'){
 				return(copy(private$table))
 			} else if (private$params[['assay']] == 'rnaseq'){
-				returnedCol <- c("region","exon","bam","design","nuc","exonsize","value","strand")
+				returnedCol <- c("region","exon","bam","design","nuc","nuctot", "exonsize","value","strand")
 				return(copy(private$table[,returnedCol,with=FALSE]))
 			}
         },
@@ -292,6 +292,7 @@ metagene <- R6Class("metagene",
                     stopifnot(all(design_names %in% 
                                     unique(private$table$design)))
                 } else {
+					print(private$design)
                     design_names <- colnames(private$design)[-1]
                 }
                 i <- (private$df$region %in% region_names &
@@ -425,6 +426,7 @@ metagene <- R6Class("metagene",
 						col_exon_size <- rep(col_exon_size,copies_count)
 						col_strand <- rep(col_strand,copies_count)
 						col_exon_size_exon_before <- rep(col_exon_size_exon_before, copies_count)
+						col_nuctot <- 1:length(col_nuc)
 						
 						if (length(private$design) != 0) { #if exist a design
 							ttt_names <- colnames(private$design)[-1]
@@ -447,29 +449,36 @@ metagene <- R6Class("metagene",
 							#produce : Error in getListElement(x, i, ...) : view is out of limits
 							grl <- mg$get_regions()
 							grtot <- unlist(grl)
-							col_values <- c()
-							for(bam in bam_names_in_design){
-								for (seqnames in unique(as.character(seqnames(grtot)))){
+							col_values <- list()
+							i = 1 #index for col_values list
+							for(bam in bam_names_in_design) {
+								for (seqnames in unique(as.character(seqnames(grtot)))) {
 									val <- Views(private$coverages[[bam]][[seqnames]], start(grtot[which(seqnames(grtot) == seqnames)]),  end(grtot[which(seqnames(grtot) == seqnames)]))
-									col_values <- c(col_values, unlist(lapply(val, as.numeric)))
+									col_values[[i]] <- unlist(lapply(val, as.numeric))
+									i = i + 1
 								}
 							}
+							col_values <- unlist(col_values)
 						} else { #one bam file = one treatment/condition
 							#print(paste('bam_files_names', bam_files_names, sep='='))
 							
+							bam_names_in_design <- tools::file_path_sans_ext(basename(private$params[["bam_files"]]))
 							col_bam <- rep(bam_files_names, each = length_std_dt_struct)
 							col_ttt <- col_bam
 							
 							## col_values
 							grl <- mg$get_regions()
 							grtot <- unlist(grl)
-							col_values <- c()
-							for(bam in bam_files_names){
-								for (seqnames in unique(as.character(seqnames(grtot)))){
+							col_values <- list()
+							i = 1 #index for col_values list
+							for(bam in bam_names_in_design) {
+								for (seqnames in unique(as.character(seqnames(grtot)))) {
 									val <- Views(private$coverages[[bam]][[seqnames]], start(grtot[which(seqnames(grtot) == seqnames)]),  end(grtot[which(seqnames(grtot) == seqnames)]))
-									col_values <- c(col_values, unlist(lapply(val, as.numeric)))
+									col_values[[i]] <- unlist(lapply(val, as.numeric))
+									i = i + 1
 								}
 							}
+							col_values <- unlist(col_values)
 						}
 						
 					
@@ -479,6 +488,7 @@ metagene <- R6Class("metagene",
 								bam = col_bam,
 								design = col_ttt,
 								nuc = col_nuc,
+								nuctot = col_nuctot,
 								exonsize = col_exon_size,
 								startexonnuc = col_start_exon_nuc,
 								value = col_values,
@@ -527,7 +537,7 @@ metagene <- R6Class("metagene",
             invisible(self)
         },
         produce_data_frame = function(alpha = 0.05, sample_count = 1000, 
-													byReplicate = FALSE) {
+													by_replicate = FALSE) {
             stopifnot(is.numeric(alpha))
             stopifnot(is.numeric(sample_count))
             stopifnot(alpha >= 0 & alpha <= 1)
@@ -565,7 +575,6 @@ metagene <- R6Class("metagene",
 								by = .(region, design, nuc)]
 					private$df <- unique(df)
 				}
-				invisible(self)
 			} else if (private$params[['assay']] == 'rnaseq'){
 				if (private$data_frame_need_update(alpha, sample_count) == TRUE) {
 
@@ -590,7 +599,7 @@ metagene <- R6Class("metagene",
 					# provide the possibility to plot by replicate/bam without clearing
 					# the already provided design. If there is no design provided
 					# then this option is useless and can be left as default.
-					if (byReplicate == TRUE) {
+					if (by_replicate == TRUE){
 						# bootstrap will be made on bam = no bootstrap
 						# then bootstrap will produce qinf = qsup = value
 						df <- data.table::copy(self$get_table())
@@ -609,8 +618,11 @@ metagene <- R6Class("metagene",
 						private$df <- unique(df)
 					}
 				}
-				invisible(self)
 			}
+			private$df <- as.data.frame(private$df)
+			private$df$group <- paste(private$df$region,private$df$design,sep="_")
+			private$df$group <- as.factor(private$df$group)
+			invisible(self)
         },
         plot = function(region_names = NULL, design_names = NULL, title = NULL,
                         x_label = NULL) {
@@ -940,8 +952,13 @@ metagene <- R6Class("metagene",
         },
         plot_graphic = function(df, title, x_label) {
             # Prepare x label
-            if (is.null(x_label)) {
-                x_label <- "Distance in bins"
+            
+			if (is.null(x_label)) {
+				if (private$params[['assay']] == "chipseq") {
+					x_label <- "Distance in bins"
+				} else if (private$params[['assay']] == "rnaseq") {
+					x_label <- "Distance in nucleotides"
+				}
             }
 
             # Prepare y label
@@ -952,6 +969,8 @@ metagene <- R6Class("metagene",
                 y_label <- paste(y_label, "(RPM)")
             }
 
+				
+			
             # Produce plot
             p <- plot_metagene(df) +
                 ylab(y_label) +
@@ -1042,7 +1061,12 @@ metagene <- R6Class("metagene",
 														private$table$bin[i]
 			} else if (private$params[['assay']] == 'rnaseq'){ #flip are executed exon by exon conserving the global gene numbering (col nuc in table)
 				i <- which(private$table$strand == '-')
+				#col_nuc
+				col_nuc_temp <- private$table$nuc
 				private$table$nuc[i] <- private$table$nuc[i] + private$table$exonsize[i] - 1 + (private$table$startexonnuc[i] - private$table$nuc[i])*2
+				#col_nuctot
+				col_nuctot_temp <- private$table$nuctot
+				private$table$nuctot[i] <- col_nuctot_temp[i] + (private$table$exonsize[i] - 1 + (private$table$startexonnuc[i] - col_nuc_temp[i])*2)
 			}
         },
         get_bam_names = function(filenames) {
