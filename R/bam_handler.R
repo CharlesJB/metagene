@@ -13,8 +13,8 @@
 #'    \item{cores}{The number of cores available to parallelize the analysis.
 #'                Either a positive integer or a \code{BiocParallelParam}.
 #'                Default: \code{SerialParam()}.}
-#'	  \item{paired_end}{If \code{TRUE}, metagene will deal with paired-ended 
-#'				  data. If \code{FALSE}, single-ended data are expected}
+#'	  \item{paired_end}{If \code{TRUE}, metagene will deal with paired-end 
+#'				  data. If \code{FALSE}, single-end data are expected}
 #' }
 #'
 #' \code{Bam_Handler$new} returns a \code{Bam_Handler} object that contains
