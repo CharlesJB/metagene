@@ -88,16 +88,19 @@
 #' }
 #' \describe{
 #'    \item{}{\code{mg$produce_data_frame(alpha = 0.05, sample_count = 1000, 
-#'                                    by_replicate = FALSE)}}
+#'                              	by_replicate = FALSE, avoid_gaps = FALSE)}}
 #'    \item{alpha}{The range of the estimation to be shown with the ribbon.
 #'                \code{1 - alpha / 2} and \code{alpha / 2} will be used.
 #'                Default: 0.05.}
 #'    \item{sample_count}{The number of draw to do in the bootstrap
 #'                        calculation. Default: 1000.}
-#'      \item{by_replicate}{Provide the possibility to plot by replicate/bam
+#'    \item{by_replicate}{Provide the possibility to plot by replicate/bam
 #'                      without clearing the already provided design. If there 
 #'                      is no design provided then this option is useless and 
-#'                      must be left as default : \code{FALSE})
+#'                      must be left as default : \code{FALSE}.}
+#'    \item{avoid_gaps}{Provide the possibility to remove values = 0 and refit
+#'                      the data_frame for this suppression.
+#'                      Default : \code{FALSE}.}
 #' }
 #' \describe{
 #'    \item{}{mg$get_params()}
@@ -444,13 +447,14 @@ metagene <- R6Class("metagene",
                         #multiplication of standard data table structure
                         col_gene <- rep(col_gene, copies_count)
                         col_exon <- rep(col_exon, copies_count)
+                        col_nuctot <- 1:length(col_nuc)
+                        col_nuctot <- rep(col_nuctot, copies_count)
                         col_nuc <- rep(col_nuc, copies_count)
                         col_exon_size <- rep(col_exon_size, copies_count)
                         col_gene_size <- rep(col_gene_size, copies_count)
                         col_strand <- rep(col_strand, copies_count)
                         col_gene_start_nuc <- rep(col_gene_start_nuc, 
                                                             copies_count)
-                        col_nuctot <- 1:length(col_nuc)
                         
                     ## other columns of data table
                         design_names <- colnames(private$design)[-1]
@@ -554,7 +558,8 @@ metagene <- R6Class("metagene",
             invisible(self)
         },
         produce_data_frame = function(alpha = 0.05, sample_count = 1000, 
-                                                    by_replicate = FALSE) {
+                                                    by_replicate = FALSE,
+                                                    avoid_gaps = FALSE) {
             stopifnot(is.numeric(alpha))
             stopifnot(is.numeric(sample_count))
             stopifnot(alpha >= 0 & alpha <= 1)
@@ -632,6 +637,103 @@ metagene <- R6Class("metagene",
             private$df$group <- paste(private$df$region,private$df$design,
                                         sep="_")
             private$df$group <- as.factor(private$df$group)
+            if(avoid_gaps){
+                #how_namy_by_exon_by_design
+                dfdt <- data.table(private$df)
+                nb_nuc_removed <- dfdt[value == 0, length(value), by=c('exon',
+                                                                    'group')]   
+                for (i in 1:length(nb_nuc_removed$V1)){
+                    selected <- which(
+                        private$df$group == nb_nuc_removed$group[i] &
+                        private$df$exon == nb_nuc_removed$exon[i])
+                    original_exonsize <- unique(private$df$exonsize[selected])
+                    new_exonsize <- original_exonsize-nb_nuc_removed$V1[i]
+                    private$df$exonsize[selected] <- new_exonsize
+                    private$df <- private$df[which(private$df$value != 0),]
+                }
+                
+				#reinitialization of nuctot before flip in next section to 
+				# clear gaps in nuctot number seauence
+				private$df$nuctot <- rep(1:length(which(
+								private$df$bam == unique(private$df$bam)[1])), 
+								times = length(unique(private$df$bam)))
+				
+                #reorder the nuc and nuctot variables
+                if(private$params[["flip_regions"]] == TRUE){
+                    print('flipped')
+                    
+                    flip_by_bam_n_region <- map2(rep(unique(private$df$bam), 
+                                each=length(unique(private$df$region))), 
+                        rep(unique(private$df$region), 
+                                times=length(unique(private$df$bam))), 
+                        ~which(private$df$bam == .x & private$df$region == .y 
+                                    & private$df$strand == '-'))
+					
+					not_empty_idx <- which(map(flip_by_bam_n_region, 
+															~length(.x)) > 0) 
+					if (length(not_empty_idx) > 0){
+						map(flip_by_bam_n_region[not_empty_idx],
+										~ (private$df$nuc[.x] <- length(.x):1))
+						map(flip_by_bam_n_region[not_empty_idx],
+										~ (private$df$nuctot[.x] <- 
+												max(private$df$nuctot[.x]):
+													min(private$df$nuctot[.x])))
+					}
+					
+					unflip_by_bam_n_region <- map2(rep(unique(private$df$bam), 
+                                each=length(unique(private$df$region))), 
+                        rep(unique(private$df$region), 
+                                times=length(unique(private$df$bam))), 
+                        ~which(private$df$bam == .x & private$df$region == .y 
+                                    & (private$df$strand == '+' | 
+										private$df$strand == '*')))
+					not_empty_idx <- which(map(unflip_by_bam_n_region, 
+															~length(.x)) > 0) 
+					if (length(not_empty_idx) > 0){
+						map(unflip_by_bam_n_region[not_empty_idx],
+										~ (private$df$nuc[.x] <- 1:length(.x)))
+						map(unflip_by_bam_n_region[not_empty_idx],
+										~ (private$df$nuctot[.x] <- 
+												min(private$df$nuctot[.x]):
+													max(private$df$nuctot[.x])))
+					}
+                    # map(flipped_groups, ~ (private$df$nuc[which(
+                                # private$df$group == .x)] <- 
+                                    # length(which(private$df$group == .x)):1))
+                    # map(flipped_bam, ~ (private$df$nuctot[which(
+                                # private$df$bam == .x)] <-
+                                    # length(which(private$df$bam == .x)):1))
+                    # #unflipped_groups and designs
+                    # map(unflipped_groups, ~ (private$df$nuc[which(
+                                # private$df$group == .x)] <-
+                                    # 1:length(which(private$df$group == .x))))
+                    # map(unflipped_bam, ~ (private$df$nuctot[which(
+                                # private$df$bam == .x)] <-
+                                    # 1:length(which(private$df$bam == .x))))
+                } else {
+					by_bam_n_region <- map2(rep(unique(private$df$bam), 
+                                each=length(unique(private$df$region))), 
+                        rep(unique(private$df$region), 
+                                times=length(unique(private$df$bam))), 
+                        ~which(private$df$bam == .x & private$df$region == .y))
+					not_empty_idx <- which(map(by_bam_n_region, 
+															~length(.x)) > 0) 
+					if (length(not_empty_idx) > 0){
+						map(by_bam_n_region[not_empty_idx], 
+										~ (private$df$nuc[.x] <- 1:length(.x)))
+						map(by_bam_n_region[not_empty_idx], 
+										~ (private$df$nuctot[.x] <- 
+												min(private$df$nuctot[.x]):
+													max(private$df$nuctot[.x])))
+					}
+                    # map(private$df$group, ~ (private$df$nuc[which(
+                                # private$df$group == .x)] <-
+                                    # 1:length(which(private$df$group == .x))))
+                    # map(private$df$bam, ~ (private$df$nuctot[which(
+                                # private$df$bam == .x)] <-
+                                    # 1:length(which(private$df$bam == .x))))
+                }
+            }
             invisible(self)
         },
         plot = function(region_names = NULL, design_names = NULL, title = NULL,

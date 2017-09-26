@@ -54,6 +54,140 @@ metagene plots on the data (or a subset of the data).
        param.
 }
 
+\section{Methods}{
+
+\describe{
+   \item{}{\code{mg$plot(region_names = NULL, design_names = NULL,
+               title = NULL, x_label = NULL)}}
+   \item{region_names}{The names of the regions to extract. If \code{NULL},
+                       all the regions are returned. Default: \code{NULL}.}
+   \item{design_names}{The names of the experiments to extract. If a design
+           was added to the \code{metagene} object, \code{design_names}
+           correspond to the column names in the design, otherwise
+           \code{design_names} corresponds to the BAM name or the BAM
+           filename. If \code{NULL}, all the experiments are
+           returned. Default: \code{NULL}.}
+   \item{title}{A title to add to the graph. If \code{NULL}, will be
+                       automatically created. Default: NULL}
+   \item{x_label}{X-axis label to add to the metagene plot. If \code{NULL},
+                   metagene will use generic label. Default: \code{NULL}.}
+}
+\describe{
+   \item{}{\code{mg$produce_table(design, bin_count, noise_removal,
+               normalization, flip_regions, bin_size = NULL}}
+   \item{design}{A \code{data.frame} that describe to experiment to plot.
+           see \code{plot} function for more details. \code{NA} can 
+           be used keep previous design value. Default: \code{NA}.}
+   \item{bin_count}{The number of bin to create. \code{NA} can be used to
+                   keep previous bin_count value. A bin_count value of 100
+                   will be used if no value is specified. Default:
+                   \code{NA}.}
+   \item{noise_removal}{The algorithm to use to remove control(s). Possible
+                       values are \code{NA}, \code{NULL} or "NCIS". By
+                       default, value is \code{NULL}. Use \code{NA} keep
+                       previous \code{noise_removal} value (i.e. if
+                       \code{produce_table} was called before). See
+                       Liand and Keles 2012 for the NCIS algorithm.}
+   \item{normalization}{The algorithm to use to normalize samples. Possible
+                       default, value is \code{NULL} and no normalization
+                       will be performed. Use \code{NA} keep
+                       previous \code{normalization} value (i.e. if
+                       \code{produce_table} was called before).}
+   \item{flip_regions}{Should regions on negative strand be flip_regions?
+                       Default: \code{FALSE}.}
+   \item{bin_size}{Deprecated.}
+}
+\describe{
+   \item{}{\code{mg$produce_data_frame(alpha = 0.05, sample_count = 1000, 
+                             	by_replicate = FALSE, avoid_gaps = FALSE)}}
+   \item{alpha}{The range of the estimation to be shown with the ribbon.
+               \code{1 - alpha / 2} and \code{alpha / 2} will be used.
+               Default: 0.05.}
+   \item{sample_count}{The number of draw to do in the bootstrap
+                       calculation. Default: 1000.}
+   \item{by_replicate}{Provide the possibility to plot by replicate/bam
+                     without clearing the already provided design. If there 
+                     is no design provided then this option is useless and 
+                     must be left as default : \code{FALSE}.}
+   \item{avoid_gaps}{Provide the possibility to remove values = 0 and refit
+                     the data_frame for this suppression.
+                     Default : \code{FALSE}.}
+}
+\describe{
+   \item{}{mg$get_params()}
+}
+\describe{
+   \item{}{mg$get_design()}
+}
+\describe{
+   \item{}{mg$get_regions(region_names = NULL)}
+   \item{region_names}{The names of the regions to extract. If \code{NULL},
+                       all the regions are returned. Default: \code{NULL}.}
+}
+\describe{
+   \item{}{mg$get_table = function()}
+}
+\describe{
+   \item{}{mg$get_matrices = function()}
+}
+\describe{
+   \item{}{mg$get_data_frame(region_names = NULL, design_names = NULL)}
+   \item{region_names}{The names of the regions to extract. If \code{NULL},
+                       all the regions are returned. Default: \code{NULL}.}
+   \item{design_names}{The names of the experiments to extract. If a design
+           was added to the \code{metagene} object, \code{design_names}
+           correspond to the column names in the design, otherwise
+           \code{design_names} corresponds to the BAM name or the BAM
+           filename. If \code{NULL}, all the experiments are
+           returned. Default: \code{NULL}.}
+}
+\describe{
+   \item{}{get_plot = function()}
+}
+\describe{
+   \item{}{get_raw_coverages = function(filenames)}
+   \item{filenames}{The name of the file to extract raw coverages. Can be
+                   the filename with the extension of the name of the bam
+                   file (if a named bam files was used during the creation
+                   of the metagene object). If \code{NULL}, returns the
+                   coverage of every bam files. Default: \code{NULL}.}
+}
+\describe{
+   \item{}{get_normalized_coverages = function(filenames)}
+   \item{filenames}{The name of the file to extract normalized coverages 
+           (in RPM). Can be the filename with the extension of 
+           the name of the bam file (if a named bam files was used during
+           the creation of the metagene object). If \code{NULL},
+           returns the coverage every bam files. Default:
+           \code{NULL}.}
+}
+\describe{
+   \item{}{\code{mg$export(bam_file, region, file)}}
+   \item{bam_file}{The name of the bam file to export.}
+   \item{region}{The name of the region to export.}
+   \item{file}{The name of the ouput file.}
+}
+\describe{
+   \item{}{\code{mg$add_design(design = NULL, check_bam_files = FALSE)}}
+   \item{design}{A \code{data.frame} that describe to experiment to plot.
+           See \code{plot} function for more details. \code{NA} can be
+           used keep previous design value. Default: \code{NA}.}
+   \item{check_bam_files}{Force check that all the bam files from the first
+                           columns of the design are present in current
+                           metagene object. Default: \code{FALSE}}
+}
+\describe{
+   \item{}{\code{mg$unflip_regions()}}
+}
+
+\describe{
+   \item{}{\code{mg$flip_regions()}}
+}
+\describe{
+   \item{}{\code{mg$unflip_regions()}}
+}
+}
+
 \examples{
 region <- get_demo_regions()[1]
 bam_file <- get_demo_bam_files()[1]
