@@ -1014,7 +1014,7 @@ metagene <- R6Class("metagene",
                                         pValue = "numeric", qValue = "numeric")
                         rtracklayer::import(region, format = "BED",
                                             extraCols = extraCols)
-                    } else if (ext == "gtf") {
+                    } else if (ext == "gtf" | ext == "gff") {
                         split(rtracklayer::import(region), 
                                 rtracklayer::import(region)$gene_id)
                     } else {
