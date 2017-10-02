@@ -14,7 +14,7 @@
 #' df <- mg$get_data_frame()
 #' p <- plot_metagene(df)
 plot_metagene <- function(df) {
-    if ('bin' %in% colnames(df)) { # if chipseq, for instance
+    if (('bin' %in% colnames(df)) & !('nuc' %in% colnames(df))) { # if chipseq, for instance
     
         expected_cols <- c("bin", "value", "qinf", "qsup", "group")
         df<-df[,which(colnames(df) %in% expected_cols)]
@@ -31,8 +31,8 @@ plot_metagene <- function(df) {
             theme(panel.background = element_rect()) +
             theme_bw(base_size = 20)
             
-    } else if ('nuc' %in% colnames(df)) { # if rnaseq, for instance
-    
+    } else if (('nuc' %in% colnames(df)) & !('bin' %in% colnames(df))) { 
+        # if rnaseq, for instance
         ascending = function(nuc) {
             nuc[1] < nuc[2]
         }
@@ -62,7 +62,7 @@ plot_metagene <- function(df) {
         }
         
         #if only one region/gene in the data_frame
-        if (length(unique(df$region)) == 1) { 
+        if (length(unique(df$region)) == 1) {
             print('One region/gene')
             
             is_genes_unflipped <- unlist(lapply(map(unique(df$region), 
@@ -126,5 +126,23 @@ plot_metagene <- function(df) {
                 theme(panel.background = element_rect()) +
                 theme_bw(base_size = 20)
         }
+    } else if (('bin' %in% colnames(df)) & ('nuc' %in% colnames(df))) { 
+        print('rnaseq with bins')
+        
+        expected_cols <- c("bin", "value", "qinf", "qsup", "design")
+        df<-df[,which(colnames(df) %in% expected_cols)]
+        print(vapply(df, class, character(1)))
+        expected_class <- c("factor", "integer", rep("numeric", 3))
+        stopifnot(all(expected_cols %in% colnames(df)))
+        stopifnot(all(vapply(df, class, character(1)) == expected_class))
+
+        ggplot(df, aes(x=bin, y=value, ymin=qinf, ymax=qsup)) +
+            geom_ribbon(aes(fill=design), alpha=0.3) +
+            geom_line(aes(color=design), size=1) +
+            theme(panel.grid.major = element_line()) +
+            theme(panel.grid.minor = element_line()) +
+            theme(panel.background = element_blank()) +
+            theme(panel.background = element_rect()) +
+            theme_bw(base_size = 20)
     }
 }

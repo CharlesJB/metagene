@@ -88,7 +88,7 @@
 #' }
 #' \describe{
 #'    \item{}{\code{mg$produce_data_frame(alpha = 0.05, sample_count = 1000, 
-#'                              	by_replicate = FALSE, avoid_gaps = FALSE)}}
+#'                                  by_replicate = FALSE, avoid_gaps = FALSE)}}
 #'    \item{alpha}{The range of the estimation to be shown with the ribbon.
 #'                \code{1 - alpha / 2} and \code{alpha / 2} will be used.
 #'                Default: 0.05.}
@@ -258,9 +258,15 @@ metagene <- R6Class("metagene",
             if (private$params[['assay']] == 'chipseq'){
                 return(copy(private$table))
             } else if (private$params[['assay']] == 'rnaseq'){
-                returnedCol <- c("region","exon","bam","design","nuc",
-                                "nuctot","exonsize","regionstartnuc",
-                                "regionsize","value","strand")
+                if('bin' %in% colnames(private$table)){
+                    returnedCol <- c("region","exon","bam","design","nuc","bin",
+                                    "nuctot","exonsize","regionstartnuc",
+                                    "regionsize","value","strand")
+                } else {
+                    returnedCol <- c("region","exon","bam","design","nuc",
+                                    "nuctot","exonsize","regionstartnuc",
+                                    "regionsize","value","strand")
+                }
                 return(copy(private$table[,returnedCol,with=FALSE]))
             }
         },
@@ -369,10 +375,7 @@ metagene <- R6Class("metagene",
                                                     "noise_removal")
             normalization <- private$get_param_value(normalization,
                                                     "normalization")
-            if (is.null(bin_count)) {
-                bin_count = 100
-            }
-            
+                        
             if (private$table_need_update(design = design,
                                             bin_count = bin_count,
                                             bin_size = bin_size,
@@ -390,6 +393,7 @@ metagene <- R6Class("metagene",
                 }
                 
                 if (private$params[['assay']] == 'rnaseq'){
+                   
                     print('RNAseq')
                     # here the word 'gene' = 'region'
                     bam_files_names <- names(private$params[["bam_files"]])
@@ -497,21 +501,44 @@ metagene <- R6Class("metagene",
                             }
                         }
                         col_values <- unlist(col_values)
-                        
-                    private$table <- data.table(
-                            region = col_gene,
-                            exon = col_exon,
-                            bam = col_bam,
-                            design = col_design,
-                            nuc = col_nuc,
-                            nuctot = col_nuctot,
-                            exonsize = col_exon_size,
-                            regionsize = col_gene_size,
-                            regionstartnuc = col_gene_start_nuc,
-                            value = col_values,
-                            strand = col_strand)
                     
+                    if (!is.null(bin_count)) {
+
+                        col_bins <- trunc(
+                                    (col_nuc/(col_gene_size+1))*bin_count)+1
+                        col_bins <- as.integer(col_bins)
+                        
+                        private$table <- data.table(
+                                region = col_gene,
+                                exon = col_exon,
+                                bam = col_bam,
+                                design = col_design,
+                                bin = col_bins,
+                                nuc = col_nuc,
+                                nuctot = col_nuctot,
+                                exonsize = col_exon_size,
+                                regionsize = col_gene_size,
+                                regionstartnuc = col_gene_start_nuc,
+                                value = col_values,
+                                strand = col_strand)
+                    } else {
+                        private$table <- data.table(
+                                region = col_gene,
+                                exon = col_exon,
+                                bam = col_bam,
+                                design = col_design,
+                                nuc = col_nuc,
+                                nuctot = col_nuctot,
+                                exonsize = col_exon_size,
+                                regionsize = col_gene_size,
+                                regionstartnuc = col_gene_start_nuc,
+                                value = col_values,
+                                strand = col_strand)
+                    }    
                 } else { # chipseq
+                    if (is.null(bin_count)) {
+                        bin_count = 100
+                    }
                     region_length <- vapply(self$get_regions(), length, 
                         numeric(1))
                     col_regions <- names(self$get_regions()) %>%
@@ -571,7 +598,12 @@ metagene <- R6Class("metagene",
                 self$produce_table()
             }
 
-            # 2. Produce the data.frame
+            # 2. Produce the data.frame    
+            private$df <- data.table::copy(self$get_table())
+            private$df$group <- paste(private$df$region,private$df$design,
+                                        sep="_")
+            private$df$group <- as.factor(private$df$group)
+            
             if (private$params[['assay']] == 'chipseq') {
                 if (private$data_frame_need_update(alpha, sample_count) == TRUE)
                 {
@@ -593,12 +625,13 @@ metagene <- R6Class("metagene",
                         as.list(res)
                     }
 
-                    df <- data.table::copy(self$get_table())
-                    df <- df[, c(out_cols) := bootstrap(.SD), 
+                    private$df <- data.table::copy(self$get_table())
+                    private$df <- private$df[, c(out_cols) := bootstrap(.SD), 
                                 by = .(region, design, bin)]
-                    private$df <- unique(df)
+                    private$df <- unique(private$df)
                 }
-            } else if (private$params[['assay']] == 'rnaseq'){
+            } else if (private$params[['assay']] == 'rnaseq' 
+                            & !('bin' %in% colnames(private$df))){
                 if (private$data_frame_need_update(alpha, sample_count) 
                                                                 == TRUE) {
 
@@ -620,120 +653,59 @@ metagene <- R6Class("metagene",
                         as.list(res)
                     }
                     
-                    if (by_replicate == TRUE){
-                        df <- data.table::copy(self$get_table())
-                        df <- df[, c(out_cols) := bootstrap(.SD), 
-                                    by = .(region, bam, nuc)]
-                        private$df <- unique(df)
-                    } else {
-                        df <- data.table::copy(self$get_table())
-                        df <- df[, c(out_cols) := bootstrap(.SD), 
-                                    by = .(region, design, nuc)]
-                        private$df <- unique(df)
+                    if(avoid_gaps){
+                        private$data_frame_avoid_gaps_updates()
                     }
+                    if (by_replicate == TRUE){
+                        private$df <- private$df[, c(out_cols) := bootstrap(.SD), 
+                                    by = .(region, bam, nuc)]
+                    } else {
+                        private$df <- private$df[, c(out_cols) := bootstrap(.SD), 
+                                    by = .(region, design, nuc)]
+                    }
+                    private$df <- private$df[
+                }
+            } else if (private$params[['assay']] == 'rnaseq' 
+                                    & ('bin' %in% colnames(private$df))){
+                if (private$data_frame_need_update(alpha, sample_count) 
+                                                                == TRUE) {
+
+                    sample_size <- self$get_table()[bin == 1,][
+                                                ,.N, by = .(region, design)][
+                                                , .(min(N))]
+                    sample_size <- as.integer(sample_size)
+                    
+                    out_cols <- c("value", "qinf", "qsup")
+                    bootstrap <- function(dtfr) {
+                        sampling <- matrix(dtfr$value[sample(seq_along(dtfr$value),
+                                                sample_size * sample_count,
+                                                replace = TRUE)],
+                                        ncol = sample_size)
+                        values <- colMeans(sampling)
+                        res <- quantile(values, c(alpha/2, 1-(alpha/2)))
+                        res <- c(mean(dtfr$value), res)
+                        names(res) <- out_cols
+                        as.list(res)
+                    }
+                    
+                    if(avoid_gaps){
+                        private$data_frame_avoid_gaps_updates()
+                    }
+                    if (by_replicate == TRUE){
+                        private$df <- private$df[, c(out_cols) := bootstrap(.SD), 
+                                    by = .(region, bam, bin)]
+                        
+                    } else {
+                        private$df <- private$df[, c(out_cols) := bootstrap(.SD), 
+                                    by = .(region, design, bin)]
+                    }
+                    vqq <- which(colnames(private$df) %in% 
+                                                    c('value','qinf','qsup'))
+                    private$df <- unique(private$df[vqq])
                 }
             }
             private$df <- as.data.frame(private$df)
-            private$df$group <- paste(private$df$region,private$df$design,
-                                        sep="_")
-            private$df$group <- as.factor(private$df$group)
-            if(avoid_gaps){
-                #how_namy_by_exon_by_design
-                dfdt <- data.table(private$df)
-                nb_nuc_removed <- dfdt[value == 0, length(value), by=c('exon',
-                                                                    'group')]   
-                for (i in 1:length(nb_nuc_removed$V1)){
-                    selected <- which(
-                        private$df$group == nb_nuc_removed$group[i] &
-                        private$df$exon == nb_nuc_removed$exon[i])
-                    original_exonsize <- unique(private$df$exonsize[selected])
-                    new_exonsize <- original_exonsize-nb_nuc_removed$V1[i]
-                    private$df$exonsize[selected] <- new_exonsize
-                    private$df <- private$df[which(private$df$value != 0),]
-                }
-                
-				#reinitialization of nuctot before flip in next section to 
-				# clear gaps in nuctot number seauence
-				private$df$nuctot <- rep(1:length(which(
-								private$df$bam == unique(private$df$bam)[1])), 
-								times = length(unique(private$df$bam)))
-				
-                #reorder the nuc and nuctot variables
-                if(private$params[["flip_regions"]] == TRUE){
-                    print('flipped')
-                    
-                    flip_by_bam_n_region <- map2(rep(unique(private$df$bam), 
-                                each=length(unique(private$df$region))), 
-                        rep(unique(private$df$region), 
-                                times=length(unique(private$df$bam))), 
-                        ~which(private$df$bam == .x & private$df$region == .y 
-                                    & private$df$strand == '-'))
-					
-					not_empty_idx <- which(map(flip_by_bam_n_region, 
-															~length(.x)) > 0) 
-					if (length(not_empty_idx) > 0){
-						map(flip_by_bam_n_region[not_empty_idx],
-										~ (private$df$nuc[.x] <- length(.x):1))
-						map(flip_by_bam_n_region[not_empty_idx],
-										~ (private$df$nuctot[.x] <- 
-												max(private$df$nuctot[.x]):
-													min(private$df$nuctot[.x])))
-					}
-					
-					unflip_by_bam_n_region <- map2(rep(unique(private$df$bam), 
-                                each=length(unique(private$df$region))), 
-                        rep(unique(private$df$region), 
-                                times=length(unique(private$df$bam))), 
-                        ~which(private$df$bam == .x & private$df$region == .y 
-                                    & (private$df$strand == '+' | 
-										private$df$strand == '*')))
-					not_empty_idx <- which(map(unflip_by_bam_n_region, 
-															~length(.x)) > 0) 
-					if (length(not_empty_idx) > 0){
-						map(unflip_by_bam_n_region[not_empty_idx],
-										~ (private$df$nuc[.x] <- 1:length(.x)))
-						map(unflip_by_bam_n_region[not_empty_idx],
-										~ (private$df$nuctot[.x] <- 
-												min(private$df$nuctot[.x]):
-													max(private$df$nuctot[.x])))
-					}
-                    # map(flipped_groups, ~ (private$df$nuc[which(
-                                # private$df$group == .x)] <- 
-                                    # length(which(private$df$group == .x)):1))
-                    # map(flipped_bam, ~ (private$df$nuctot[which(
-                                # private$df$bam == .x)] <-
-                                    # length(which(private$df$bam == .x)):1))
-                    # #unflipped_groups and designs
-                    # map(unflipped_groups, ~ (private$df$nuc[which(
-                                # private$df$group == .x)] <-
-                                    # 1:length(which(private$df$group == .x))))
-                    # map(unflipped_bam, ~ (private$df$nuctot[which(
-                                # private$df$bam == .x)] <-
-                                    # 1:length(which(private$df$bam == .x))))
-                } else {
-					by_bam_n_region <- map2(rep(unique(private$df$bam), 
-                                each=length(unique(private$df$region))), 
-                        rep(unique(private$df$region), 
-                                times=length(unique(private$df$bam))), 
-                        ~which(private$df$bam == .x & private$df$region == .y))
-					not_empty_idx <- which(map(by_bam_n_region, 
-															~length(.x)) > 0) 
-					if (length(not_empty_idx) > 0){
-						map(by_bam_n_region[not_empty_idx], 
-										~ (private$df$nuc[.x] <- 1:length(.x)))
-						map(by_bam_n_region[not_empty_idx], 
-										~ (private$df$nuctot[.x] <- 
-												min(private$df$nuctot[.x]):
-													max(private$df$nuctot[.x])))
-					}
-                    # map(private$df$group, ~ (private$df$nuc[which(
-                                # private$df$group == .x)] <-
-                                    # 1:length(which(private$df$group == .x))))
-                    # map(private$df$bam, ~ (private$df$nuctot[which(
-                                # private$df$bam == .x)] <-
-                                    # 1:length(which(private$df$bam == .x))))
-                }
-            }
+            private$df$design <- as.factor(private$df$design)
             invisible(self)
         },
         plot = function(region_names = NULL, design_names = NULL, title = NULL,
@@ -1081,8 +1053,6 @@ metagene <- R6Class("metagene",
             } else {
                 y_label <- paste(y_label, "(RPM)")
             }
-
-                
             
             # Produce plot
             p <- plot_metagene(df) +
@@ -1207,6 +1177,97 @@ metagene <- R6Class("metagene",
                 !is.null((private$bam_handler$get_bam_name(x)))
             },
             logical(1)))
+        },
+        data_frame_avoid_gaps_updates = function() {
+            #how_namy_by_exon_by_design
+            dfdt <- data.table::copy(private$df)
+            nb_nuc_removed <- dfdt[value == 0, length(value), by=c('exon',
+                                                                'group')]   
+            for (i in 1:length(nb_nuc_removed$V1)){
+                selected <- which(
+                    private$df$group == nb_nuc_removed$group[i] &
+                    private$df$exon == nb_nuc_removed$exon[i])
+                original_exonsize <- unique(private$df$exonsize[selected])
+                new_exonsize <- original_exonsize-nb_nuc_removed$V1[i]
+                private$df$exonsize[selected] <- new_exonsize
+                private$df <- private$df[which(private$df$value != 0),]
+            }
+            
+            #reinitialization of nuctot before flip in next section to 
+            # clear gaps in nuctot number seauence
+            private$df$nuctot <- rep(1:length(which(
+                            private$df$bam == unique(private$df$bam)[1])), 
+                            times = length(unique(private$df$bam)))
+            
+            #reorder the nuc and nuctot variables
+            if(private$params[["flip_regions"]] == TRUE){
+                print('flipped')
+                
+                flip_by_bam_n_region <- map2(rep(unique(private$df$bam), 
+                            each=length(unique(private$df$region))), 
+                    rep(unique(private$df$region),
+                            times=length(unique(private$df$bam))), 
+                    ~which(private$df$bam == .x & private$df$region == .y 
+                                & private$df$strand == '-'))
+                
+                not_empty_idx <- which(map(flip_by_bam_n_region, 
+                                                        ~length(.x)) > 0) 
+                if (length(not_empty_idx) > 0){
+                    map(flip_by_bam_n_region[not_empty_idx],
+                                    ~ (private$df$nuc[.x] <- length(.x):1))
+                    map(flip_by_bam_n_region[not_empty_idx],
+                                    ~ (private$df$nuctot[.x] <- 
+                                            max(private$df$nuctot[.x]):
+                                                min(private$df$nuctot[.x])))
+                }
+                
+                unflip_by_bam_n_region <- map2(rep(unique(private$df$bam), 
+                            each=length(unique(private$df$region))), 
+                    rep(unique(private$df$region), 
+                            times=length(unique(private$df$bam))), 
+                    ~which(private$df$bam == .x & private$df$region == .y 
+                                & (private$df$strand == '+' | 
+                                    private$df$strand == '*')))
+                not_empty_idx <- which(map(unflip_by_bam_n_region, 
+                                                        ~length(.x)) > 0) 
+                if (length(not_empty_idx) > 0){
+                    map(unflip_by_bam_n_region[not_empty_idx],
+                                    ~ (private$df$nuc[.x] <- 1:length(.x)))
+                    map(unflip_by_bam_n_region[not_empty_idx],
+                                    ~ (private$df$nuctot[.x] <- 
+                                            min(private$df$nuctot[.x]):
+                                                max(private$df$nuctot[.x])))
+                }
+            } else {
+                by_bam_n_region <- map2(rep(unique(private$df$bam), 
+                            each=length(unique(private$df$region))), 
+                    rep(unique(private$df$region), 
+                            times=length(unique(private$df$bam))), 
+                    ~which(private$df$bam == .x & private$df$region == .y))
+                not_empty_idx <- which(map(by_bam_n_region, 
+                                                        ~length(.x)) > 0) 
+                if (length(not_empty_idx) > 0){
+                    map(by_bam_n_region[not_empty_idx], 
+                                    ~ (private$df$nuc[.x] <- 1:length(.x)))
+                    map(by_bam_n_region[not_empty_idx], 
+                                    ~ (private$df$nuctot[.x] <- 
+                                            min(private$df$nuctot[.x]):
+                                                max(private$df$nuctot[.x])))
+                }
+            }
+            if(!is.null(private$params[["bin_count"]])){
+                print('col bin rebuilt')
+                #reinitialization of region/gene_size to be able to rebuild 
+                #bin column
+                length_by_region_n_bam <- private$df[,length(nuc),
+                                                    by=c('region','bam')]$V1
+                private$df$regionsize <- rep(length_by_region_n_bam, 
+                                            times=length_by_region_n_bam)
+                #rebuild the correct bin column
+                col_bins <- trunc((private$df$nuc/(private$df$regionsize+1))
+                                        *private$params[["bin_count"]])+1
+                private$df$bin <- as.integer(col_bins)
+            }
         }
     )
 )
