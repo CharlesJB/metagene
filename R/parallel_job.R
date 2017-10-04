@@ -8,7 +8,7 @@ Parallel_Job <- R6Class("Parallel_Job",
         },
         launch_job = function(data, FUN, ...) {
             res <- BiocParallel:::bplapply(data, FUN, BPPARAM = self$BPPARAM,
-                                        ...)
+                                           ...)
             # Check for errors
             if (!all(bpok(res))) {
                 i <- grepl("stop", attr(res[[1]], "traceback"))
@@ -29,16 +29,16 @@ Parallel_Job <- R6Class("Parallel_Job",
         },
         set_core_count = function(cores) {
             # Note: cores can be numeric or BiocParallelParam instance
-            # BPPARAM is always a BiocParallelParam instance
+            #       BPPARAM is always a BiocParallelParam instance
             self$parameters[["cores"]] <- cores
             self$BPPARAM <- private$get_bpparam(cores)
         }
     ),
     private = list(
         get_bpparam = function(cores) {
-            if (.Platform$OS.type != "unix") {
-                BPPARAM <- SerialParam()
-            } else if (is.numeric(cores)) {
+			if (.Platform$OS.type != "unix") {
+				BPPARAM <- SerialParam()
+			} else if (is.numeric(cores)) {
                 # The number of cores has to be a positive integer
                 if(as.integer(cores) != cores || cores <= 0) {
                     msg <- "cores must be positive numeric or "

@@ -5,16 +5,13 @@
 #'
 #' @section Constructor:
 #' \describe{
-#'    \item{}{\code{bh <- Bam_Handler$new(bam_files, cores = SerialParam())}}
-#'    \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
-#'                    indexed. i.e.: if a file is named file.bam, there must
-#'                    be a file named file.bam.bai or file.bai in the same 
-#'                    directory.}
-#'    \item{cores}{The number of cores available to parallelize the analysis.
-#'                Either a positive integer or a \code{BiocParallelParam}.
-#'                Default: \code{SerialParam()}.}
-#'	  \item{paired_end}{If \code{TRUE}, metagene will deal with paired-ended 
-#'				  data. If \code{FALSE}, single-ended data are expected}
+#'     \item{}{\code{bh <- Bam_Handler$new(bam_files, cores = SerialParam())}}
+#'     \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
+#'                      indexed. i.e.: if a file is named file.bam, there must
+#'                      be a file named file.bam.bai in the same directory.}
+#'     \item{cores}{The number of cores available to parallelize the analysis.
+#'                  Either a positive integer or a \code{BiocParallelParam}.
+#'                  Default: \code{SerialParam()}.}
 #' }
 #'
 #' \code{Bam_Handler$new} returns a \code{Bam_Handler} object that contains
@@ -27,48 +24,44 @@
 #'
 #' @section Methods:
 #' \describe{
-#'    \item{}{\code{bh$get_aligned_count(bam_file)}}
-#'    \item{bam_file}{The name of the BAM file.}
+#'     \item{}{\code{bh$get_aligned_count(bam_file)}}
+#'     \item{bam_file}{The name of the BAM file.}
 #' }
 #' \describe{
-#'    \item{}{\code{bg$get_bam_name(bam_file)}}
-#'    \item{bam_file}{The name of the BAM file.}
+#'     \item{}{\code{bg$get_bam_name(bam_file)}}
+#'     \item{bam_file}{The name of the BAM file.}
 #' }
 #' \describe{
-#'    \item{}{\code{bh$get_rpm_coefficient(bam_file)}}
-#'    \item{bam_file}{The name of the BAM file.}
+#'     \item{}{\code{bh$get_rpm_coefficient(bam_file)}}
+#'     \item{bam_file}{The name of the BAM file.}
 #' }
 #' \describe{
-#'    \item{}{\code{bh$index_bam_files(bam_files)}}
-#'    \item{bam_files}{A \code{vector} of BAM filenames.}
+#'     \item{}{\code{bh$index_bam_files(bam_files)}}
+#'     \item{bam_files}{A \code{vector} of BAM filenames.}
 #' }
 #' \describe{
-#'    \item{}{\code{bh$get_bam_files()}}
+#'     \item{}{\code{bh$get_bam_files()}}
 #' }
 #' \describe{
-#'    \item{}{\code{bh$get_coverage(bam_file, regions)
+#'     \item{}{\code{bh$get_coverage(bam_file, regions)
 #'                                force_seqlevels = FALSE)}}
-#'    \item{bam_file}{The name of the BAM file.}
-#'    \item{regions}{A not empty \code{GRanges} object.}
-#'    \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
-#'                    in bam file header. Default: \code{FALSE}. TRUE and FALSE
-#'                    respectively correspond to pruning.mode = "coarse" 
-#'                    and "error" in ?seqinfo.}
+#'     \item{bam_file}{The name of the BAM file.}
+#'     \item{regions}{A not empty \code{GRanges} object.}
+#'     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
+#'                            in bam file header. Default: \code{FALSE}.}
 #' }
 #' \describe{
-#'    \item{}{\code{bh$get_normalized_coverage(bam_file, regions)
+#'     \item{}{\code{bh$get_normalized_coverage(bam_file, regions)
 #'                                force_seqlevels = FALSE)}}
-#'    \item{bam_file}{The name of the BAM file.}
-#'    \item{regions}{A not empty \code{GRanges} object.}
-#'    \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
-#'                    in bam file header. Default: \code{FALSE}. TRUE and FALSE
-#'                    respectively correspond to pruning.mode = "coarse" 
-#'                    and "error" in ?seqinfo.}
+#'     \item{bam_file}{The name of the BAM file.}
+#'     \item{regions}{A not empty \code{GRanges} object.}
+#'     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
+#'                            in bam file header. Default: \code{FALSE}.}
 #' }
 #' \describe{
-#'    \item{}{\code{bh$get_noise_ratio(chip_bam_file, input_bam_file)}}
-#'    \item{chip_bam_file}{The path to the chip bam file.}
-#'    \item{input_bam_file}{The path to the input (control) bam file.}
+#'     \item{}{\code{bh$get_noise_ratio(chip_bam_file, input_bam_file)}}
+#'     \item{chip_bam_file}{The path to the chip bam file.}
+#'     \item{input_bam_file}{The path to the input (control) bam file.}
 #' }
 #' @examples
 #' bam_file <- get_demo_bam_files()[1]
@@ -82,7 +75,7 @@
 Bam_Handler <- R6Class("Bam_Handler",
     public = list(
         parameters = list(),
-        initialize = function(bam_files, cores = SerialParam(), paired_end = FALSE) {
+        initialize = function(bam_files, cores = SerialParam()) {
             # Check prerequisites
             # bam_files must be a vector of BAM filenames
             if (!is.vector(bam_files, "character")) {
@@ -95,37 +88,30 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
 
             # All BAM files must be indexed
-            if (any(sapply(sapply(bam_files, private$get_bam_index_filename), 
-                                        is.na))) {
-                stop("All BAM files must be indexed")
+            if (!all(sapply(paste0(bam_files, ".bai"), file.exists))) {
+              stop("All BAM files must be indexed")
             }
 
             # All BAM names must be unique
             if (is.null(names(bam_files))) {
                 bam_names <- tools::file_path_sans_ext(basename(bam_files))
                 if (length(bam_names) != length(unique(bam_names))) {
-                    stop("All BAM names must be unique")
+                        stop("All BAM names must be unique")
                 }
             }
 
             # Core must be a positive integer or a BiocParallelParam instance
             isBiocParallel = is(cores, "BiocParallelParam")
             isInteger = ((is.numeric(cores) || is.integer(cores)) &&
-                            cores > 0 &&as.integer(cores) == cores)
+                             cores > 0 &&  as.integer(cores) == cores)
             if (!isBiocParallel && !isInteger) {
                 stop(paste0("cores must be a positive numeric or ",
-                    "BiocParallelParam instance"))
+                            "BiocParallelParam instance"))
             }
 
-            # paired_end must be logical
-            if (!is.logical(paired_end)) {
-                stop("paired_end argument must be logical")
-            }	
-			
             # Initialize the Bam_Handler object
             private$parallel_job <- Parallel_Job$new(cores)
             self$parameters[["cores"]] <- private$parallel_job$get_core_count()
-			self$parameters[["paired_end"]] <- paired_end
             private$bam_files <- data.frame(bam = bam_files,
                                             stringsAsFactors = FALSE)
             if (is.null(names(bam_files))) {
@@ -143,14 +129,14 @@ Bam_Handler <- R6Class("Bam_Handler",
             bam_seqnames <- lapply(private$bam_files$bam, get_seqnames)
             all_seqnames <- unlist(bam_seqnames)
             if (!all(table(all_seqnames) == length(bam_seqnames))) {
-                msg <- "\n\nSome bam files have discrepancies in their "
+                msg <- "\n\n  Some bam files have discrepancies in their "
                 msg <- paste0(msg, "seqnames.")
                 msg <- paste0(msg, "\n\n")
-                msg <- paste0(msg, "This could be caused by chromosome names")
+                msg <- paste0(msg, "  This could be caused by chromosome names")
                 msg <- paste0(msg, " present only in a subset of the bam ")
                 msg <- paste0(msg, "files (i.e.: chrY in some bam files, but ")
                 msg <- paste0(msg, "absent in others.\n\n")
-                msg <- paste0(msg, "This could also be caused by ")
+                msg <- paste0(msg, "  This could also be caused by ")
                 msg <- paste0(msg, "discrepancies in the seqlevels style")
                 msg <- paste0(msg, " (i.e.: UCSC:chr1 versus NCBI:1)\n\n")
                 warning(msg)
@@ -194,18 +180,16 @@ Bam_Handler <- R6Class("Bam_Handler",
         get_coverage = function(bam_file, regions, force_seqlevels = FALSE) {
             private$check_bam_file(bam_file)
             regions <- private$prepare_regions(regions, bam_file,
-                                                force_seqlevels)
-            private$extract_coverage_by_regions(regions, bam_file, 
-								paired_end = self$parameters[['paired_end']])
+                                               force_seqlevels)
+            private$extract_coverage_by_regions(regions, bam_file)
         },
         get_normalized_coverage = function(bam_file, regions,
-                            force_seqlevels = FALSE) {
+                           force_seqlevels = FALSE) {
             private$check_bam_file(bam_file)
             regions <- private$prepare_regions(regions, bam_file,
-                                                force_seqlevels)
+                                               force_seqlevels)
             count <- self$get_aligned_count(bam_file)
-            private$extract_coverage_by_regions(regions, bam_file, count,
-								paired_end = self$parameters[['paired_end']])
+            private$extract_coverage_by_regions(regions, bam_file, count)
         },
         get_noise_ratio = function(chip_bam_names, input_bam_names) {
             lapply(c(chip_bam_names, input_bam_names), private$check_bam_file)
@@ -235,20 +219,15 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
             invisible(bam_name)
         },
-        check_bam_levels = function(bam_file, regions, force_seqlevels) {
+        check_bam_levels = function(bam_file, regions, force) {
             bam_levels <- GenomeInfoDb::seqlevels(Rsamtools::BamFile(bam_file))
-            if (!all(unique(GenomeInfoDb::seqlevels(regions)) %in% bam_levels))
-            {
-                if (force_seqlevels == FALSE) {
+            if (!all(unique(GenomeInfoDb::seqlevels(regions)) %in% bam_levels)) {
+                if (force == FALSE) {
                     stop("Some seqlevels of regions are absent in bam_file")
-                } else { #force_seqlevels = TRUE
-                    #force_seqlevels is used here but the user interface 
-                    #continue to use force_seqlevels an boolean mode
-                    GenomeInfoDb::seqlevels(regions, 
-                                    pruning.mode = 'coarse') <- bam_levels
+                } else {
+                    GenomeInfoDb::seqlevels(regions, pruning.mode = "coarse") <- bam_levels
                     if (length(regions) == 0) {
-                        stop(paste("No seqlevels matching between ",
-                                        "regions and bam file", sep=''))
+                        stop("No seqlevels matching between regions and bam file")
                     }
                 }
             }
@@ -264,23 +243,8 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
             regions
         },
-        get_bam_index_filename = function(bam_file) {
-            # Look for a file where bai is appended (.bam.bai)
-            bai_suffix_filename = paste(bam_file, ".bai", sep="")
-            if(file.exists(bai_suffix_filename)) {
-                return(bai_suffix_filename)
-            } else {
-                # Look for a file where bai replaces bam (.bai)
-                bam_is_bai_filename = gsub("\\.bam$", ".bai", bam_file)
-                if(file.exists(bam_is_bai_filename)) {
-                    return(bam_is_bai_filename)
-                }
-            }
-            # No index file found, return NA.
-            return(NA)
-        },
         index_bam_file = function(bam_file) {
-            if (is.na(private$get_bam_index_filename(bam_file))) {
+            if (file.exists(paste(bam_file, ".bai", sep=""))  == FALSE) {
                 # If there is no index file, we sort and index the current bam
                 # file
                 # TODO: we need to check if the sorted file was previously
@@ -323,8 +287,8 @@ Bam_Handler <- R6Class("Bam_Handler",
             do.call(sum, private$parallel_job$launch_job(
                                 data = suppressWarnings(split(chr, 1:cores)),
                                 FUN = function(x) {
-                                    param = ScanBamParam(which = x);
-                                    countBam(bam_file, param = param)$records;
+                                  param = ScanBamParam(which = x);
+                                  countBam(bam_file, param = param)$records;
                                 }))
 
         },
@@ -334,13 +298,6 @@ Bam_Handler <- R6Class("Bam_Handler",
                 stop("Parameter regions must be a GRanges object.")
             }
 
-            # The seqlevels of regions must all be present in bam_file
-            regions <- private$check_bam_levels(bam_file, regions,
-                            force_seqlevels = force_seqlevels)
-            to_remove <- seqlevels(regions)[!(seqlevels(regions) %in%
-                                            unique(seqnames(regions)))]
-            regions <- dropSeqlevels(regions, to_remove)
-
             # The regions must not be empty
             if (length(regions) == 0) {
                 stop("Parameter regions must not be an empty GRanges object")
@@ -348,32 +305,25 @@ Bam_Handler <- R6Class("Bam_Handler",
 
             # The seqlevels of regions must all be present in bam_file
             regions <- private$check_bam_levels(bam_file, regions,
-                            force_seqlevels = force_seqlevels)
+                            force = force_seqlevels)
 
             # The seqlengths of regions must be smaller or eqal to those in
-            # bam_file
+			# bam_file
             regions <- private$check_bam_length(bam_file, regions)
 
             # The regions must not be overlapping
             reduce(regions)
         },
-        extract_coverage_by_regions = function(regions, bam_file, count=NULL, 
-														paired_end = FALSE){
-            if(!paired_end){
-                param <- Rsamtools:::ScanBamParam(which=reduce(regions))
-                alignment <- GenomicAlignments:::readGAlignments(bam_file,
-                                                                param=param)
-            } else {
-				param <- Rsamtools:::ScanBamParam(which=reduce(regions))
-                alignment <- GenomicAlignments:::readGAlignmentPairs(bam_file,
-                                                                param=param)
-            }
-			if (!is.null(count)) {
+        extract_coverage_by_regions = function(regions, bam_file, count=NULL) {
+            param <- Rsamtools:::ScanBamParam(which=reduce(regions))
+            alignment <- GenomicAlignments:::readGAlignments(bam_file,
+                                                             param=param)
+            if (!is.null(count)) {
                 weight <- 1 / (count / 1000000)
                 GenomicAlignments::coverage(alignment) * weight
             } else {
                 GenomicAlignments::coverage(alignment)
-			}
+            }
         }
     )
 )

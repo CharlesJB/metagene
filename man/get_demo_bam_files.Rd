@@ -15,3 +15,4 @@ Get BAM filenames for demo
 \examples{
 bam_files <- get_demo_bam_files()
 }
+

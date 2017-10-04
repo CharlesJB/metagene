@@ -6,35 +6,30 @@
 #'
 #' @section Constructor:
 #' \describe{
-#'    \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
-#'                            cores = SerialParam(), verbose = FALSE,
-#'                            force_seqlevels = FALSE)}}
-#'    \item{regions}{Either a \code{vector} of BED, narrowPeak or broadPeak
-#'                    filenames, a \code{GRanges} object or a 
-#'                    \code{GRangesList} object.}
-#'    \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
-#'                    indexed. i.e.: if a file is named file.bam, there must
-#'                    be a file named file.bam.bai or file.bai in the same 
-#'                    directory.}
-#'    \item{padding_size}{The regions will be extended on each side by the
-#'                        value of this parameter. The padding_size must be a
-#'                        non-negative integer. Default = 0.}
-#'    \item{cores}{The number of cores available to parallelize the analysis.
-#'                Either a positive integer or a \code{BiocParallelParam}.
-#'                Default: \code{SerialParam()}.}
-#'    \item{verbose}{Print progression of the analysis. A logical constant.
+#'     \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
+#'                              cores = SerialParam(), verbose = FALSE,
+#'                              force_seqlevels = FALSE)}}
+#'     \item{regions}{Either a \code{vector} of BED, narrowPeak or broadPeak
+#'                    filenames, a \code{GRanges} object or a \code{GRangesList}
+#'                    object.}
+#'     \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
+#'                      indexed. i.e.: if a file is named file.bam, there must
+#'                      be a file named file.bam.bai in the same directory.}
+#'     \item{padding_size}{The regions will be extended on each side by the
+#'                         value of this parameter. The padding_size must be a
+#'                         non-negative integer. Default = 0.}
+#'     \item{cores}{The number of cores available to parallelize the analysis.
+#'                  Either a positive integer or a \code{BiocParallelParam}.
+#'                  Default: \code{SerialParam()}.}
+#'     \item{verbose}{Print progression of the analysis. A logical constant.
 #'                    Default: \code{FALSE}.}
-#'    \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
-#'                in bam file header. Default: \code{FALSE}. TRUE and FALSE
-#'                respectively correspond to pruning.mode = "coarse"
-#'                and "error" in ?seqinfo.}
-#'	  \item{paired_end}{If \code{TRUE}, metagene will deal with paired-ended 
-#'				  data. If \code{FALSE}, single-ended data are expected}
+#'     \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
+#'                            in bam file header. Default: \code{FALSE}.}
 #' }
 #'
-#'    \code{metagene$new} returns a \code{metagene} object that contains the
-#'        coverages for every BAM files in the regions from the \code{regions}
-#'        param.
+#'     \code{metagene$new} returns a \code{metagene} object that contains the
+#'         coverages for every BAM files in the regions from the \code{regions}
+#'         param.
 #'
 #' @return
 #' \code{metagene$new} returns a \code{metagene} object which contains the
@@ -42,127 +37,146 @@
 #'
 #' @section Methods:
 #' \describe{
-#'    \item{}{\code{mg$plot(region_names = NULL, design_names = NULL,
-#'                title = NULL, x_label = NULL)}}
-#'    \item{region_names}{The names of the regions to extract. If \code{NULL},
-#'                        all the regions are returned. Default: \code{NULL}.}
-#'    \item{design_names}{The names of the experiments to extract. If a design
-#'            was added to the \code{metagene} object, \code{design_names}
-#'            correspond to the column names in the design, otherwise
-#'            \code{design_names} corresponds to the BAM name or the BAM
-#'            filename. If \code{NULL}, all the experiments are
-#'            returned. Default: \code{NULL}.}
-#'    \item{title}{A title to add to the graph. If \code{NULL}, will be
-#'                        automatically created. Default: NULL}
-#'    \item{x_label}{X-axis label to add to the metagene plot. If \code{NULL},
+#'     \item{}{\code{mg$plot(region_names = NULL, exp_names = NULL,
+#'                   title = NULL, x_label = NULL)}}
+#'     \item{region_names}{The names of the regions to extract. If \code{NULL},
+#'                         all the regions are returned. Default: \code{NULL}.}
+#'     \item{exp_names}{The names of the experiments to extract. If a design was
+#'                      added to the \code{metagene} object, \code{exp_names}
+#'                      correspond to the column names in the design, otherwise
+#'                      \code{exp_names} corresponds to the BAM name or the BAM
+#'                      filename. If \code{NULL}, all the experiments are
+#'                      returned. Default: \code{NULL}.}
+#'     \item{title}{A title to add to the graph. If \code{NULL}, will be
+#'                         automatically created. Default: NULL}
+#'     \item{x_label}{X-axis label to add to the metagene plot. If \code{NULL},
 #'                    metagene will use generic label. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'    \item{}{\code{mg$produce_table(design, bin_count, noise_removal,
-#'                normalization, flip_regions, bin_size = NULL}}
-#'    \item{design}{A \code{data.frame} that describe to experiment to plot.
-#'            see \code{plot} function for more details. \code{NA} can 
-#'            be used keep previous design value. Default: \code{NA}.}
-#'    \item{bin_count}{The number of bin to create. \code{NA} can be used to
-#'                    keep previous bin_count value. A bin_count value of 100
-#'                    will be used if no value is specified. Default:
-#'                    \code{NA}.}
-#'    \item{noise_removal}{The algorithm to use to remove control(s). Possible
-#'                        values are \code{NA}, \code{NULL} or "NCIS". By
-#'                        default, value is \code{NULL}. Use \code{NA} keep
-#'                        previous \code{noise_removal} value (i.e. if
-#'                        \code{produce_table} was called before). See
-#'                        Liand and Keles 2012 for the NCIS algorithm.}
-#'    \item{normalization}{The algorithm to use to normalize samples. Possible
-#;                        values are \code{NA}, \code{NULL} or "RPM". By
-#'                        default, value is \code{NULL} and no normalization
-#'                        will be performed. Use \code{NA} keep
-#'                        previous \code{normalization} value (i.e. if
-#'                        \code{produce_table} was called before).}
-#'    \item{flip_regions}{Should regions on negative strand be flip_regions?
-#'                        Default: \code{FALSE}.}
-#'    \item{bin_size}{Deprecated.}
+#'     \item{}{\code{mg$produce_matrices(design, bin_count, noise_removal,
+#'                   normalization, flip_regions, bin_size = NULL}}
+#'     \item{design}{A \code{data.frame} that describe to experiment to plot.
+#'                   see \code{plot} function for more details. \code{NA} can be
+#'                   used keep previous design value. Default: \code{NA}.}
+#'     \item{bin_count}{The number of bin to create. \code{NA} can be used to
+#'                      keep previous bin_count value. A bin_count value of 100
+#'                      will be used if no value is specified. Default:
+#'                      \code{NA}.}
+#'     \item{noise_removal}{The algorithm to use to remove control(s). Possible
+#'                          values are \code{NA}, \code{NULL} or "NCIS". By
+#'                          default, value is \code{NULL}. Use \code{NA} keep
+#'                          previous \code{noise_removal} value (i.e. if
+#'                          \code{produce_matrices} was called before). See
+#'                          Liand and Keles 2012 for the NCIS algorithm.}
+#'     \item{normalization}{The algorithm to use to normalize samples. Possible
+#;                          values are \code{NA}, \code{NULL} or "RPM". By
+#'                          default, value is \code{NULL} and no normalization
+#'                          will be performed. Use \code{NA} keep
+#'                          previous \code{normalization} value (i.e. if
+#'                          \code{produce_matrices} was called before).}
+#'     \item{flip_regions}{Should regions on negative strand be flip_regions?
+#'                         Default: \code{FALSE}.}
+#'     \item{bin_size}{Deprecated.}
 #' }
 #' \describe{
-#'    \item{}{\code{mg$produce_data_frame(alpha = 0.05, sample_count = 1000)}}
-#'    \item{alpha}{The range of the estimation to be shown with the ribbon.
-#'                \code{1 - alpha / 2} and \code{alpha / 2} will be used.
-#'                Default: 0.05.}
-#'    \item{sample_count}{The number of draw to do in the bootstrap
-#'                        calculation. Default: 1000.}
+#'     \item{}{\code{mg$produce_data_frame(stat = "bootstrap", range = NULL
+#'                   ...)}}
+#'     \item{stat}{The stat to use to calculate the values of the ribbon in the
+#'                 metagene plot. Must be "bootstrap" or "basic". "bootstrap"
+#'                 will estimate the range of average ("mean" or "median") that
+#'                 could have produce the observed distribution of values for
+#'                 each bin. With the "basic" approach, the ribbon will
+#'                 represent the range of the values between
+#'                 \code{1 - alpha / 2} and \code{alpha / 2} (see \code{...}
+#'                 param.}
+#'     \item{range}{Deprecated.}
+#'     \item{...}{Extra params for the calculation of the ribbon values. See
+#'                following param descriptions.}
+#'     \item{alpha}{The range of the estimation to be shown with the ribbon.
+#'                  \code{1 - alpha / 2} and \code{alpha / 2} will be used.
+#'                  Default: 0.05.}
+#'     \item{average}{The function to use to summarize the values of each
+#'                    bins. "mean" or "median". Default: "mean".}
+#'     \item{sample_count}{With "bootstrap" only. The number of draw to do
+#'                         in the bootstrap calculation. Default: 1000.}
 #' }
 #' \describe{
-#'    \item{}{mg$get_params()}
+#'     \item{}{mg$get_params()}
 #' }
 #' \describe{
-#'    \item{}{mg$get_design()}
+#'     \item{}{mg$get_design()}
 #' }
 #' \describe{
-#'    \item{}{mg$get_regions(region_names = NULL)}
-#'    \item{region_names}{The names of the regions to extract. If \code{NULL},
-#'                        all the regions are returned. Default: \code{NULL}.}
+#'     \item{}{mg$get_regions(region_names = NULL)}
+#'     \item{region_names}{The names of the regions to extract. If \code{NULL},
+#'                         all the regions are returned. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'    \item{}{mg$get_table = function()}
+#'     \item{}{mg$get_matrices(region_names = NULL, exp_name = NULL)}
+#'     \item{region_names}{The names of the regions to extract. If \code{NULL},
+#'                         all the regions are returned. Default: \code{NULL}.}
+#'     \item{exp_names}{The names of the experiments to extract. If a design was
+#'                      added to the \code{metagene} object, \code{exp_names}
+#'                      correspond to the column names in the design, otherwise
+#'                      \code{exp_names} corresponds to the BAM name or the BAM
+#'                      filename. If \code{NULL}, all the experiments are
+#'                      returned. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'    \item{}{mg$get_matrices = function()}
+#'     \item{}{mg$get_data_frame(region_names = NULL, exp_name = NULL)}
+#'     \item{region_names}{The names of the regions to extract. If \code{NULL},
+#'                         all the regions are returned. Default: \code{NULL}.}
+#'     \item{exp_names}{The names of the experiments to extract. If a design was
+#'                      added to the \code{metagene} object, \code{exp_names}
+#'                      correspond to the column names in the design, otherwise
+#'                      \code{exp_names} corresponds to the BAM name or the BAM
+#'                      filename. If \code{NULL}, all the experiments are
+#'                      returned. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'    \item{}{mg$get_data_frame(region_names = NULL, design_names = NULL)}
-#'    \item{region_names}{The names of the regions to extract. If \code{NULL},
-#'                        all the regions are returned. Default: \code{NULL}.}
-#'    \item{design_names}{The names of the experiments to extract. If a design
-#'            was added to the \code{metagene} object, \code{design_names}
-#'            correspond to the column names in the design, otherwise
-#'            \code{design_names} corresponds to the BAM name or the BAM
-#'            filename. If \code{NULL}, all the experiments are
-#'            returned. Default: \code{NULL}.}
+#'     \item{}{get_plot = function()}
 #' }
 #' \describe{
-#'    \item{}{get_plot = function()}
+#'     \item{}{get_raw_coverages = function(filenames)}
+#'     \item{filenames}{The name of the file to extract raw coverages. Can be
+#'                      the filename with the extension of the name of the bam
+#'                      file (if a named bam files was used during the creation
+#'                      of the metagene object). If \code{NULL}, returns the
+#'                      coverage of every bam files. Default: \code{NULL}.}
 #' }
 #' \describe{
-#'    \item{}{get_raw_coverages = function(filenames)}
-#'    \item{filenames}{The name of the file to extract raw coverages. Can be
-#'                    the filename with the extension of the name of the bam
-#'                    file (if a named bam files was used during the creation
-#'                    of the metagene object). If \code{NULL}, returns the
-#'                    coverage of every bam files. Default: \code{NULL}.}
+#'     \item{}{get_normalized_coverages = function(filenames)}
+#'     \item{filenames}{The name of the file to extract normalized coverages (in
+#'                      RPM). Can be the filename with the extension of the name
+#'                      of the bam file (if a named bam files was used during
+#'                      the creation of the metagene object). If \code{NULL},
+#'                      returns the coverage every bam files. Default:
+#'                      \code{NULL}.}
 #' }
 #' \describe{
-#'    \item{}{get_normalized_coverages = function(filenames)}
-#'    \item{filenames}{The name of the file to extract normalized coverages 
-#'            (in RPM). Can be the filename with the extension of 
-#'            the name of the bam file (if a named bam files was used during
-#'            the creation of the metagene object). If \code{NULL},
-#'            returns the coverage every bam files. Default:
-#'            \code{NULL}.}
+#'     \item{}{\code{mg$export(bam_file, region, file)}}
+#'     \item{bam_file}{The name of the bam file to export.}
+#'     \item{region}{The name of the region to export.}
+#'     \item{file}{The name of the ouput file.}
 #' }
 #' \describe{
-#'    \item{}{\code{mg$export(bam_file, region, file)}}
-#'    \item{bam_file}{The name of the bam file to export.}
-#'    \item{region}{The name of the region to export.}
-#'    \item{file}{The name of the ouput file.}
-#' }
-#' \describe{
-#'    \item{}{\code{mg$add_design(design = NULL, check_bam_files = FALSE)}}
-#'    \item{design}{A \code{data.frame} that describe to experiment to plot.
-#'            See \code{plot} function for more details. \code{NA} can be
-#'            used keep previous design value. Default: \code{NA}.}
-#'    \item{check_bam_files}{Force check that all the bam files from the first
+#'     \item{}{\code{mg$add_design(design = NULL, check_bam_files = FALSE)}}
+#'     \item{design}{A \code{data.frame} that describe to experiment to plot.
+#'                   See \code{plot} function for more details. \code{NA} can be
+#'                   used keep previous design value. Default: \code{NA}.}
+#'     \item{check_bam_files}{Force check that all the bam files from the first
 #'                            columns of the design are present in current
 #'                            metagene object. Default: \code{FALSE}}
 #' }
 #' \describe{
-#'    \item{}{\code{mg$unflip_regions()}}
+#'     \item{}{\code{mg$unflip_regions()}}
 #' }
 #'
 #' \describe{
-#'    \item{}{\code{mg$flip_regions()}}
+#'     \item{}{\code{mg$flip_regions()}}
 #' }
 #' \describe{
-#'    \item{}{\code{mg$unflip_regions()}}
+#'     \item{}{\code{mg$unflip_regions()}}
 #' }
 #'
 #' @examples
@@ -170,11 +184,10 @@
 #' bam_file <- get_demo_bam_files()[1]
 #' mg <- metagene$new(regions = region, bam_files = bam_file)
 #' \dontrun{
-#'    df <- metagene$plot()
+#'     df <- metagene$plot()
 #' }
 #'
 #' @importFrom R6 R6Class
-#' @importFrom data.table data.table
 #' @export
 #' @format A metagene experiment manager
 
@@ -182,8 +195,8 @@ metagene <- R6Class("metagene",
     public = list(
     # Methods
         initialize = function(regions, bam_files, padding_size = 0,
-                                cores = SerialParam(), verbose = FALSE,
-                                force_seqlevels = FALSE, paired_end = FALSE) {
+                              cores = SerialParam(), verbose = FALSE,
+                              force_seqlevels = FALSE) {
             # Check params...
             private$check_param(regions = regions, bam_files = bam_files,
                                 padding_size = padding_size,
@@ -204,8 +217,7 @@ metagene <- R6Class("metagene",
 
             # Prepare bam files
             private$print_verbose("Prepare bam files...")
-            private$bam_handler <- Bam_Handler$new(bam_files, cores = cores,
-                                        paired_end = paired_end)
+            private$bam_handler <- Bam_Handler$new(bam_files, cores = cores)
 
             # Prepare regions
             private$print_verbose("Prepare regions...")
@@ -213,7 +225,7 @@ metagene <- R6Class("metagene",
 
             # Parse bam files
             private$print_verbose("Parse bam files...\n")
-            private$print_verbose("coverages...\n")
+            private$print_verbose("  coverages...\n")
             private$coverages <- private$produce_coverages()
         },
         get_bam_count = function(filename) {
@@ -230,61 +242,62 @@ metagene <- R6Class("metagene",
             if (is.null(region_names)) {
                 private$regions
             } else {
-                new_names <- tools::file_path_sans_ext(
-                                            basename(region_names))
+                new_names <- tools::file_path_sans_ext(basename(region_names))
                 region_names <- new_names
                 stopifnot(all(region_names %in% names(private$regions)))
                 private$regions[region_names]
             }
         },
-        get_table = function() {
-            if (length(private$table) == 0) { 
-                return(NULL)
-            }
-            return(copy(private$table))
-        },
-        get_matrices = function() {
-            if (is.null(self$get_table())){
-                return(NULL)
-            }
-            matrices <- list()
-            nbcol <- private$params[["bin_count"]]
-            nbrow <- vapply(self$get_regions(), length, numeric(1))
-            for (regions in names(self$get_regions())) {
-                matrices[[regions]] <- list()
-                for (design_name in colnames(self$get_design())[-1]) {
-                    matrices[[regions]][[design_name]] <- list()
-                    matrices[[regions]][[design_name]][["input"]] <- 
-                            matrix(private$table[region == regions & 
-                            design == design_name,]$value, 
-                            nrow=nbrow, ncol=nbcol, byrow=TRUE)
-                }
-            }
-            return (matrices)
-        },
-        get_data_frame = function(region_names = NULL, design_names = NULL) {
-            if (nrow(private$df) == 0) {
+        get_matrices = function(region_names = NULL, exp_names = NULL) {
+            if (length(private$matrices) == 0) {
                 NULL
-            } else if (is.null(region_names) & is.null(design_names)) {
-                return(copy(private$df))
+            } else if (is.null(region_names) & is.null(exp_names)) {
+                private$matrices
             } else {
                 if (!is.null(region_names)) {
                     stopifnot(is.character(region_names))
-                    stopifnot(all(region_names %in% 
-                                    unique(private$table$region)))
+                    region_names <-
+                        tools::file_path_sans_ext(basename(region_names))
+                    stopifnot(all(region_names %in% names(private$matrices)))
                 } else {
                     region_names <- names(private$regions)
                 }
-                if (!is.null(design_names)) {
-                    stopifnot(is.character(design_names))
-                    stopifnot(all(design_names %in% 
-                                    unique(private$table$design)))
+                if (!is.null(exp_names)) {
+                    stopifnot(is.character(exp_names))
+                    exp_names <- private$get_bam_names(exp_names)
+                    stopifnot(all(exp_names %in% names(private$matrices[[1]])))
                 } else {
-                    design_names <- colnames(private$design)[-1]
+                    exp_names <- colnames(private$design)[-1]
                 }
-                i <- (private$df$region %in% region_names &
-                                    private$df$design %in% design_names)
-                return(copy(private$df[i,]))
+                matrices <- private$matrices[region_names]
+                lapply(matrices, `[`, exp_names)
+            }
+        },
+        get_data_frame = function(region_names = NULL, exp_names = NULL) {
+            if (nrow(private$df) == 0) {
+                NULL
+            } else if (is.null(region_names) & is.null(exp_names)) {
+                private$df
+            } else {
+                if (!is.null(region_names)) {
+                    stopifnot(is.character(region_names))
+                    region_names <- basename(region_names)
+                    region_names <- tools::file_path_sans_ext(region_names)
+                    stopifnot(all(region_names %in% names(private$matrices)))
+                } else {
+                    region_names <- names(private$regions)
+                }
+                if (!is.null(exp_names)) {
+                    stopifnot(is.character(exp_names))
+                    exp_names <- private$get_bam_names(exp_names)
+                    stopifnot(all(exp_names %in% names(private$matrices[[1]])))
+                } else {
+                    exp_names <- colnames(private$design)[-1]
+                }
+                eg <- expand.grid(exp_names, region_names)
+                groups <- do.call(paste, c(eg, sep = "_"))
+                i <- private$df$group %in% groups
+                private$df[i,]
             }
         },
         get_plot = function() {
@@ -322,71 +335,54 @@ metagene <- R6Class("metagene",
         add_design = function(design, check_bam_files = FALSE) {
             private$design = private$fetch_design(design, check_bam_files)
         },
-        produce_table = function(design = NA, bin_count = NA, bin_size = NULL,
-                                noise_removal = NA, normalization = NA,
-                                flip_regions = FALSE) {
+        produce_matrices = function(design = NA, bin_count = NA,
+                                    noise_removal = NA, normalization = NA,
+                                    flip_regions = FALSE, bin_size = NULL) {
             if (!is.null(bin_size)) {
                 warning("bin_size is now deprecated. Please use bin_count.")
                 bin_size <- NULL
             }
-
             design = private$fetch_design(design)
-            private$check_produce_table_params(bin_count = bin_count,
-                                                bin_size = bin_size,
-                                                design = design,
-                                                noise_removal = noise_removal,
-                                                normalization = normalization,
-                                                flip_regions = flip_regions)
+            private$check_produce_matrices_params(bin_count = bin_count,
+                                                  bin_size = bin_size,
+                                                  design = design,
+                                                  noise_removal = noise_removal,
+                                                  normalization = normalization,
+                                                  flip_regions = flip_regions)
             bin_count <- private$get_param_value(bin_count, "bin_count")
             noise_removal <- private$get_param_value(noise_removal,
-                                                    "noise_removal")
+                                                     "noise_removal")
             normalization <- private$get_param_value(normalization,
-                                                    "normalization")
+                                                     "normalization")
             if (is.null(bin_count)) {
                 bin_count = 100
             }
-            # Replace with table_need_update
-            if (private$table_need_update(design = design,
-                                            bin_count = bin_count,
-                                            bin_size = bin_size,
-                                            noise_removal = noise_removal,
-                                            normalization = normalization)) {
+            if (private$matrices_need_update(design = design,
+                                             bin_count = bin_count,
+                                             bin_size = bin_size,
+                                             noise_removal = noise_removal,
+                                             normalization = normalization)) {
                 coverages <- private$coverages
                 if (!is.null(noise_removal)) {
-                    coverages <- private$remove_controls(coverages, design)
+                  coverages <- private$remove_controls(coverages, design)
                 } else {
-                    coverages <- private$merge_chip(coverages, design)
+                  coverages <- private$merge_chip(coverages, design)
                 }
                 if (!is.null(normalization)) {
-                    coverages <- private$normalize_coverages(coverages, design)
+                  coverages <- private$normalize_coverages(coverages, design)
                 }
+                matrices <- list()
+                for (region in names(self$get_regions())) {
+                    matrices[[region]] <- list()
+                    for (design_name in colnames(design)[-1]) {
+                        matrices[[region]][[design_name]] <- list()
 
-                region_length <- vapply(self$get_regions(), length, numeric(1))
-                col_regions <- names(self$get_regions()) %>%
-                    map(~ rep(.x, length(coverages) * bin_count * 
-                                region_length[.x])) %>% unlist()
-                col_designs <- map(region_length, ~ rep(names(coverages), 
-                                    each = bin_count * .x)) %>% unlist
-                col_bins <- rep(1:bin_count,
-                                length(coverages) * sum(region_length))
-                pairs <- expand.grid(colnames(design)[-1], 
-                                    names(self$get_regions()), 
-                                    stringsAsFactors = FALSE)
-                col_values <- map2(pairs$Var1, pairs$Var2,
-                    ~ private$get_subtable(coverages[[.x]], .y, bin_count)) %>%
-                    unlist
-                col_strand <- c()
-                for (region_names in unique(col_regions)){
-                    col_strand <- c(col_strand,rep(rep(
-                            as.vector(strand(private$regions)[[region_names]]),
-                            each=bin_count),length(unique(col_designs))))
+                        matrices[[region]][[design_name]][["input"]] <-
+                        private$get_matrix(coverages[[design_name]], region,
+                                           bin_count)
+                    }
                 }
-                            private$table <- data.table(region = col_regions,
-                                            design = col_designs,
-                                            bin = col_bins,
-                                            value = col_values,
-                                            strand = col_strand)
-                private$params[["bin_size"]] <- bin_size
+                private$matrices <- matrices
                 private$params[["bin_count"]] <- bin_count
                 private$params[["noise_removal"]] <- noise_removal
                 private$params[["normalization"]] <- normalization
@@ -399,50 +395,80 @@ metagene <- R6Class("metagene",
             }
             invisible(self)
         },
-        produce_data_frame = function(alpha = 0.05, sample_count = 1000) {
-            stopifnot(is.numeric(alpha))
-            stopifnot(is.numeric(sample_count))
-            stopifnot(alpha >= 0 & alpha <= 1)
-            stopifnot(sample_count > 0)
-            sample_count <- as.integer(sample_count)
+        produce_data_frame = function(stat = "bootstrap", range = NULL,
+                                      ...) {
+            # Prepare range
+            if (!is.null(range)) {
+                warning("range param in produce_data_frame is now deprecated.")
+            }
+            bin_count <- private$params[["bin_count"]]
+            dist <- floor(bin_count / 2)
+            range <- c(-dist, dist)
 
-            # 1. Get the correctly formatted table
-            if (is.null(self$get_table())) {
-                self$produce_table()
+            stopifnot(is.character(stat))
+            stopifnot(length(stat) == 1)
+            stopifnot(stat %in% c("bootstrap", "basic"))
+            # 1. Get the correctly formatted matrices
+            if (length(private$matrices) == 0) {
+                self$produce_matrices()
             }
 
             # 2. Produce the data.frame
-            if (private$data_frame_need_update(alpha, sample_count) == TRUE) {
-                sample_size <- self$get_table()[bin == 1,][
-                                            ,.N, by = .(region, design)][
-                                            , .(min(N))]
-                sample_size <- as.integer(sample_size)
-
-                out_cols <- c("value", "qinf", "qsup")
-                bootstrap <- function(df) {
-                    sampling <- matrix(df$value[sample(seq_along(df$value),
-                                            sample_size * sample_count,
-                                            replace = TRUE)],
-                                    ncol = sample_size)
-                    values <- colMeans(sampling)
-                    res <- quantile(values, c(alpha/2, 1-(alpha/2)))
-                    res <- c(mean(df$value), res)
-                    names(res) <- out_cols
-                    as.list(res)
+            if (private$data_frame_need_update(stat, ...) == TRUE) {
+                sample_size = NULL
+                if (stat == "bootstrap") {
+                    stat <- Bootstrap_Stat
+                    sample_size <- sapply(private$matrices, sapply, sapply,
+                                          nrow)
+                    sample_size <- as.integer(min(unlist(sample_size)))
+                } else {
+                    stat <- Basic_Stat
                 }
+                df <- data.frame(group = character(), position = numeric(),
+                                 value = numeric(), qinf = numeric(),
+                                 qsup = numeric())
 
-                df <- data.table::copy(self$get_table())
-                df <- df[, c(out_cols) := bootstrap(.SD), 
-                            by = .(region, design, bin)]
-                private$df <- unique(df)
+                m <- private$matrices
+                regions <- names(m)
+                stopifnot(length(unique(lapply(m, names))) == 1)
+                exp_names <- unique(lapply(m, names))[[1]]
+
+                combinations <- expand.grid(regions, exp_names)
+                combinations <- split(combinations, 1:nrow(combinations))
+
+                get_statistics <- function(combination) {
+                    region <- as.character(combination[1,1])
+                    exp_name <- as.character(combination[1,2])
+                    group_name <- paste(exp_name, region, sep = "_")
+                    message(group_name)
+                    data <- m[[region]][[exp_name]][["input"]]
+                    ctrl <- m[[region]][[exp_name]][["ctrl"]]
+                    current_stat <- ""
+                    if (! is.null(sample_size)) {
+                        current_stat <- stat$new(data = data, ctrl = ctrl,
+                                                 sample_size = sample_size,
+                                                 range = range, ...)
+                    } else {
+                        current_stat <- stat$new(data = data, ctrl = ctrl,
+                                                 range = range, ...)
+                    }
+                    current_df <- current_stat$get_statistics()
+                    current_df <- cbind(rep(group_name, nrow(current_df)),
+                                        current_df)
+                    colnames(current_df)[1] <- "group"
+                    current_df
+                }
+                df <- private$parallel_job$launch_job(data = combinations,
+                                                      FUN = get_statistics)
+                df <- do.call("rbind", df)
+                private$df <- df
             }
             invisible(self)
         },
-        plot = function(region_names = NULL, design_names = NULL, title = NULL,
-                        x_label = NULL) {
-            # 1. Get the correctly formatted table
-            if (length(private$table) == 0) {
-                self$produce_table()
+        plot = function(region_names = NULL, exp_names = NULL, title = NULL, x_label = NULL) {
+            # 1. Get the correctly formatted matrices
+            if (length(private$matrices) == 0) {
+                self$produce_matrices()
             }
 
             # 2. Produce the data frame
@@ -450,13 +476,12 @@ metagene <- R6Class("metagene",
                 self$produce_data_frame()
             }
             df <- self$get_data_frame(region_names = region_names,
-                                    design_names = design_names)
+                                      exp_names = exp_names)
             # 3. Produce the graph
             if (is.null(title)) {
                 title <- paste(unique(private$df[["group"]]), collapse=" vs ")
             }
-            p <- private$plot_graphic(df = df, title = title, 
-                                        x_label = x_label)
+            p <- private$plot_graphic(df = df, title = title, x_label = x_label)
             print(p)
             private$graph <- p
             invisible(self)
@@ -476,14 +501,14 @@ metagene <- R6Class("metagene",
         },
         flip_regions = function() {
             if (private$params[["flip_regions"]] == FALSE) {
-                private$flip_table()
+                private$flip_matrices()
                 private$params[["flip_regions"]] <- TRUE
             }
             invisible(self)
         },
         unflip_regions = function() {
             if (private$params[["flip_regions"]] == TRUE) {
-                private$flip_table()
+                private$flip_matrices()
                 private$params[["flip_regions"]] <- FALSE
             }
             invisible(self)
@@ -492,7 +517,7 @@ metagene <- R6Class("metagene",
         private = list(
         params = list(),
         regions = GRangesList(),
-        table = data.table(),
+        matrices = list(),
         design = data.frame(),
         coverages = list(),
         df = data.frame(),
@@ -500,14 +525,13 @@ metagene <- R6Class("metagene",
         bam_handler = "",
         parallel_job = "",
         check_param = function(regions, bam_files, padding_size,
-                                cores, verbose, force_seqlevels) {
+                               cores, verbose, force_seqlevels) {
             # Check parameters validity
             if (!is.logical(verbose)) {
                 stop("verbose must be a logicial value (TRUE or FALSE)")
             }
             if (!is.logical(force_seqlevels)) {
-                stop(paste("force_seqlevels must be a logicial ",
-                            "value (TRUE or FALSE)",sep=""))
+                stop("force_seqlevels must be a logicial value (TRUE or FALSE)")
             }
             if (!(is.numeric(padding_size) || is.integer(padding_size)) ||
                 padding_size < 0 || as.integer(padding_size) != padding_size) {
@@ -515,7 +539,7 @@ metagene <- R6Class("metagene",
             }
             isBiocParallel = is(cores, "BiocParallelParam")
             isInteger = ((is.numeric(cores) || is.integer(cores)) &&
-                            cores > 0 &&as.integer(cores) == cores)
+                             cores > 0 &&  as.integer(cores) == cores)
             if (!isBiocParallel && !isInteger) {
                 stop(paste0("cores must be a positive numeric or ",
                             "BiocParallelParam instance"))
@@ -525,6 +549,9 @@ metagene <- R6Class("metagene",
             }
             if (!all(sapply(bam_files, file.exists))) {
                 stop("At least one BAM file does not exist")
+            }
+            if (!all(sapply(paste0(bam_files, ".bai"), file.exists))) {
+                stop("All BAM files must be indexed")
             }
             if (!is(regions, "GRangesList") && !is.character(regions)
                 && !is(regions, "GRanges") && !is.list(regions)) {
@@ -539,7 +566,7 @@ metagene <- R6Class("metagene",
         check_design = function(design, check_bam_files = FALSE) {
             stopifnot(is.logical(check_bam_files))
             if(!is.null(design) && !is.data.frame(design) &&
-                !identical(design, NA)) {
+               !identical(design, NA)) {
                 stop("design must be a data.frame object, NULL or NA")
             }
             if (is.data.frame(design)) {
@@ -550,9 +577,9 @@ metagene <- R6Class("metagene",
                     stop("The first column of design must be BAM filenames")
                 }
                 if (!all(apply(design[, -1, drop=FALSE], MARGIN=2,
-                            is.numeric))) {
-                    stop(paste0("All design column, except the first one,",
-                                    " must be in numeric format"))
+                               is.numeric))) {
+                    stop(paste0("All design column, except the first one, must",
+                                    " be in numeric format"))
                 }
                 if (check_bam_files == TRUE) {
                     samples <- as.character(design[,1])
@@ -562,22 +589,21 @@ metagene <- R6Class("metagene",
                 }
             }
         },
-        check_produce_table_params = function(bin_count, bin_size, design,
-                                                noise_removal, normalization,
-                                                flip_regions) {
+        check_produce_matrices_params = function(bin_count, bin_size, design,
+                                                 noise_removal, normalization,
+                                                 flip_regions) {
             # At least one file must be used in the design
             if (!identical(design, NA)) {
                 if (!is.null(design)) {
                     if (sum(rowSums(design[ , -1, drop=FALSE]) > 0) == 0) {
-                        stop(paste("At least one BAM file must be ",
-                                "used in the design",sep=""))
+                        stop("At least one BAM file must be used in the design")
                     }
                 }
             }
             # Test only BAM file used in the design
             if (!identical(design, NA)) {
                 if(!is.null(design) &&
-                    !all(apply(design[rowSums(design[, -1, drop=FALSE]) > 0, 1,
+                    !all(apply(design[rowSums(design[ , -1, drop=FALSE]) > 0, 1,
                                     drop=FALSE], MARGIN = 2,
                             FUN=private$check_bam_files))) {
                     stop("At least one BAM file does not exist")
@@ -614,7 +640,7 @@ metagene <- R6Class("metagene",
                 stop(msg)
             }
         },
-        table_need_update = function(design, bin_count, bin_size,
+        matrices_need_update = function(design, bin_count, bin_size,
                                         noise_removal, normalization) {
             if (!identical(private$design, design)) {
                 return(TRUE)
@@ -630,32 +656,50 @@ metagene <- R6Class("metagene",
             }
             return(FALSE)
         },
-        data_frame_need_update = function(alpha = NA, sample_count = NA) {
+        data_frame_need_update = function(stat = NA, alpha = NA, average = NA,
+                                          sample_count = NA) {
             need_update = FALSE
             # Fetch saved values
+            stat = private$get_param_value(stat, "stat")
             alpha = private$get_param_value(alpha, "alpha")
-            sample_count = private$get_param_value(sample_count, 
-                                                    "sample_count")
+            average = private$get_param_value(average, "average")
+            sample_count = private$get_param_value(sample_count, "sample_count")
 
             # Add default, if needed
+            if (is.null(stat)) {
+                stat <- "bootstrap"
+            }
             if (is.null(alpha)) {
-                alpha <- 0.95
+                alpha <- 0.05
+            }
+            if (is.null(average)) {
+                average <- "mean"
             }
             if (is.null(sample_count)) {
-                sample_count <- "basic"
+                sample_count <- 1000
             }
             if (nrow(private$df) == 0) {
                 need_update <- TRUE
-                private$params[["alpha"]] <- alpha
                 private$params[["sample_count"]] <- sample_count
+                private$params[["average"]] <- average
+                private$params[["alpha"]] <- alpha
+                private$params[["stat"]] <- stat
             } else {
                 # Check if data frame need update
+                if (!identical(private$params[["stat"]], stat)) {
+                    need_update <- TRUE
+                    private$params[["stat"]] <- stat
+                }
                 if (!identical(private$params[["alpha"]], alpha)) {
                     need_update <- TRUE
                     private$params[["alpha"]] <- alpha
                 }
-                if (!identical(private$params[["sample_count"]], 
-                                                    sample_count)) {
+                if (!identical(private$params[["average"]], average)) {
+                    need_update <- TRUE
+                    private$params[["average"]] <- average
+                }
+                if (!identical(private$params[["sample_count"]],
+                               sample_count)) {
                     need_update <- TRUE
                     private$params[["sample_count"]] <- sample_count
                 }
@@ -678,35 +722,36 @@ metagene <- R6Class("metagene",
                 cat(paste0(to_print, "\n"))
             }
         },
-        get_subtable = function(coverages, region, bcount) {
+        get_matrix = function(coverages, region, bcount) {
             gr <- private$regions[[region]]
             grl <- split(gr, GenomeInfoDb::seqnames(gr))
             i <- vapply(grl, length, numeric(1)) > 0
-            do.call("c", lapply(grl[i], private$get_view_means,
-                                bcount = bcount, cov = coverages))
+            m <- do.call("rbind", lapply(grl[i], private$get_view_means,
+                                         bcount = bcount, cov = coverages))
+            m[GenomicRanges::findOverlaps(gr, unlist(grl), select="first"),]
         },
         get_view_means = function(gr, bcount, cov) {
             chr <- unique(as.character(GenomeInfoDb::seqnames(gr)))
             gr <- intoNbins(gr, bcount)
             stopifnot(length(chr) == 1)
             views <- Views(cov[[chr]], start(gr), end(gr))
-            viewMeans(views)
+            matrix(viewMeans(views), ncol = bcount, byrow = TRUE)
         },
         prepare_regions = function(regions) {
             if (class(regions) == "character") {
                 names <- sapply(regions, function(x)
                     file_path_sans_ext(basename(x)))
                 import_file <- function(region) {
-                ext <- tolower(tools::file_ext(region))
+            ext <- tolower(tools::file_ext(region))
                     if (ext == "narrowpeak") {
                         extraCols <- c(signalValue = "numeric",
-                                        pValue = "numeric", qValue = "numeric",
-                                        peak = "integer")
+                                       pValue = "numeric", qValue = "numeric",
+                                       peak = "integer")
                         rtracklayer::import(region, format = "BED",
                                             extraCols = extraCols)
-                    } else if (ext == "broadpeak") {
+                } else if (ext == "broadpeak") {
                         extraCols <- c(signalValue = "numeric",
-                                        pValue = "numeric", qValue = "numeric")
+                                       pValue = "numeric", qValue = "numeric")
                         rtracklayer::import(region, format = "BED",
                                             extraCols = extraCols)
                     } else {
@@ -714,21 +759,20 @@ metagene <- R6Class("metagene",
                     }
                 }
                 regions <- private$parallel_job$launch_job(data = regions,
-                                                        FUN = import_file)
+                                                           FUN = import_file)
                 names(regions) <- names
             } else if (class(regions) == "GRanges") {
                 regions <- GRangesList("regions" = regions)
             } else if (class(regions) == "list") {
                 regions <- GRangesList(regions)
-            }
+        }
             if (is.null(names(regions))) {
-                names(regions) <- sapply(seq_along(regions), function(x) {
+            names(regions) <- sapply(seq_along(regions), function(x) {
                     paste("region", x, sep = "_")
-                    })
-            }
+                              })
+        }
             # TODO: Check if there is a id column in the mcols of every ranges.
-            #    If not, add one by merging seqnames, start and end.
-
+            #       If not, add one by merging seqnames, start and end.
             GRangesList(lapply(regions, function(x) {
                 # Add padding
                 start(x) <- start(x) - private$params$padding_size
@@ -829,7 +873,7 @@ metagene <- R6Class("metagene",
                 which_rows = design[[design_name]]==1
                 bam_files <- as.character(design[,1][which_rows])
                 counts <- lapply(bam_files,
-                                private$bam_handler$get_aligned_count)
+                                 private$bam_handler$get_aligned_count)
                 count <- sum(unlist(counts))
                 weight <- 1 / (count / 1000000)
                 coverages[[design_name]] <- coverages[[design_name]] * weight
@@ -847,10 +891,18 @@ metagene <- R6Class("metagene",
             }
             result
         },
-        flip_table = function() {
-            i <- which(private$table$strand == '-')
-            private$table$bin[i] <- (self$get_params()$bin_count + 1) - 
-                                                    private$table$bin[i]
+        flip_matrices = function() {
+            for (region_name in names(private$matrices)) {
+                region <- private$regions[[region_name]]
+                i <- as.logical(strand(region) == "-")
+                flip <- function(x) {
+                    x[i,] <- x[i,ncol(x):1]
+                    x
+                }
+                m <- private$matrices[[region_name]]
+                m <- lapply(m, lapply, flip)
+                private$matrices[[region_name]] <- m
+            }
         },
         get_bam_names = function(filenames) {
             if (all(filenames %in% colnames(private$design)[-1])) {
@@ -858,8 +910,8 @@ metagene <- R6Class("metagene",
             } else {
                 stopifnot(private$check_bam_files(filenames))
                 vapply(filenames,
-                    private$bam_handler$get_bam_name,
-                    character(1))
+                   private$bam_handler$get_bam_name,
+                   character(1))
             }
         },
         check_bam_files = function(bam_files) {
