@@ -600,9 +600,6 @@ metagene <- R6Class("metagene",
 
             # 2. Produce the data.frame    
             private$df <- data.table::copy(self$get_table())
-            private$df$group <- paste(private$df$region,private$df$design,
-                                        sep="_")
-            private$df$group <- as.factor(private$df$group)
             
             if (private$params[['assay']] == 'chipseq') {
                 if (private$data_frame_need_update(alpha, sample_count) == TRUE)
@@ -624,8 +621,6 @@ metagene <- R6Class("metagene",
                         names(res) <- out_cols
                         as.list(res)
                     }
-
-                    private$df <- data.table::copy(self$get_table())
                     private$df <- private$df[, c(out_cols) := bootstrap(.SD), 
                                 by = .(region, design, bin)]
                     private$df <- unique(private$df)
@@ -663,7 +658,10 @@ metagene <- R6Class("metagene",
                         private$df <- private$df[, c(out_cols) := bootstrap(.SD), 
                                     by = .(region, design, nuc)]
                     }
-                    private$df <- private$df[
+					private$df <- private$df[which(!duplicated(paste(
+									private$df$value,
+									private$df$qinf,
+									private$df$qsup))),]
                 }
             } else if (private$params[['assay']] == 'rnaseq' 
                                     & ('bin' %in% colnames(private$df))){
@@ -699,11 +697,16 @@ metagene <- R6Class("metagene",
                         private$df <- private$df[, c(out_cols) := bootstrap(.SD), 
                                     by = .(region, design, bin)]
                     }
-                    vqq <- which(colnames(private$df) %in% 
-                                                    c('value','qinf','qsup'))
-                    private$df <- unique(private$df[vqq])
+					private$df <- private$df[which(!duplicated(paste(
+									private$df$value,
+									private$df$qinf,
+									private$df$qsup))),]
                 }
             }
+			private$df$group <- paste(private$df$design,
+										private$df$region,
+                                        sep="_")
+			private$df$group <- as.factor(private$df$group)
             private$df <- as.data.frame(private$df)
             private$df$design <- as.factor(private$df$design)
             invisible(self)
