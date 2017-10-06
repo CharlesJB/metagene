@@ -210,12 +210,13 @@ metagene <- R6Class("metagene",
                 new_names <- tools::file_path_sans_ext(basename(bam_files))
                 names(bam_files) <- new_names
             }
-            private$params[["bin_count"]] <- 100
+            private$params[["bin_count"]] <- NULL
             private$params[["bam_files"]] <- bam_files
             private$params[["force_seqlevels"]] <- force_seqlevels
             private$params[["flip_regions"]] <- FALSE
             private$params[["assay"]] <- tolower(assay)
-
+            private$params[["df_need_update"]] <- TRUE
+            
             # Prepare bam files
             private$print_verbose("Prepare bam files...")
             private$bam_handler <- Bam_Handler$new(bam_files, cores = cores,
@@ -355,7 +356,7 @@ metagene <- R6Class("metagene",
         add_design = function(design, check_bam_files = FALSE) {
             private$design = private$fetch_design(design, check_bam_files)
         },
-        produce_table = function(design = NA, bin_count = NA, bin_size = NULL,
+        produce_table = function(design = NA, bin_count = NULL, bin_size = NULL,
                                 noise_removal = NA, normalization = NA,
                                 flip_regions = FALSE) {
             if (!is.null(bin_size)) {
@@ -370,7 +371,7 @@ metagene <- R6Class("metagene",
                                                 noise_removal = noise_removal,
                                                 normalization = normalization,
                                                 flip_regions = flip_regions)
-            bin_count <- private$get_param_value(bin_count, "bin_count")
+            #bin_count <- private$get_param_value(bin_count, "bin_count")
             noise_removal <- private$get_param_value(noise_removal,
                                                     "noise_removal")
             normalization <- private$get_param_value(normalization,
@@ -394,7 +395,7 @@ metagene <- R6Class("metagene",
                 
                 if (private$params[['assay']] == 'rnaseq'){
                    
-                    print('RNAseq')
+                    message('RNAseq')
                     # here the word 'gene' = 'region'
                     bam_files_names <- names(private$params[["bam_files"]])
 
@@ -503,7 +504,7 @@ metagene <- R6Class("metagene",
                         col_values <- unlist(col_values)
                     
                     if (!is.null(bin_count)) {
-
+                        message('produce data table : rnaseq + bin count NOT null')
                         col_bins <- trunc(
                                     (col_nuc/(col_gene_size+1))*bin_count)+1
                         col_bins <- as.integer(col_bins)
@@ -522,6 +523,7 @@ metagene <- R6Class("metagene",
                                 value = col_values,
                                 strand = col_strand)
                     } else {
+                        message('produce data table : rnaseq + bin count null')
                         private$table <- data.table(
                                 region = col_gene,
                                 exon = col_exon,
@@ -536,6 +538,7 @@ metagene <- R6Class("metagene",
                                 strand = col_strand)
                     }    
                 } else { # chipseq
+                    message('produce data table : chipseq')
                     if (is.null(bin_count)) {
                         bin_count = 100
                     }
@@ -600,8 +603,15 @@ metagene <- R6Class("metagene",
 
             # 2. Produce the data.frame    
             private$df <- data.table::copy(self$get_table())
+            private$df$group <- paste(private$df$design,
+                                private$df$region,
+                                sep="_")
+            private$df$group <- as.factor(private$df$group)
+            
+            print(self$get_params())
             
             if (private$params[['assay']] == 'chipseq') {
+                message('produce DF : chipseq')
                 if (private$data_frame_need_update(alpha, sample_count) == TRUE)
                 {
                     sample_size <- self$get_table()[bin == 1,][
@@ -627,12 +637,14 @@ metagene <- R6Class("metagene",
                 }
             } else if (private$params[['assay']] == 'rnaseq' 
                             & !('bin' %in% colnames(private$df))){
+                message('produce DF : rnaseq + nuc')
                 if (private$data_frame_need_update(alpha, sample_count) 
                                                                 == TRUE) {
 
                     sample_size <- self$get_table()[nuc == 1,][
                                                 ,.N, by = .(region, design)][
                                                 , .(min(N))]
+                    print(paste('sample size (rnanuc)=',sample_size))
                     sample_size <- as.integer(sample_size)
                     
                     out_cols <- c("value", "qinf", "qsup")
@@ -649,6 +661,7 @@ metagene <- R6Class("metagene",
                     }
                     
                     if(avoid_gaps){
+                        print('avoiding gaps')
                         private$data_frame_avoid_gaps_updates()
                     }
                     if (by_replicate == TRUE){
@@ -658,13 +671,11 @@ metagene <- R6Class("metagene",
                         private$df <- private$df[, c(out_cols) := bootstrap(.SD), 
                                     by = .(region, design, nuc)]
                     }
-					private$df <- private$df[which(!duplicated(paste(
-									private$df$value,
-									private$df$qinf,
-									private$df$qsup))),]
+                    private$df
                 }
             } else if (private$params[['assay']] == 'rnaseq' 
                                     & ('bin' %in% colnames(private$df))){
+                message('produce DF : rnaseq + bin')
                 if (private$data_frame_need_update(alpha, sample_count) 
                                                                 == TRUE) {
 
@@ -672,6 +683,7 @@ metagene <- R6Class("metagene",
                                                 ,.N, by = .(region, design)][
                                                 , .(min(N))]
                     sample_size <- as.integer(sample_size)
+                    print(paste('sample size (rnabin) =',sample_size))
                     
                     out_cols <- c("value", "qinf", "qsup")
                     bootstrap <- function(dtfr) {
@@ -687,26 +699,22 @@ metagene <- R6Class("metagene",
                     }
                     
                     if(avoid_gaps){
+                        print('avoiding gaps')
                         private$data_frame_avoid_gaps_updates()
                     }
                     if (by_replicate == TRUE){
                         private$df <- private$df[, c(out_cols) := bootstrap(.SD), 
                                     by = .(region, bam, bin)]
-                        
                     } else {
                         private$df <- private$df[, c(out_cols) := bootstrap(.SD), 
                                     by = .(region, design, bin)]
                     }
-					private$df <- private$df[which(!duplicated(paste(
-									private$df$value,
-									private$df$qinf,
-									private$df$qsup))),]
+                    private$df <- private$df[which(!duplicated(paste(
+                                    private$df$value,
+                                    private$df$qinf,
+                                    private$df$qsup))),]
                 }
             }
-			private$df$group <- paste(private$df$design,
-										private$df$region,
-                                        sep="_")
-			private$df$group <- as.factor(private$df$group)
             private$df <- as.data.frame(private$df)
             private$df$design <- as.factor(private$df$design)
             invisible(self)
@@ -1147,11 +1155,13 @@ metagene <- R6Class("metagene",
                                 "must have the same sign to be flipped.'))
             }
             if (private$params[['assay']] == 'chipseq'){
+                message('chipseq flip/unflip')
                 i <- which(private$table$strand == '-')
                 private$table$bin[i] <- (self$get_params()$bin_count + 1) - 
                                                         private$table$bin[i]
                 private$table$bin <- as.integer(private$table$bin)
             } else if (private$params[['assay']] == 'rnaseq'){
+                message('rna flip/unflip')
                 i <- which(private$table$strand == '-')
                 #col_nuc
                 private$table$nuc[i] <- (private$table$regionsize[i] + 1) - 

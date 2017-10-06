@@ -18,7 +18,8 @@ plot_metagene <- function(df) {
     
         expected_cols <- c("bin", "value", "qinf", "qsup", "group")
         df<-df[,which(colnames(df) %in% expected_cols)]
-        expected_class <- c("integer", rep("numeric", 3), "factor")
+        expected_class <- c("integer", "numeric", "factor",
+                                                    rep("numeric", 2))
         stopifnot(all(expected_cols %in% colnames(df)))
         stopifnot(all(vapply(df, class, character(1)) == expected_class))
 
@@ -76,8 +77,10 @@ plot_metagene <- function(df) {
         
             expected_cols <- c("nuc", "value", "qinf", "qsup", "group")
             df<-df[,which(colnames(df) %in% expected_cols)]
-            expected_class <- c("integer", rep("numeric", 3), "factor")
+            expected_class <- c("integer", "numeric", "factor",
+                                                    rep("numeric", 2))
             stopifnot(all(expected_cols %in% colnames(df)))
+            print(vapply(df, class, character(1)))
             stopifnot(all(vapply(df, class, character(1)) == expected_class))
             
             ggplot(df, aes(x=nuc, y=value, ymin=qinf, ymax=qsup)) +
@@ -108,8 +111,10 @@ plot_metagene <- function(df) {
             
             expected_cols <- c("nuctot", "value", "qinf", "qsup", "group")
             df<-df[,which(colnames(df) %in% expected_cols)]
-            expected_class <- c("integer", rep("numeric", 3), "factor")
+            expected_class <- c("integer", "numeric", "factor",
+                                                    rep("numeric", 2))
             stopifnot(all(expected_cols %in% colnames(df)))
+            print(vapply(df, class, character(1)))
             stopifnot(all(vapply(df, class, character(1)) == expected_class))
         
             #adjustment of nuctot in case of subset of original data frame
