@@ -216,6 +216,7 @@ metagene <- R6Class("metagene",
             private$params[["flip_regions"]] <- FALSE
             private$params[["assay"]] <- tolower(assay)
             private$params[["df_needs_update"]] <- TRUE
+			private$params[["df_arguments"]] <- ""
             
             # Prepare bam files
             private$print_verbose("Prepare bam files...")
@@ -594,20 +595,36 @@ metagene <- R6Class("metagene",
         },
         produce_data_frame = function(alpha = 0.05, sample_count = 1000, 
                                                     by_replicate = FALSE,
-                                                    avoid_gaps = FALSE) {
+                                                    avoid_gaps = FALSE, 
+                                                    bam_name = NULL, 
+                                                    gaps_threshold = 0) {
             stopifnot(is.numeric(alpha))
             stopifnot(is.numeric(sample_count))
             stopifnot(alpha >= 0 & alpha <= 1)
             stopifnot(sample_count > 0)
             sample_count <- as.integer(sample_count)
-
-            # 1. Get the correctly formatted table
-            if (is.null(self$get_table())) {
-                self$produce_table()
-            }
-
-            # 2. Produce the data.frame  
+            #add checks
+            list_of_arguments <- paste(alpha,
+									sample_count,
+									by_replicate,
+									avoid_gaps,
+									bam_name,
+									gaps_threshold)
+			print(list_of_arguments)
+									
+			if (private$params[["df_arguments"]] != list_of_arguments){
+				private$params[["df_arguments"]] <- list_of_arguments
+				private$params[["df_needs_update"]] <- TRUE
+			}
+            
             if (private$params[['df_needs_update']]){
+			
+				# 1. Get the correctly formatted table
+				if (is.null(self$get_table())) {
+					self$produce_table()
+				}
+			
+				# 2. Produce the data.frame 
                 private$df <- data.table::copy(self$get_table())
                 private$df$group <- paste(private$df$design,
                                 private$df$region,
@@ -617,121 +634,128 @@ metagene <- R6Class("metagene",
                 if (private$params[['assay']] == 'chipseq') {
                     message('produce DF : chipseq')
                     private$data_frame_need_update(alpha, sample_count)
-                    if (private$params[['df_needs_update']])
-                    {
-                        sample_size <- self$get_table()[bin == 1,][
-                                                ,.N, by = .(region, design)][
-                                                , .(min(N))]
-                        sample_size <- as.integer(sample_size)
+					sample_size <- self$get_table()[bin == 1,][
+											,.N, by = .(region, design)][
+											, .(min(N))]
+					sample_size <- as.integer(sample_size)
 
-                        out_cols <- c("value", "qinf", "qsup")
-                        bootstrap <- function(df) {
-                            sampling <- matrix(df$value[sample(seq_along(
-                                                    df$value),
-                                                    sample_size * sample_count,
-                                                    replace = TRUE)],
-                                            ncol = sample_size)
-                            values <- colMeans(sampling)
-                            res <- quantile(values, c(alpha/2, 1-(alpha/2)))
-                            res <- c(mean(df$value), res)
-                            names(res) <- out_cols
-                            as.list(res)
-                        }
-                        private$df <- private$df[, 
-                                            c(out_cols) := bootstrap(.SD), 
-                                                by = .(region, design, bin)]
-                        private$df <- unique(private$df)
-                    }
+					out_cols <- c("value", "qinf", "qsup")
+					bootstrap <- function(df) {
+						sampling <- matrix(df$value[sample(seq_along(
+												df$value),
+												sample_size * sample_count,
+												replace = TRUE)],
+										ncol = sample_size)
+						values <- colMeans(sampling)
+						res <- quantile(values, c(alpha/2, 1-(alpha/2)))
+						res <- c(mean(df$value), res)
+						names(res) <- out_cols
+						as.list(res)
+					}
+					private$df <- private$df[, 
+										c(out_cols) := bootstrap(.SD), 
+											by = .(region, design, bin)]
+					private$df <- unique(private$df)
                 } else if (private$params[['assay']] == 'rnaseq' 
                                 & !('bin' %in% colnames(private$df))){
                     message('produce DF : rnaseq + nuc')
                     private$data_frame_need_update(alpha, sample_count)
-                    if (private$params[['df_needs_update']]) {
                         
-                        sample_size <- self$get_table()[nuc == 1,][
-                                                ,.N, by = .(region, design)][
-                                                , .(min(N))]
-                        print(paste('sample size (rnanuc)=',sample_size))
-                        sample_size <- as.integer(sample_size)
-                        
-                        out_cols <- c("value", "qinf", "qsup")
-                        bootstrap <- function(df) {
-                            sampling <- matrix(df$value[sample(
-                                                    seq_along(df$value),
-                                                    sample_size * sample_count,
-                                                    replace = TRUE)],
-                                            ncol = sample_size)
-                            values <- colMeans(sampling)
-                            res <- quantile(values, c(alpha/2, 1-(alpha/2)))
-                            res <- c(mean(df$value), res)
-                            names(res) <- out_cols
-                            as.list(res)
-                        }
-                        
-                        if(avoid_gaps){
-                            print('avoiding gaps')
-                            private$data_frame_avoid_gaps_updates()
-                        }
-                        if (by_replicate == TRUE){
-                            private$df <- private$df[, 
-                                        c(out_cols) := bootstrap(.SD), 
-                                        by = .(region, bam, nuctot)]
-                        } else {
-                            private$df <- private$df[, 
-                                        c(out_cols) := bootstrap(.SD), 
-                                        by = .(region, design, nuctot)]
-                        }
-						#filter to avoid  duplicated ligne (to reduce df dims)
-						#it does not matter concerning the plot. Plot works !
-						private$df <- private$df[which(!duplicated(paste(
-                                        private$df$region,
-										private$df$design,
-                                        private$df$nuctot))),]
-                    }
+					sample_size <- self$get_table()[nuc == 1,][
+											,.N, by = .(region, design)][
+											, .(min(N))]
+					print(paste('sample size (rnanuc)=',sample_size))
+					sample_size <- as.integer(sample_size)
+					
+					out_cols <- c("value", "qinf", "qsup")
+					bootstrap <- function(df) {
+						sampling <- matrix(df$value[sample(
+												seq_along(df$value),
+												sample_size * sample_count,
+												replace = TRUE)],
+										ncol = sample_size)
+						values <- colMeans(sampling)
+						res <- quantile(values, c(alpha/2, 1-(alpha/2)))
+						res <- c(mean(df$value), res)
+						names(res) <- out_cols
+						as.list(res)
+					}
+					
+					if(avoid_gaps){
+						print('avoiding gaps')
+						if (!is.null(bam_name)){
+							private$data_frame_avoid_gaps_updates(bam_name,
+														gaps_threshold)
+						} else {
+							private$data_frame_avoid_gaps_updates(
+														private$df$bam[1], 
+														gaps_threshold)
+						}
+					}
+					if (by_replicate == TRUE){
+						private$df <- private$df[, 
+									c(out_cols) := bootstrap(.SD), 
+									by = .(region, bam, nuctot)]
+					} else {
+						private$df <- private$df[, 
+									c(out_cols) := bootstrap(.SD), 
+									by = .(region, design, nuctot)]
+					}
+					#filter to avoid  duplicated ligne (to reduce df dims)
+					#it does not matter concerning the plot. Plot works !
+					private$df <- private$df[which(!duplicated(paste(
+									private$df$region,
+									private$df$design,
+									private$df$nuctot))),]
                 } else if (private$params[['assay']] == 'rnaseq' 
                                         & ('bin' %in% colnames(private$df))){
                     message('produce DF : rnaseq + bin')
                     private$data_frame_need_update(alpha, sample_count)
-                    if (private$params[['df_needs_update']]) {
-
-                        sample_size <- self$get_table()[bin == 1,][
-                                                ,.N, by = .(design)][
-                                                , .(min(N))]
-                        sample_size <- as.integer(sample_size)
-                        print(paste('sample size (rnabin) =',sample_size))
                         
-                        out_cols <- c("value", "qinf", "qsup")
-                        bootstrap <- function(df) {
-                            sampling <- matrix(df$value[sample(
-                                                    seq_along(df$value),
-                                                    sample_size * sample_count,
-                                                    replace = TRUE)],
-                                            ncol = sample_size)
-                            values <- colMeans(sampling)
-                            res <- quantile(values, c(alpha/2, 1-(alpha/2)))
-                            res <- c(mean(df$value), res)
-                            names(res) <- out_cols
-                            as.list(res)
-                        }
-                        
-                        if(avoid_gaps){
-                            print('avoiding gaps')
-                            private$data_frame_avoid_gaps_updates()
-                        }
-                        if (by_replicate == TRUE){
-                            private$df <- private$df[, 
-                                        c(out_cols) := bootstrap(.SD), 
-                                        by = .(bam, bin)]
-                        } else {
-                            private$df <- private$df[, 
-                                        c(out_cols) := bootstrap(.SD), 
-                                        by = .(design, bin)]
-                        }
-                        # checked : ok !
-						private$df <- private$df[which(!duplicated(paste(
-                                        private$df$design,
-                                        private$df$bin))),]
-                    }
+					sample_size <- self$get_table()[bin == 1,][
+											,.N, by = .(design)][
+											, .(min(N))]
+					sample_size <- as.integer(sample_size)
+					print(paste('sample size (rnabin) =',sample_size))
+					
+					out_cols <- c("value", "qinf", "qsup")
+					bootstrap <- function(df) {
+						sampling <- matrix(df$value[sample(
+												seq_along(df$value),
+												sample_size * sample_count,
+												replace = TRUE)],
+										ncol = sample_size)
+						values <- colMeans(sampling)
+						res <- quantile(values, c(alpha/2, 1-(alpha/2)))
+						res <- c(mean(df$value), res)
+						names(res) <- out_cols
+						as.list(res)
+					}
+					
+					if(avoid_gaps){
+						print('avoiding gaps')
+						if (!is.null(bam_name)){
+							private$data_frame_avoid_gaps_updates(bam_name,
+														gaps_threshold)
+						} else {
+							private$data_frame_avoid_gaps_updates(
+														private$df$bam[1], 
+														gaps_threshold)
+						}
+					}
+					if (by_replicate == TRUE){
+						private$df <- private$df[, 
+									c(out_cols) := bootstrap(.SD), 
+									by = .(bam, bin)]
+					} else {
+						private$df <- private$df[, 
+									c(out_cols) := bootstrap(.SD), 
+									by = .(design, bin)]
+					}
+					# checked : ok !
+					private$df <- private$df[which(!duplicated(paste(
+									private$df$design,
+									private$df$bin))),]
                 }
                 private$df <- as.data.frame(private$df)
                 private$df$design <- as.factor(private$df$design)
@@ -1223,27 +1247,71 @@ metagene <- R6Class("metagene",
             },
             logical(1)))
         },
-        data_frame_avoid_gaps_updates = function() {
-            message(paste('This gaps deletion is calibrated on data from',
-                    'the first bam file provided'))
+        data_frame_avoid_gaps_updates = function(bam_name, gaps_threshold) {
+            #bootstrap not executed at this point. Don't work on design !
+            message(paste('Gaps deletion is calibrated on data from',
+                    'the bam file name provided as argument "bam_name" in',
+                    '"produce_data_frame()" method. Otherwise, the first bam',
+                    'will be used as default'))
+            
             #how_namy_by_exon_by_design
             dfdt <- data.table::copy(private$df)
-            nb_nuc_removed <- dfdt[value == 0 & bam == private$df$bam[1], length(value),
-                                                by=c('exon', 'region')]
+            nb_nuc_removed <- dfdt[value <= gaps_threshold 
+                                    & bam == bam_name, length(value),
+                                by=c('exon', 'region')]
+            
+            #assignment of new exonsize
             for (i in 1:length(nb_nuc_removed$V1)){
+                #selected = lines of the ith region and exon of nb_nuc_removed
                 selected <- which(
-                    private$df$group == nb_nuc_removed$group[i] &
+                    private$df$region == nb_nuc_removed$region[i] &
                     private$df$exon == nb_nuc_removed$exon[i])
+                #retrieve the exonsize value of the ith region and exon
                 original_exonsize <- unique(private$df$exonsize[selected])
+                #replace former exonsixe
                 new_exonsize <- original_exonsize-nb_nuc_removed$V1[i]
                 private$df$exonsize[selected] <- new_exonsize
-                private$df <- private$df[which(private$df$value != 0),]
             }
             
+            nb_nuc_removed_by_gene <- dfdt[value <= gaps_threshold 
+                                    & bam == bam_name, length(value),
+                                by=c('region')]
+            #assignment of new region/genesize
+            for (i in 1:length(unique(nb_nuc_removed_by_gene$region))){
+                #selected = lines of the ith region of nb_nuc_removed
+                selected <- which(
+                    private$df$region == nb_nuc_removed_by_gene$region[i])
+                #retrieve the regionsize value of the ith region and exon
+                original_regionsize <- unique(private$df$regionsize[selected])
+                #replace former regionsize
+                new_regionsize <- (original_regionsize
+                                    - nb_nuc_removed_by_gene$V1[i])
+                private$df$regionsize[selected] <- new_regionsize
+            }
+            
+            ### removal of zero values
+            ## stop if all bam haven't the same amount of lines in table
+            stopifnot(length(unique(private$table[, .N, by=bam]$N)) == 1)
+            bam_line_count <- tab[bam == bam_name, .N]
+            #lines_to_remove for bam_name
+            lines_to_remove <- which(private$df$bam == bam_name &
+                                            private$df$value <= gaps_threshold)
+            # %% provide the idx for the first bam
+            lines_to_remove <- (lines_to_remove %% bam_line_count)
+            #to avoid 0 if there is a x %% x = 0
+            lines_to_remove <- replace(lines_to_remove, 
+                                    which(lines_to_remove == 0), 
+                                    bam_line_count)
+            bam_count <- length(unique(private$df$bam))
+            #lines_to_remove for all bam
+            lines_to_remove <- unlist(map((0:(bam_count-1)), 
+                                ~ lines_to_remove + bam_line_count * .x))
+            private$df <- private$df[-lines_to_remove,]
+
             #reinitialization of nuctot before flip in next section to 
             # clear gaps in nuctot number seauence
             private$df$nuctot <- rep(1:length(which(
-                            private$df$bam == unique(private$df$bam)[1])), 
+                            private$df$bam == bam_name)),
                             times = length(unique(private$df$bam)))
             
             #reorder the nuc and nuctot variables
@@ -1285,7 +1353,7 @@ metagene <- R6Class("metagene",
                                             min(private$df$nuctot[.x]):
                                                 max(private$df$nuctot[.x])))
                 }
-            } else {
+            } else { # if private$params[["flip_regions"]] == FALSE
                 by_bam_n_region <- map2(rep(unique(private$df$bam), 
                             each=length(unique(private$df$region))), 
                     rep(unique(private$df$region), 

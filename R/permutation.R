@@ -41,9 +41,9 @@
 #' @export
 permutation_test <- function(table1, table2, sample_size, sample_count, FUN,
                             ...) {
-	if (!is.null(table1$nuc)) {
-		stop("Permutation test is only available for chipseq data.")
-	}
+	# if (!is.null(table1$nuc)) {
+		# stop("Permutation test is only available for chipseq data.")
+	# }
     stopifnot(is.data.frame(table1))
     stopifnot(is.data.frame(table2))
     stopifnot(!identical(table1, table2))
@@ -95,5 +95,4 @@ permutation_test <- function(table1, table2, sample_size, sample_count, FUN,
     # We calculate the scores for each combination of profiles.
     stopifnot(identical(dim(m1), dim(m2)))
     vapply(1:ncol(m1), function(x) FUN(m1[,x], m2[,x], ...), numeric(1))
-
 }
