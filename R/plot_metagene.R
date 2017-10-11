@@ -80,17 +80,17 @@ plot_metagene <- function(df) {
                         df$exonsize[1:length(which(df$bam == df$bam[1]))])))
             }
         
-            expected_cols <- c("nuc", "value", "qinf", "qsup", "group")
+            expected_cols <- c("nuctot", "value", "qinf", "qsup", "design")
             df<-df[,which(colnames(df) %in% expected_cols)]
-            expected_class <- c("integer", "numeric", "factor",
+            expected_class <- c("factor", "integer", "numeric",
                                                     rep("numeric", 2))
             stopifnot(all(expected_cols %in% colnames(df)))
             print(vapply(df, class, character(1)))
             stopifnot(all(vapply(df, class, character(1)) == expected_class))
             
             ggplot(df, aes(x=nuc, y=value, ymin=qinf, ymax=qsup)) +
-                geom_ribbon(aes(fill = group), alpha=0.3) +
-                geom_line(aes(color = group), size=1) +
+                geom_ribbon(aes(fill = design), alpha=0.3) +
+                geom_line(aes(color = design), size=1) +
                 geom_vline(xintercept = exon_separation_bars, 
                                                     linetype = "dotted") +
                 theme(panel.grid.major = element_line()) +
