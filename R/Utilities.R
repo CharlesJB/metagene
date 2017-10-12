@@ -211,6 +211,9 @@ write_bed_file_filter_result <- function(bed_file_filter_result,
 #' will be recalculated. To use on metagene's table during RNA-seq analysis. 
 #' Not made for ChIP-Seq analysis or to apply on matagene's data_frame. A
 #' similar function is implemented in produce_data_frame() with same arguments.
+#' The unique goal of this function is to allow permutation_test which match
+#' the plot created using avoid_gaps, bam_name and gaps_threshold arguments
+#' in the produce_data_frame function.
 #'
 #' @param table A data.table from produce_table(...) function of metagene.
 #' @param bam_name A reference bam_name to allow the same removal 
@@ -230,11 +233,49 @@ write_bed_file_filter_result <- function(bed_file_filter_result,
 #'  system.file("extdata/ENCFF355RXX_DPM1less.bed", package="metagene"),
 #'  system.file("extdata/ENCFF355RXX_NDUFAB1less.bed", package="metagene"),
 #'  system.file("extdata/ENCFF355RXX_SLC25A5less.bed", package="metagene"))
+#'  mydesign <- matrix(c(1,1,0,0,0,0,1,1),ncol=2, byrow=FALSE)
+#'  mydesign <- cbind(c("c_al4_945MLM_demo_sorted.bam",
+#'                      "c_al3_362PYX_demo_sorted.bam",
+#'                      "n_al4_310HII_demo_sorted.bam",
+#'                      "n_al3_588WMR_demo_sorted.bam"), mydesign)
+#'  colnames(mydesign) <- c('Samples', 'cyto', 'nucleo')
+#'  mydesign <- data.frame(mydesign)
+#'  mydesign[,2] <- as.numeric(mydesign[,2])-1
+#'  mydesign[,3] <- as.numeric(mydesign[,3])-1
+#'
 #'  mg <- metagene$new(regions = region, bam_files = bam_files, 
 #'                                                            assay = 'rnaseq')
+#'  mg$produce_table(flip_regions = FALSE, bin_count = 100, 
+#'                                design = mydesign, normalization = 'RPM')
+#'  mg$produce_data_frame(avoid_gaps = TRUE, 
+#'                        bam_name = "c_al4_945MLM_demo_sorted", 
+#'                        gaps_threshold = 10)
+#'  mg$plot()
 #'  tab <- mg$get_table()
 #'  tab <- avoid_gaps_update(tab, 
 #'         bam_name = 'c_al4_945MLM_demo_sorted', gaps_threshold = 10)
+#'  tab0 <- mg$get_table()
+#'  tab1 <- tab0[which(tab0$design == "cyto"),]
+#'  tab2 <- tab0[which(tab0$design == "nucleo"),]
+#'  
+#'  library(similaRpeak)
+#'  perm_fun <- function(profile1, profile2) {
+#'    sim <- similarity(profile1, profile2)
+#'    sim[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+#'  }
+#'  
+#'  ratio_normalized_intersect <- 
+#'    perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, 
+#'             tab2[, .(moy=mean(value)), by=bin]$moy)
+#'  ratio_normalized_intersect
+#'  
+#'  permutation_results <- permutation_test(tab1, tab2, sample_size = 2,
+#'                                  sample_count = 1000, FUN = perm_fun)
+#'  hist(permutation_results, 
+#'           main="ratio_normalized_intersect (1=total overlapping area)")
+#'  abline(v=ratio_normalized_intersect, col = 'red')
+#'  sum(ratio_normalized_intersect >= permutation_results) / 
+#'         length(permutation_results)
 #' }
 #'
 
@@ -268,7 +309,7 @@ avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
     nb_nuc_removed_by_gene <- new_table[value <= gaps_threshold 
                             & bam == bam_name, length(value),
                         by=c('region')]
-    #assignment of new region/genesize
+    #assignment of new regionsize/genesize
     for (i in 1:length(unique(nb_nuc_removed_by_gene$region))){
         #selected = lines of the ith region of nb_nuc_removed
         selected <- which(
@@ -281,6 +322,19 @@ avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
         new_table$regionsize[selected] <- new_regionsize
     }
     
+	#assignment of new regionstartnuc (allow flip nuctot after gaps removal)
+	for (i in 1:length(unique(nb_nuc_removed_by_gene$region))){
+        #selected = lines of the ith region of nb_nuc_removed
+        selected <- which(
+            new_table$region == nb_nuc_removed_by_gene$region[i])
+        #retrieve the regionsize value of the ith region and exon
+        original_regionstartnuc <- unique(new_table$regionstartnuc[selected])
+        #replace former regionsize
+        new_regionstartnuc <- (original_regionstartnuc
+                            - nb_nuc_removed_by_gene$V1[i])
+        new_table$regionstartnuc[selected] <- new_regionstartnuc
+    }
+	
     ### removal of zero values
     ## stop if all bam haven't the same amount of lines in table
     stopifnot(length(unique(new_table[, .N, by=bam]$N)) == 1)
@@ -316,7 +370,6 @@ avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
                                     new_table$bam == new_table$bam[1]),]$nuc)
                                         , ascending))
     if(!all(are_genes_unflipped)){
-        print('flipped')
         
         flip_by_bam_n_region <- map2(rep(unique(new_table$bam), 
                     each=length(unique(new_table$region))), 
@@ -371,7 +424,6 @@ avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
         }
     }
     if(!is.null(bin_count)){
-        print('col bin rebuilt')
         #reinitialization of region/gene_size to be able to rebuild 
         #bin column
         length_by_region_n_bam <- new_table[,length(nuc),

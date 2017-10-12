@@ -637,7 +637,7 @@ metagene <- R6Class("metagene",
                 private$df$group <- as.factor(private$df$group)
             
                 if (private$params[['assay']] == 'chipseq') {
-                    message('produce DF : chipseq')
+                    message('produce DF : ChIP-Seq')
                     private$data_frame_need_update(alpha, sample_count)
                     sample_size <- self$get_table()[bin == 1,][
                                             ,.N, by = .(region, design)][
@@ -663,7 +663,7 @@ metagene <- R6Class("metagene",
                     private$df <- unique(private$df)
                 } else if (private$params[['assay']] == 'rnaseq' 
                                 & !('bin' %in% colnames(private$df))){
-                    message('produce DF : rnaseq + nuc')
+                    message('produce DF : RNA-Seq')
                     private$data_frame_need_update(alpha, sample_count)
                         
                     sample_size <- self$get_table()[nuc == 1,][
@@ -708,7 +708,7 @@ metagene <- R6Class("metagene",
                                     private$df$nuctot))),]
                 } else if (private$params[['assay']] == 'rnaseq' 
                                         & ('bin' %in% colnames(private$df))){
-                    message('produce DF : rnaseq + bin')
+                    message('produce DF : RNA-Seq binned')
                     private$data_frame_need_update(alpha, sample_count)
                         
                     sample_size <- self$get_table()[bin == 1,][
@@ -731,7 +731,7 @@ metagene <- R6Class("metagene",
                     }
                     
                     if(avoid_gaps){
-                        message('avoiding gaps')
+                        message('Avoiding gaps')
                         if (!is.null(bam_name)){
                             private$data_frame_avoid_gaps_updates(bam_name,
                                                         gaps_threshold)
