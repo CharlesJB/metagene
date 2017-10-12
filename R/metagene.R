@@ -214,6 +214,7 @@ metagene <- R6Class("metagene",
             private$params[["assay"]] <- tolower(assay)
             private$params[["df_needs_update"]] <- TRUE
             private$params[["df_arguments"]] <- ""
+			private$params[["table_needs_update"]] <- TRUE
             
             # Prepare bam files
             private$print_verbose("Prepare bam files...")
@@ -353,6 +354,7 @@ metagene <- R6Class("metagene",
         },
         add_design = function(design, check_bam_files = FALSE) {
             private$design = private$fetch_design(design, check_bam_files)
+			private$params[["table_needs_update"]] <- TRUE
         },
         produce_table = function(design = NA, bin_count = NULL, bin_size = NULL,
                                 noise_removal = NA, normalization = NA,
@@ -381,11 +383,15 @@ metagene <- R6Class("metagene",
 			print(paste('noise_removal =', noise_removal))
 			print(paste('normalization =', normalization))
 			
+			#addition of private$params[["table_needs_update"]] comes from 
+			#troubles in table update when adding a design with the add_design
+			#function and changing nothing else in produce_table parameters
             if (private$table_need_update(design = design,
-                                            bin_count = bin_count,
-                                            bin_size = bin_size,
-                                            noise_removal = noise_removal,
-                                            normalization = normalization)) {
+                                    bin_count = bin_count,
+                                    bin_size = bin_size,
+                                    noise_removal = noise_removal,
+                                    normalization = normalization) |
+									private$params[["table_needs_update"]]) {
                 private$design <- design
                 coverages <- private$coverages
                 
@@ -592,6 +598,7 @@ metagene <- R6Class("metagene",
                 private$params[["noise_removal"]] <- noise_removal
                 private$params[["normalization"]] <- normalization
                 private$params[["df_needs_update"]] <- TRUE
+				private$params[["table_needs_update"]] <- FALSE
                 private$design <- design
             } else {
                 message(paste('WARNING : table is unchanged regarding',
