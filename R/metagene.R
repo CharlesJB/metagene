@@ -362,6 +362,7 @@ metagene <- R6Class("metagene",
                 bin_size <- NULL
             }
 
+			print(private$design)
             design <- private$fetch_design(design)
             private$check_produce_table_params(bin_count = bin_count,
                                                 bin_size = bin_size,
@@ -374,7 +375,12 @@ metagene <- R6Class("metagene",
                                                     "noise_removal")
             normalization <- private$get_param_value(normalization,
                                                     "normalization")
-
+			
+			print(design)
+			print(paste('bin_count =', bin_count))
+			print(paste('noise_removal =', noise_removal))
+			print(paste('normalization =', normalization))
+			
             if (private$table_need_update(design = design,
                                             bin_count = bin_count,
                                             bin_size = bin_size,
