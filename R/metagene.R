@@ -372,10 +372,10 @@ metagene <- R6Class("metagene",
                                                 normalization = normalization,
                                                 flip_regions = flip_regions)
             #bin_count <- private$get_param_value(bin_count, "bin_count")
-            noise_removal <- private$get_param_value(noise_removal,
-                                                    "noise_removal")
-            normalization <- private$get_param_value(normalization,
-                                                    "normalization")
+            #noise_removal <- private$get_param_value(noise_removal,
+            #                                        "noise_removal")
+            #normalization <- private$get_param_value(normalization,
+            #                                        "normalization")
             coverages <- private$coverages
 			print(coverages)
 			print(design)
