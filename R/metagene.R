@@ -214,7 +214,7 @@ metagene <- R6Class("metagene",
             private$params[["assay"]] <- tolower(assay)
             private$params[["df_needs_update"]] <- TRUE
             private$params[["df_arguments"]] <- ""
-			private$params[["table_needs_update"]] <- TRUE
+            private$params[["table_needs_update"]] <- TRUE
             
             # Prepare bam files
             private$print_verbose("Prepare bam files...")
@@ -354,7 +354,7 @@ metagene <- R6Class("metagene",
         },
         add_design = function(design, check_bam_files = FALSE) {
             private$design = private$fetch_design(design, check_bam_files)
-			private$params[["table_needs_update"]] <- TRUE
+            private$params[["table_needs_update"]] <- TRUE
         },
         produce_table = function(design = NA, bin_count = NULL, bin_size = NULL,
                                 noise_removal = NA, normalization = NA,
@@ -364,7 +364,6 @@ metagene <- R6Class("metagene",
                 bin_size <- NULL
             }
 
-			print(private$design)
             design <- private$fetch_design(design)
             private$check_produce_table_params(bin_count = bin_count,
                                                 bin_size = bin_size,
@@ -377,32 +376,27 @@ metagene <- R6Class("metagene",
                                                     "noise_removal")
             normalization <- private$get_param_value(normalization,
                                                     "normalization")
-			
+            coverages <- private$coverages
+			print(coverages)
 			print(design)
-			print(paste('bin_count =', bin_count))
-			print(paste('noise_removal =', noise_removal))
-			print(paste('normalization =', normalization))
-			
-			#addition of private$params[["table_needs_update"]] comes from 
-			#troubles in table update when adding a design with the add_design
-			#function and changing nothing else in produce_table parameters
+
+            #addition of private$params[["table_needs_update"]] comes from 
+            #troubles in table update when adding a design with the add_design
+            #function and changing nothing else in produce_table parameters
             if (private$table_need_update(design = design,
                                     bin_count = bin_count,
                                     bin_size = bin_size,
                                     noise_removal = noise_removal,
                                     normalization = normalization) |
-									private$params[["table_needs_update"]]) {
-                private$design <- design
-                coverages <- private$coverages
+                                    private$params[["table_needs_update"]]) {
+                
+                
+                if (!is.null(normalization)) {
+                    coverages <- private$normalize_coverages(coverages)
+                }
                 
                 if (private$params[['assay']] == 'rnaseq'){
-                    
-                    if (!is.null(normalization)) {
-                        coverages <- private$normalize_coverages(coverages, 
-                                                                        design)
-                    }
-
-                    message('RNAseq')
+				
                     # here the word 'gene' = 'region'
                     bam_files_names <- names(private$params[["bam_files"]])
 
@@ -453,8 +447,8 @@ metagene <- R6Class("metagene",
                         length_std_dt_struct = length(col_gene)
 
                         # the number of not empty cases in the design param
-                        copies_count <- sum(replace(unlist(private$design[,-1]),
-                                    which(unlist(private$design[,-1]) == 2),1))
+                        copies_count <- sum(replace(unlist(design[,-1]),
+                                    which(unlist(design[,-1]) == 2),1))
 
                         #multiplication of standard data table structure
                         col_gene <- rep(col_gene, copies_count)
@@ -469,21 +463,21 @@ metagene <- R6Class("metagene",
                                                             copies_count)
                         
                     ## other columns of data table
-                        design_names <- colnames(private$design)[-1]
+                        design_names <- colnames(design)[-1]
                         bam_names_in_design <- tools::file_path_sans_ext(
-                                                            private$design[,1])
+                                                            design[,1])
 
                         bfile_names_by_design <- tools::file_path_sans_ext(
                             unlist(map(design_names , 
-                                ~private$design[which(private$design[,
+                                ~design[which(design[,
                                     which(colnames(
-                                        private$design) == .x)] > 0),1])))
+                                        design) == .x)] > 0),1])))
                         col_bam <- rep(bfile_names_by_design,
                                 each=length_std_dt_struct)
                         
                         nb_bfile_by_design <-  unlist(map(design_names , 
-                                ~length(which(private$design[,which(
-                                colnames(private$design) == .x)] > 0))))
+                                ~length(which(design[,which(
+                                colnames(design) == .x)] > 0))))
                         col_design <- rep(design_names,
                                     times=(nb_bfile_by_design *
                                         length_std_dt_struct))
@@ -511,7 +505,7 @@ metagene <- R6Class("metagene",
                         col_values <- unlist(col_values)
                     
                     if (!is.null(bin_count)) {
-                        message('produce data table : rnaseq + bin count NOT null')
+                        message('produce data table : rnaseq + bin')
                         col_bins <- trunc(
                                     (col_nuc/(col_gene_size+1))*bin_count)+1
                         col_bins <- as.integer(col_bins)
@@ -530,7 +524,7 @@ metagene <- R6Class("metagene",
                                 value = col_values,
                                 strand = col_strand)
                     } else {
-                        message('produce data table : rnaseq + bin count null')
+                        message('produce data table : rnaseq')
                         private$table <- data.table(
                                 region = col_gene,
                                 exon = col_exon,
@@ -549,10 +543,6 @@ metagene <- R6Class("metagene",
                         coverages <- private$remove_controls(coverages, design)
                     } else {
                         coverages <- private$merge_chip(coverages, design)
-                    }
-                    if (!is.null(normalization)) {
-                        coverages <- private$normalize_coverages(coverages, 
-                                                                        design)
                     }
                 
                     message('produce data table : chipseq')
@@ -598,7 +588,7 @@ metagene <- R6Class("metagene",
                 private$params[["noise_removal"]] <- noise_removal
                 private$params[["normalization"]] <- normalization
                 private$params[["df_needs_update"]] <- TRUE
-				private$params[["table_needs_update"]] <- FALSE
+                private$params[["table_needs_update"]] <- FALSE
                 private$design <- design
             } else {
                 message(paste('WARNING : table is unchanged regarding',
@@ -1181,15 +1171,16 @@ metagene <- R6Class("metagene",
             }
             results
         },
-        normalize_coverages = function(coverages, design) {
-            for (design_name in colnames(design)[-1]) {
-                which_rows = design[[design_name]]==1
-                bam_files <- as.character(design[,1][which_rows])
-                counts <- lapply(bam_files,
-                                private$bam_handler$get_aligned_count)
-                count <- sum(unlist(counts))
+        normalize_coverages = function(coverages) {
+            bam_names <- unlist(lapply(private$bam_handler$get_bam_files()$bam, 
+								private$bam_handler$get_bam_name))
+			for (bam_name in bam_names) {
+                #which_rows = design[[design_name]]==1
+                #bam_files <- as.character(design[,1][which_rows])
+                count <- private$bam_handler$get_aligned_count(bam_name)
+                #count <- sum(unlist(counts))
                 weight <- 1 / (count / 1000000)
-                coverages[[design_name]] <- coverages[[design_name]] * weight
+				coverages[[bam_name]] <-	coverages[[bam_name]] * weight
             }
             coverages
         },
