@@ -22,7 +22,8 @@ metagene plots on the data (or a subset of the data).
 \describe{
    \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
                            cores = SerialParam(), verbose = FALSE,
-                           force_seqlevels = FALSE)}}
+                           force_seqlevels = FALSE, paired_end = FALSE,
+                           assay = 'chipseq'))}}
    \item{regions}{Either a \code{vector} of BED, narrowPeak or broadPeak
                    filenames, a \code{GRanges} object or a 
                    \code{GRangesList} object.}
@@ -42,10 +43,10 @@ metagene plots on the data (or a subset of the data).
                in bam file header. Default: \code{FALSE}. TRUE and FALSE
                respectively correspond to pruning.mode = "coarse"
                and "error" in ?seqinfo.}
-     \item{paired_end}{If \code{TRUE}, metagene will deal with paired-ended 
+   \item{paired_end}{If \code{TRUE}, metagene will deal with paired-ended 
                  data. If \code{FALSE}, single-ended data are expected. 
                  Default: \code{FALSE}}
-     \item{assay}{\code{'chipseq'} or \code{'rnaseq'}, the two available 
+   \item{assay}{\code{'chipseq'} or \code{'rnaseq'}, the two available 
                  options. Default: \code{'chipseq'}}
 }
 
@@ -99,19 +100,17 @@ metagene plots on the data (or a subset of the data).
 }
 \describe{
    \item{}{\code{mg$produce_data_frame(alpha = 0.05, sample_count = 1000, 
-                             	by_replicate = FALSE, avoid_gaps = FALSE)}}
+                                 avoid_gaps = FALSE, gaps_threshold = 0)}}
    \item{alpha}{The range of the estimation to be shown with the ribbon.
                \code{1 - alpha / 2} and \code{alpha / 2} will be used.
                Default: 0.05.}
    \item{sample_count}{The number of draw to do in the bootstrap
                        calculation. Default: 1000.}
-   \item{by_replicate}{Provide the possibility to plot by replicate/bam
-                     without clearing the already provided design. If there 
-                     is no design provided then this option is useless and 
-                     must be left as default : \code{FALSE}.}
    \item{avoid_gaps}{Provide the possibility to remove values = 0 and refit
                      the data_frame for this suppression.
                      Default : \code{FALSE}.}
+   \item{gaps_threshold}{It works with avoid_gaps argument. It lets to remove
+                     values <= at gaps_threshold. Default : 0.}
 }
 \describe{
    \item{}{mg$get_params()}

@@ -16,7 +16,8 @@
 plot_metagene <- function(df) {
     if (('bin' %in% colnames(df)) & !('nuc' %in% colnames(df))) { 
         # if chipseq, for instance
-    
+        message('ChIP-Seq')
+        
         expected_cols <- c("bin", "value", "qinf", "qsup", "group")
         df<-df[,which(colnames(df) %in% expected_cols)]
         expected_class <- c("integer", "numeric", "factor",
@@ -67,7 +68,7 @@ plot_metagene <- function(df) {
         
         #if only one region/gene in the data_frame
         if (length(unique(df$region)) == 1) {
-            print('One region/gene')
+            message('RNA-Seq : One region/gene')
             
             are_genes_unflipped <- unlist(lapply(map(unique(df$region),
                         ~ df[which(df$region == .x & df$bam == df$bam[1]),]$nuc)
@@ -85,7 +86,6 @@ plot_metagene <- function(df) {
             expected_class <- c("factor", "integer", "numeric",
                                                     rep("numeric", 2))
             stopifnot(all(expected_cols %in% colnames(df)))
-            print(vapply(df, class, character(1)))
             stopifnot(all(vapply(df, class, character(1)) == expected_class))
             
             ggplot(df, aes(x=nuc, y=value, ymin=qinf, ymax=qsup)) +
@@ -100,7 +100,7 @@ plot_metagene <- function(df) {
                 theme_bw(base_size = 20)
                 
         } else { #if multiple regions/genes in the data_frame
-            print('Multiple regions/genes')
+            message('RNA-Seq : Multiple regions/genes')
             
             are_genes_unflipped <- unlist(lapply(map(unique(df$region),
                         ~ df[which(df$region == .x & df$bam == df$bam[1]),]$nuc)
@@ -128,7 +128,6 @@ plot_metagene <- function(df) {
             expected_class <- c("factor", "integer", "numeric",
                                                     rep("numeric", 2))
             stopifnot(all(expected_cols %in% colnames(df)))
-            print(vapply(df, class, character(1)))
             stopifnot(all(vapply(df, class, character(1)) == expected_class))
         
             #adjustment of nuctot in case of subset of original data frame
@@ -149,11 +148,10 @@ plot_metagene <- function(df) {
                 theme_bw(base_size = 20)
         }
     } else if (('bin' %in% colnames(df)) & ('nuc' %in% colnames(df))) { 
-        print('rnaseq with bins')
+        message('RNA-Seq binned')
         
         expected_cols <- c("bin", "value", "qinf", "qsup", "design")
         df<-df[,which(colnames(df) %in% expected_cols)]
-        print(vapply(df, class, character(1)))
         expected_class <- c("factor", "integer", rep("numeric", 3))
         stopifnot(all(expected_cols %in% colnames(df)))
         stopifnot(all(vapply(df, class, character(1)) == expected_class))

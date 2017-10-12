@@ -71,14 +71,14 @@ get_promoters_txdb <- function(txdb, upstream = 1000, downstream = 1000) {
 #'
 #' @examples
 #' \dontrun{
-#'        require(EnsDb.Hsapiens.v86)
-#'        edb <- EnsDb.Hsapiens.v86
-#'        quantification_files <- 'file_path'
-#'         ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
-#'                                                        quantification_files)
-#'         bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
-#'                                                                end=23596356))
-#'         bed_file_filter(ebgwot, bed_file_content_gr)
+#'    require(EnsDb.Hsapiens.v86)
+#'    edb <- EnsDb.Hsapiens.v86
+#'    quantification_files <- 'file_path'
+#'    ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
+#'                                                     quantification_files)
+#'    bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
+#'                                                            end=23596356))
+#'    bed_file_filter(ebgwot, bed_file_content_gr)
 #' }
 #'
 #' @import EnsDb.Hsapiens.v86
@@ -180,15 +180,15 @@ bed_file_filter <- function (exon_by_gene_with_observed_transcripts,
 #'
 #' @examples
 #' \dontrun{
-#'        require(EnsDb.Hsapiens.v86)
-#'        edb <- EnsDb.Hsapiens.v86
-#'        quantification_files <- 'file_path'
-#'         ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
-#'                                                        quantification_files)
-#'         bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
-#'                                                                end=23596356))
-#'         bffr <- bed_file_filter(ebgwot, bed_file_content_gr)
-#'         write_bed_file_filter_result(bffr, file='test','./')
+#'   require(EnsDb.Hsapiens.v86)
+#'   edb <- EnsDb.Hsapiens.v86
+#'   quantification_files <- 'file_path'
+#'   ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
+#'                                                    quantification_files)
+#'   bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
+#'                                                            end=23596356))
+#'   bffr <- bed_file_filter(ebgwot, bed_file_content_gr)
+#'   write_bed_file_filter_result(bffr, file='test','./')
 #' }
 #'
 write_bed_file_filter_result <- function(bed_file_filter_result, 
@@ -206,166 +206,182 @@ write_bed_file_filter_result <- function(bed_file_filter_result,
     write(string, paste0(path, file, '.BED'))
 }
 
-#' Description
+#' Is is a function designed to remove values <= to 'gaps_threshold'. 
+#' Nucleotides local and global positions, bins, size of regions/genes and exons
+#' will be recalculated. To use on metagene's table during RNA-seq analysis. 
+#' Not made for ChIP-Seq analysis or to apply on matagene's data_frame. A
+#' similar function is implemented in produce_data_frame() with same arguments.
 #'
-#' @param X description 
+#' @param table A data.table from produce_table(...) function of metagene.
+#' @param bam_name A reference bam_name to allow the same removal 
+#'                 (position in bam) of values for other bam file.
+#' @param gaps_threshold A threshold under which values will be removed.    
 #'
-#' @return description
+#' @return A data.table with values <= to 'gaps_threshold' removed
 #'
 #' @examples
 #' \dontrun{
-#'        TODO
+#'  bam_files <- c(
+#'  system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
+#'  system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
+#'  system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
+#'  system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
+#'  region <- c(
+#'  system.file("extdata/ENCFF355RXX_DPM1less.bed", package="metagene"),
+#'  system.file("extdata/ENCFF355RXX_NDUFAB1less.bed", package="metagene"),
+#'  system.file("extdata/ENCFF355RXX_SLC25A5less.bed", package="metagene"))
+#'  mg <- metagene$new(regions = region, bam_files = bam_files, 
+#'                                                            assay = 'rnaseq')
+#'  tab <- mg$get_table()
+#'  tab <- avoid_gaps_update(tab, 
+#'         bam_name = 'c_al4_945MLM_demo_sorted', gaps_threshold = 10)
 #' }
 #'
 
 avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
-	new_table <- data.table::copy(table)
-	
-	bin_count <- max(unique(new_table$bin))
-	message(paste('Gaps deletion is calibrated on data from',
+    new_table <- data.table::copy(table)
+    
+    bin_count <- max(unique(new_table$bin))
+    message(paste('Gaps deletion is calibrated on data from',
                     'the bam file name provided as argument "bam_name" in',
                     '"produce_data_frame()" method. Otherwise, the first bam',
                     'will be used as default'))
             
-	#how_namy_by_exon_by_design
-	nb_nuc_removed <- new_table[value <= gaps_threshold 
-							& bam == bam_name, length(value),
-						by=c('exon', 'region')]
-	
-	#assignment of new exonsize
-	for (i in 1:length(nb_nuc_removed$V1)){
-		#selected = lines of the ith region and exon of nb_nuc_removed
-		selected <- which(
-			new_table$region == nb_nuc_removed$region[i] &
-			new_table$exon == nb_nuc_removed$exon[i])
-		#retrieve the exonsize value of the ith region and exon
-		original_exonsize <- unique(new_table$exonsize[selected])
-		#replace former exonsixe
-		new_exonsize <- original_exonsize-nb_nuc_removed$V1[i]
-		new_table$exonsize[selected] <- new_exonsize
-	}
-	
-	nb_nuc_removed_by_gene <- new_table[value <= gaps_threshold 
-							& bam == bam_name, length(value),
-						by=c('region')]
-	#assignment of new region/genesize
-	for (i in 1:length(unique(nb_nuc_removed_by_gene$region))){
-		#selected = lines of the ith region of nb_nuc_removed
-		selected <- which(
-			new_table$region == nb_nuc_removed_by_gene$region[i])
-		#retrieve the regionsize value of the ith region and exon
-		original_regionsize <- unique(new_table$regionsize[selected])
-		#replace former regionsize
-		new_regionsize <- (original_regionsize
-							- nb_nuc_removed_by_gene$V1[i])
-		new_table$regionsize[selected] <- new_regionsize
-	}
-	
-	### removal of zero values
-	## stop if all bam haven't the same amount of lines in table
-	stopifnot(length(unique(new_table[, .N, by=bam]$N)) == 1)
-	bam_line_count <- tab[bam == bam_name, .N]
-	#lines_to_remove for bam_name
-	lines_to_remove <- which(new_table$bam == bam_name &
-									new_table$value <= gaps_threshold)
-	# %% provide the idx for the first bam
-	lines_to_remove <- (lines_to_remove %% bam_line_count)
-	#to avoid 0 if there is a x %% x = 0
-	lines_to_remove <- replace(lines_to_remove, 
-							which(lines_to_remove == 0), 
-							bam_line_count)
-	bam_count <- length(unique(new_table$bam))
-	#lines_to_remove for all bam
-	lines_to_remove <- unlist(map((0:(bam_count-1)), 
-						~ lines_to_remove + bam_line_count * .x))
-	new_table <- new_table[-lines_to_remove,]
+    #how_namy_by_exon_by_design
+    nb_nuc_removed <- new_table[value <= gaps_threshold 
+                            & bam == bam_name, length(value),
+                        by=c('exon', 'region')]
+    
+    #assignment of new exonsize
+    for (i in 1:length(nb_nuc_removed$V1)){
+        #selected = lines of the ith region and exon of nb_nuc_removed
+        selected <- which(
+            new_table$region == nb_nuc_removed$region[i] &
+            new_table$exon == nb_nuc_removed$exon[i])
+        #retrieve the exonsize value of the ith region and exon
+        original_exonsize <- unique(new_table$exonsize[selected])
+        #replace former exonsixe
+        new_exonsize <- original_exonsize-nb_nuc_removed$V1[i]
+        new_table$exonsize[selected] <- new_exonsize
+    }
+    
+    nb_nuc_removed_by_gene <- new_table[value <= gaps_threshold 
+                            & bam == bam_name, length(value),
+                        by=c('region')]
+    #assignment of new region/genesize
+    for (i in 1:length(unique(nb_nuc_removed_by_gene$region))){
+        #selected = lines of the ith region of nb_nuc_removed
+        selected <- which(
+            new_table$region == nb_nuc_removed_by_gene$region[i])
+        #retrieve the regionsize value of the ith region and exon
+        original_regionsize <- unique(new_table$regionsize[selected])
+        #replace former regionsize
+        new_regionsize <- (original_regionsize
+                            - nb_nuc_removed_by_gene$V1[i])
+        new_table$regionsize[selected] <- new_regionsize
+    }
+    
+    ### removal of zero values
+    ## stop if all bam haven't the same amount of lines in table
+    stopifnot(length(unique(new_table[, .N, by=bam]$N)) == 1)
+    bam_line_count <- tab[bam == bam_name, .N]
+    #lines_to_remove for bam_name
+    lines_to_remove <- which(new_table$bam == bam_name &
+                                    new_table$value <= gaps_threshold)
+    # %% provide the idx for the first bam
+    lines_to_remove <- (lines_to_remove %% bam_line_count)
+    #to avoid 0 if there is a x %% x = 0
+    lines_to_remove <- replace(lines_to_remove, 
+                            which(lines_to_remove == 0), 
+                            bam_line_count)
+    bam_count <- length(unique(new_table$bam))
+    #lines_to_remove for all bam
+    lines_to_remove <- unlist(map((0:(bam_count-1)), 
+                        ~ lines_to_remove + bam_line_count * .x))
+    new_table <- new_table[-lines_to_remove,]
 
-	
-	#reinitialization of nuctot before flip in next section to 
-	# clear gaps in nuctot number seauence
-	new_table$nuctot <- rep(1:length(which(
-					new_table$bam == bam_name)),
-					times = length(unique(new_table$bam)))
-	
-	#reorder the nuc and nuctot variables
-	ascending = function(nuc) {
+    
+    #reinitialization of nuctot before flip in next section to 
+    # clear gaps in nuctot number seauence
+    new_table$nuctot <- rep(1:length(which(
+                    new_table$bam == bam_name)),
+                    times = length(unique(new_table$bam)))
+    
+    #reorder the nuc and nuctot variables
+    ascending = function(nuc) {
             nuc[1] < nuc[2]
     }
-	are_genes_unflipped <- unlist(lapply(map(unique(new_table$region),
+    are_genes_unflipped <- unlist(lapply(map(unique(new_table$region),
                         ~ new_table[which(new_table$region == .x & 
-									new_table$bam == new_table$bam[1]),]$nuc)
+                                    new_table$bam == new_table$bam[1]),]$nuc)
                                         , ascending))
-	if(!all(are_genes_unflipped)){
-		print('flipped')
-		
-		flip_by_bam_n_region <- map2(rep(unique(new_table$bam), 
-					each=length(unique(new_table$region))), 
-			rep(unique(new_table$region),
-					times=length(unique(new_table$bam))), 
-			~which(new_table$bam == .x & new_table$region == .y 
-						& new_table$strand == '-'))
-		
-		not_empty_idx <- which(map(flip_by_bam_n_region, 
-												~length(.x)) > 0) 
-		if (length(not_empty_idx) > 0){
-			map(flip_by_bam_n_region[not_empty_idx],
-							~ (new_table$nuc[.x] <- length(.x):1))
-			map(flip_by_bam_n_region[not_empty_idx],
-							~ (new_table$nuctot[.x] <- 
-									max(new_table$nuctot[.x]):
-										min(new_table$nuctot[.x])))
-		}
-		
-		unflip_by_bam_n_region <- map2(rep(unique(new_table$bam), 
-					each=length(unique(new_table$region))), 
-			rep(unique(new_table$region), 
-					times=length(unique(new_table$bam))), 
-			~which(new_table$bam == .x & new_table$region == .y 
-						& (new_table$strand == '+' | 
-							new_table$strand == '*')))
-		not_empty_idx <- which(map(unflip_by_bam_n_region, 
-												~length(.x)) > 0) 
-		if (length(not_empty_idx) > 0){
-			map(unflip_by_bam_n_region[not_empty_idx],
-							~ (new_table$nuc[.x] <- 1:length(.x)))
-			map(unflip_by_bam_n_region[not_empty_idx],
-							~ (new_table$nuctot[.x] <- 
-									min(new_table$nuctot[.x]):
-										max(new_table$nuctot[.x])))
-		}
-	} else { # if all(are_genes_unflipped)
-		by_bam_n_region <- map2(rep(unique(new_table$bam), 
-					each=length(unique(new_table$region))), 
-			rep(unique(new_table$region), 
-					times=length(unique(new_table$bam))), 
-			~which(new_table$bam == .x & new_table$region == .y))
-		not_empty_idx <- which(map(by_bam_n_region, 
-												~length(.x)) > 0) 
-		if (length(not_empty_idx) > 0){
-			map(by_bam_n_region[not_empty_idx], 
-							~ (new_table$nuc[.x] <- 1:length(.x)))
-			map(by_bam_n_region[not_empty_idx], 
-							~ (new_table$nuctot[.x] <- 
-									min(new_table$nuctot[.x]):
-										max(new_table$nuctot[.x])))
-		}
-	}
-	if(!is.null(bin_count)){
-		print('col bin rebuilt')
-		#reinitialization of region/gene_size to be able to rebuild 
-		#bin column
-		length_by_region_n_bam <- new_table[,length(nuc),
-											by=c('region','bam')]$V1
-		new_table$regionsize <- rep(length_by_region_n_bam, 
-									times=length_by_region_n_bam)
-		#rebuild the correct bin column
-		col_bins <- trunc((new_table$nuc/(new_table$regionsize+1))
-								*bin_count)+1
-		new_table$bin <- as.integer(col_bins)
-	}
-	return(new_table)
+    if(!all(are_genes_unflipped)){
+        print('flipped')
+        
+        flip_by_bam_n_region <- map2(rep(unique(new_table$bam), 
+                    each=length(unique(new_table$region))), 
+            rep(unique(new_table$region),
+                    times=length(unique(new_table$bam))), 
+            ~which(new_table$bam == .x & new_table$region == .y 
+                        & new_table$strand == '-'))
+        
+        not_empty_idx <- which(map(flip_by_bam_n_region, 
+                                                ~length(.x)) > 0) 
+        if (length(not_empty_idx) > 0){
+            map(flip_by_bam_n_region[not_empty_idx],
+                            ~ (new_table$nuc[.x] <- length(.x):1))
+            map(flip_by_bam_n_region[not_empty_idx],
+                            ~ (new_table$nuctot[.x] <- 
+                                    max(new_table$nuctot[.x]):
+                                        min(new_table$nuctot[.x])))
+        }
+        
+        unflip_by_bam_n_region <- map2(rep(unique(new_table$bam), 
+                    each=length(unique(new_table$region))), 
+            rep(unique(new_table$region), 
+                    times=length(unique(new_table$bam))), 
+            ~which(new_table$bam == .x & new_table$region == .y 
+                        & (new_table$strand == '+' | 
+                            new_table$strand == '*')))
+        not_empty_idx <- which(map(unflip_by_bam_n_region, 
+                                                ~length(.x)) > 0) 
+        if (length(not_empty_idx) > 0){
+            map(unflip_by_bam_n_region[not_empty_idx],
+                            ~ (new_table$nuc[.x] <- 1:length(.x)))
+            map(unflip_by_bam_n_region[not_empty_idx],
+                            ~ (new_table$nuctot[.x] <- 
+                                    min(new_table$nuctot[.x]):
+                                        max(new_table$nuctot[.x])))
+        }
+    } else { # if all(are_genes_unflipped)
+        by_bam_n_region <- map2(rep(unique(new_table$bam), 
+                    each=length(unique(new_table$region))), 
+            rep(unique(new_table$region), 
+                    times=length(unique(new_table$bam))), 
+            ~which(new_table$bam == .x & new_table$region == .y))
+        not_empty_idx <- which(map(by_bam_n_region, 
+                                                ~length(.x)) > 0) 
+        if (length(not_empty_idx) > 0){
+            map(by_bam_n_region[not_empty_idx], 
+                            ~ (new_table$nuc[.x] <- 1:length(.x)))
+            map(by_bam_n_region[not_empty_idx], 
+                            ~ (new_table$nuctot[.x] <- 
+                                    min(new_table$nuctot[.x]):
+                                        max(new_table$nuctot[.x])))
+        }
+    }
+    if(!is.null(bin_count)){
+        print('col bin rebuilt')
+        #reinitialization of region/gene_size to be able to rebuild 
+        #bin column
+        length_by_region_n_bam <- new_table[,length(nuc),
+                                            by=c('region','bam')]$V1
+        new_table$regionsize <- rep(length_by_region_n_bam, 
+                                    times=length_by_region_n_bam)
+        #rebuild the correct bin column
+        col_bins <- trunc((new_table$nuc/(new_table$regionsize+1))
+                                *bin_count)+1
+        new_table$bin <- as.integer(col_bins)
+    }
+    return(new_table)
 }
-
-
-
-

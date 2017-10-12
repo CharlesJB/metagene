@@ -8,7 +8,8 @@
 #' \describe{
 #'    \item{}{\code{mg <- metagene$new(regions, bam_files, padding_size = 0,
 #'                            cores = SerialParam(), verbose = FALSE,
-#'                            force_seqlevels = FALSE)}}
+#'                            force_seqlevels = FALSE, paired_end = FALSE,
+#'                            assay = 'chipseq'))}}
 #'    \item{regions}{Either a \code{vector} of BED, narrowPeak or broadPeak
 #'                    filenames, a \code{GRanges} object or a 
 #'                    \code{GRangesList} object.}
@@ -28,10 +29,10 @@
 #'                in bam file header. Default: \code{FALSE}. TRUE and FALSE
 #'                respectively correspond to pruning.mode = "coarse"
 #'                and "error" in ?seqinfo.}
-#'      \item{paired_end}{If \code{TRUE}, metagene will deal with paired-ended 
+#'    \item{paired_end}{If \code{TRUE}, metagene will deal with paired-ended 
 #'                  data. If \code{FALSE}, single-ended data are expected. 
 #'                  Default: \code{FALSE}}
-#'      \item{assay}{\code{'chipseq'} or \code{'rnaseq'}, the two available 
+#'    \item{assay}{\code{'chipseq'} or \code{'rnaseq'}, the two available 
 #'                  options. Default: \code{'chipseq'}}
 #' }
 #'
@@ -97,7 +98,8 @@
 #'    \item{avoid_gaps}{Provide the possibility to remove values = 0 and refit
 #'                      the data_frame for this suppression.
 #'                      Default : \code{FALSE}.}
-#'    \item{gaps_threshold}{...as default : 0.}
+#'    \item{gaps_threshold}{It works with avoid_gaps argument. It lets to remove
+#'                      values <= at gaps_threshold. Default : 0.}
 #' }
 #' \describe{
 #'    \item{}{mg$get_params()}
@@ -290,9 +292,9 @@ metagene <- R6Class("metagene",
                 }
                 return (matrices)
             } else {
-                stop(paste('unsupported function for assay of type ',
+                stop(paste('unsupported function for assay of type',
                         private$params[['assay']],
-                        '. Only available for ChIP-seq assay.', sep='')) 
+                        '. Only available for "chipseq" assay.')) 
             }
         },
         get_data_frame = function(region_names = NULL, design_names = NULL) {
@@ -377,8 +379,6 @@ metagene <- R6Class("metagene",
             #normalization <- private$get_param_value(normalization,
             #                                        "normalization")
             coverages <- private$coverages
-			print(coverages)
-			print(design)
 
             #addition of private$params[["table_needs_update"]] comes from 
             #troubles in table update when adding a design with the add_design
@@ -396,7 +396,7 @@ metagene <- R6Class("metagene",
                 }
                 
                 if (private$params[['assay']] == 'rnaseq'){
-				
+                
                     # here the word 'gene' = 'region'
                     bam_files_names <- names(private$params[["bam_files"]])
 
@@ -505,7 +505,7 @@ metagene <- R6Class("metagene",
                         col_values <- unlist(col_values)
                     
                     if (!is.null(bin_count)) {
-                        message('produce data table : rnaseq + bin')
+                        message('produce data table : rnaseq binned')
                         col_bins <- trunc(
                                     (col_nuc/(col_gene_size+1))*bin_count)+1
                         col_bins <- as.integer(col_bins)
@@ -616,7 +616,6 @@ metagene <- R6Class("metagene",
                                     avoid_gaps,
                                     bam_name,
                                     gaps_threshold)
-            print(list_of_arguments)
                                     
             if (private$params[["df_arguments"]] != list_of_arguments){
                 private$params[["df_arguments"]] <- list_of_arguments
@@ -670,7 +669,6 @@ metagene <- R6Class("metagene",
                     sample_size <- self$get_table()[nuc == 1,][
                                             ,.N, by = .(region, design)][
                                             , .(min(N))]
-                    print(paste('sample size (rnanuc)=',sample_size))
                     sample_size <- as.integer(sample_size)
                     
                     out_cols <- c("value", "qinf", "qsup")
@@ -688,7 +686,6 @@ metagene <- R6Class("metagene",
                     }
                     
                     if(avoid_gaps){
-                        print('avoiding gaps')
                         if (!is.null(bam_name)){
                             private$data_frame_avoid_gaps_updates(bam_name,
                                                         gaps_threshold)
@@ -718,7 +715,6 @@ metagene <- R6Class("metagene",
                                             ,.N, by = .(design)][
                                             , .(min(N))]
                     sample_size <- as.integer(sample_size)
-                    print(paste('sample size (rnabin) =',sample_size))
                     
                     out_cols <- c("value", "qinf", "qsup")
                     bootstrap <- function(df) {
@@ -735,7 +731,7 @@ metagene <- R6Class("metagene",
                     }
                     
                     if(avoid_gaps){
-                        print('avoiding gaps')
+                        message('avoiding gaps')
                         if (!is.null(bam_name)){
                             private$data_frame_avoid_gaps_updates(bam_name,
                                                         gaps_threshold)
@@ -1173,14 +1169,14 @@ metagene <- R6Class("metagene",
         },
         normalize_coverages = function(coverages) {
             bam_names <- unlist(lapply(private$bam_handler$get_bam_files()$bam, 
-								private$bam_handler$get_bam_name))
-			for (bam_name in bam_names) {
+                                private$bam_handler$get_bam_name))
+            for (bam_name in bam_names) {
                 #which_rows = design[[design_name]]==1
                 #bam_files <- as.character(design[,1][which_rows])
                 count <- private$bam_handler$get_aligned_count(bam_name)
                 #count <- sum(unlist(counts))
                 weight <- 1 / (count / 1000000)
-				coverages[[bam_name]] <-	coverages[[bam_name]] * weight
+                coverages[[bam_name]] <-    coverages[[bam_name]] * weight
             }
             coverages
         },
@@ -1316,8 +1312,6 @@ metagene <- R6Class("metagene",
             
             #reorder the nuc and nuctot variables
             if(private$params[["flip_regions"]] == TRUE){
-                print('flipped')
-                
                 flip_by_bam_n_region <- map2(rep(unique(private$df$bam), 
                             each=length(unique(private$df$region))), 
                     rep(unique(private$df$region),
@@ -1371,7 +1365,6 @@ metagene <- R6Class("metagene",
                 }
             }
             if(!is.null(private$params[["bin_count"]])){
-                print('col bin rebuilt')
                 #reinitialization of region/gene_size to be able to rebuild 
                 #bin column
                 length_by_region_n_bam <- private$df[,length(nuc),
