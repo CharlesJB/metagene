@@ -1520,4 +1520,152 @@ test.metagene_unflip_regions_previously_flipped <- function() {
  checkTrue(identical(tab2, tab3) == TRUE)
 }
 
+################################################################################
+################################################################################
+############################## RNA-Seq UT ######################################
+################################################################################
+################################################################################
+
+#########################
+## Init of RNA-Seq assay 
+#########################
+
+bam_files <- 
+c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
+    system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
+    system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
+    system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
+
+regions <- 
+c(system.file("extdata/ENCFF355RXX_DPM1less.bed", package="metagene"),
+system.file("extdata/ENCFF355RXX_NDUFAB1less.bed", package="metagene"),
+system.file("extdata/ENCFF355RXX_SLC25A5less.bed", package="metagene"))
+
+mg_ori <- metagene$new(regions = regions, bam_files = bam_files, 
+															assay = 'rnaseq')
+nb_nuctot <- sum(unlist(width(mg_ori$get_regions())))
+nb_bam <- length(bam_files)
+nb_rg <- length(regions)
+
+mydesign <- matrix(c(1,1,1,0,0,0,0,1),ncol=2, byrow=FALSE)
+mydesign <- cbind(c("c_al4_945MLM_demo_sorted.bam",
+                    "c_al3_362PYX_demo_sorted.bam",
+                    "n_al4_310HII_demo_sorted.bam",
+                    "n_al3_588WMR_demo_sorted.bam"), mydesign)
+colnames(mydesign) <- c('Samples', 'cyto', 'nucleo')
+mydesign <- data.frame(mydesign)
+mydesign[,2] <- as.numeric(mydesign[,2])-1
+mydesign[,3] <- as.numeric(mydesign[,3])-1
+mydesign
+
+	
+###############################
+## produce_data_table checking
+###############################
+
+test.metagene.rna_produce_data_frame_dim_checking_default_params <- function() {
+	mg <- mg_ori$clone()
+	tab <- mg$produce_table()
+	
+	#nb of columns
+	colnames_tab <- c("region",
+					  "exon",
+					  "bam",
+					  "design",
+					  "nuc",
+					  "nuctot",
+					  "exonsize",
+					  "regionstartnuc",
+					  "regionsize",
+					  "value",
+					  "strand")
+	checkIdentical(dim(tab)[2], length(colnames_tab))
+	#colnames
+	checkIdentical(colnames(tab), colnames_tab)
+	#nb of rows
+	checkIdentical(nrow(tab), nb_nuctot*nb_bam)
+}
+
+test.metagene.rna_produce_data_frame_dim_checking_bin100 <- function() {
+	mg <- mg_ori$clone()
+	tab <- mg$produce_table(bin_count = 100)
+	
+	#nb of columns
+	colnames_tab <- c("region",
+					  "exon",
+					  "bam",
+					  "design",
+					  "nuc",
+					  "bin",
+					  "nuctot",
+					  "exonsize",
+					  "regionstartnuc",
+					  "regionsize",
+					  "value",
+					  "strand")
+	checkIdentical(dim(tab)[2], length(colnames_tab))
+	#colnames
+	checkIdentical(colnames(tab), colnames_tab)
+	#nb of rows
+	checkIdentical(nrow(tab), nb_nuctot*nb_bam)
+	#nb of bin
+	checkIdentical(unique(tab$bin), 1:100)
+	checkIdentical(dim(tab[,.N,by=c('bam','region','bin')])[1] == 
+														nb_bam * nb_rg * 100)
+}
+
+test.metagene.rna_produce_data_frame_checking_noise_removal <- function() {
+	mg <- mg_ori$clone()
+	tab1 <- mg$produce_table()
+	tab2 <- mg$produce_table(noise_removal = "NCIS")
+	checkIdentical(tab1$value, tab2$value)
+}
+
+test.metagene.rna_produce_data_frame_checking_normalization <- function() {
+	mg <- mg_ori$clone()
+	mg$produce_table()
+	tab1 <- mg$get_table()
+	mg$produce_table(normalization = "RPM")
+	tab2 <- mg$get_table()
+	checkIdentical(sum(tab1$value == tab2$value) == nb_nuctot*nb_bam, FALSE)
+}
+
+test.metagene.rna_produce_data_frame_checking_flip <- function() {
+	mg <- mg_ori$clone()
+	mg$produce_table()
+	tab1 <- mg$get_table()
+	mg$produce_table(flip_regions = TRUE)
+	tab2 <- mg$get_table()
+	mg$produce_table()
+	tab3 <- mg$get_table()
+	checkIdentical(sum(tab1$nuc == tab2$nuc) == nb_nuctot*nb_bam, FALSE)
+	checkIdentical(sum(tab2$nuc == tab3$nuc) == nb_nuctot*nb_bam, FALSE)
+	checkIdentical(sum(tab1$nuc == tab3$nuc) == nb_nuctot*nb_bam, TRUE)
+}
+
+test.metagene.rna_produce_data_frame_checking_design <- function() {
+	mg <- mg_ori$clone()
+	mg$produce_table()
+	tab3 <- mg$get_table()
+	checkIdentical(length(unique(tab3$design)), length(colnames(mg$get_design())[-1]))
+	mg$produce_table(design = mydesign)
+	tab1 <- mg$get_table()
+	checkIdentical(length(unique(tab1$design)), length(colnames(mydesign)[-1]))
+	checkIdentical(dim(tab1[design == 'nucleo',])[1] == nb_nuctot * nb_bam / 4, TRUE)
+}
+
+
+test.metagene.rna_produce_data_frame_checking_nb_lines_by <- function() {
+	mg <- mg_ori$clone()
+	mg$produce_table()
+	
+	
+	
+}
+
+
+
+
+
+
 

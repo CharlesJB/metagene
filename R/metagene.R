@@ -390,7 +390,6 @@ metagene <- R6Class("metagene",
                                     normalization = normalization) |
                                     private$params[["table_needs_update"]]) {
                 
-                
                 if (!is.null(normalization)) {
                     coverages <- private$normalize_coverages(coverages)
                     message('Normalization done')
