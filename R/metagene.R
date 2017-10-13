@@ -358,7 +358,7 @@ metagene <- R6Class("metagene",
             private$design = private$fetch_design(design, check_bam_files)
             private$params[["table_needs_update"]] <- TRUE
         },
-        produce_table = function(design = NA, bin_count = NULL, bin_size = NULL,
+        produce_table = function(design = NA, bin_count = NA, bin_size = NULL,
                                 noise_removal = NA, normalization = NA,
                                 flip_regions = FALSE) {
             if (!is.null(bin_size)) {
@@ -373,11 +373,11 @@ metagene <- R6Class("metagene",
                                                 noise_removal = noise_removal,
                                                 normalization = normalization,
                                                 flip_regions = flip_regions)
-            #bin_count <- private$get_param_value(bin_count, "bin_count")
-            #noise_removal <- private$get_param_value(noise_removal,
-            #                                        "noise_removal")
-            #normalization <- private$get_param_value(normalization,
-            #                                        "normalization")
+            bin_count <- private$get_param_value(bin_count, "bin_count")
+			noise_removal <- private$get_param_value(noise_removal,
+                                                    "noise_removal")
+            normalization <- private$get_param_value(normalization,
+                                                    "normalization")
             coverages <- private$coverages
 
             #addition of private$params[["table_needs_update"]] comes from 
@@ -393,6 +393,7 @@ metagene <- R6Class("metagene",
                 
                 if (!is.null(normalization)) {
                     coverages <- private$normalize_coverages(coverages)
+					message('Normalization done')
                 }
                 
                 if (private$params[['assay']] == 'rnaseq'){
@@ -1244,10 +1245,6 @@ metagene <- R6Class("metagene",
         },
         data_frame_avoid_gaps_updates = function(bam_name, gaps_threshold) {
             #bootstrap not executed at this point. Don't work on design !
-            message(paste('Gaps deletion is calibrated on data from',
-                    'the bam file name provided as argument "bam_name" in',
-                    '"produce_data_frame()" method. Otherwise, the first bam',
-                    'will be used as default'))
             
             #how_namy_by_exon_by_design
             dfdt <- data.table::copy(private$df)

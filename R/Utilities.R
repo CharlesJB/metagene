@@ -283,10 +283,6 @@ avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
     new_table <- data.table::copy(table)
     
     bin_count <- max(unique(new_table$bin))
-    message(paste('Gaps deletion is calibrated on data from',
-                    'the bam file name provided as argument "bam_name" in',
-                    '"produce_data_frame()" method. Otherwise, the first bam',
-                    'will be used as default'))
             
     #how_namy_by_exon_by_design
     nb_nuc_removed <- new_table[value <= gaps_threshold 
