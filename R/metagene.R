@@ -30,10 +30,10 @@
 #'                respectively correspond to pruning.mode = "coarse"
 #'                and "error" in ?seqinfo.}
 #'    \item{paired_end}{If \code{TRUE}, metagene will deal with paired-ended 
-#'                  data. If \code{FALSE}, single-ended data are expected. 
-#'                  Default: \code{FALSE}}
+#'                data. If \code{FALSE}, single-ended data are expected. 
+#'                Default: \code{FALSE}}
 #'    \item{assay}{\code{'chipseq'} or \code{'rnaseq'}, the two available 
-#'                  options. Default: \code{'chipseq'}}
+#'                options. Default: \code{'chipseq'}}
 #' }
 #'
 #'    \code{metagene$new} returns a \code{metagene} object that contains the
@@ -89,17 +89,17 @@
 #' }
 #' \describe{
 #'    \item{}{\code{mg$produce_data_frame(alpha = 0.05, sample_count = 1000, 
-#'                                  avoid_gaps = FALSE, gaps_threshold = 0)}}
+#'                                avoid_gaps = FALSE, gaps_threshold = 0)}}
 #'    \item{alpha}{The range of the estimation to be shown with the ribbon.
 #'                \code{1 - alpha / 2} and \code{alpha / 2} will be used.
 #'                Default: 0.05.}
 #'    \item{sample_count}{The number of draw to do in the bootstrap
 #'                        calculation. Default: 1000.}
 #'    \item{avoid_gaps}{Provide the possibility to remove values = 0 and refit
-#'                      the data_frame for this suppression.
-#'                      Default : \code{FALSE}.}
+#'                    the data_frame for this suppression.
+#'                    Default : \code{FALSE}.}
 #'    \item{gaps_threshold}{It works with avoid_gaps argument. It lets to remove
-#'                      values <= at gaps_threshold. Default : 0.}
+#'                    values <= at gaps_threshold. Default : 0.}
 #' }
 #' \describe{
 #'    \item{}{mg$get_params()}
@@ -374,7 +374,7 @@ metagene <- R6Class("metagene",
                                                 normalization = normalization,
                                                 flip_regions = flip_regions)
             bin_count <- private$get_param_value(bin_count, "bin_count")
-			noise_removal <- private$get_param_value(noise_removal,
+            noise_removal <- private$get_param_value(noise_removal,
                                                     "noise_removal")
             normalization <- private$get_param_value(normalization,
                                                     "normalization")
@@ -393,7 +393,7 @@ metagene <- R6Class("metagene",
                 
                 if (!is.null(normalization)) {
                     coverages <- private$normalize_coverages(coverages)
-					message('Normalization done')
+                    message('Normalization done')
                 }
                 
                 if (private$params[['assay']] == 'rnaseq'){
@@ -476,7 +476,7 @@ metagene <- R6Class("metagene",
                         col_bam <- rep(bfile_names_by_design,
                                 each=length_std_dt_struct)
                         
-                        nb_bfile_by_design <-  unlist(map(design_names , 
+                        nb_bfile_by_design <- unlist(map(design_names , 
                                 ~length(which(design[,which(
                                 colnames(design) == .x)] > 0))))
                         col_design <- rep(design_names,
@@ -495,7 +495,7 @@ metagene <- R6Class("metagene",
                                 val <- Views(
                                     coverages[[bam]][[seqnames]], 
                                     start(grtot[which(
-                                        seqnames(grtot) == seqnames)]),  
+                                        seqnames(grtot) == seqnames)]), 
                                     end(grtot[which(
                                         seqnames(grtot) == seqnames)]))
                                 col_values[[idx]] <- unlist(lapply(
@@ -632,10 +632,6 @@ metagene <- R6Class("metagene",
             
                 # 2. Produce the data.frame 
                 private$df <- data.table::copy(self$get_table())
-                private$df$group <- paste(private$df$design,
-                                private$df$region,
-                                sep="_")
-                private$df$group <- as.factor(private$df$group)
             
                 if (private$params[['assay']] == 'chipseq') {
                     message('produce DF : ChIP-Seq')
@@ -701,7 +697,7 @@ metagene <- R6Class("metagene",
                                 c(out_cols) := bootstrap(.SD), 
                                 by = .(region, design, nuctot)]
 
-                    #filter to avoid  duplicated ligne (to reduce df dims)
+                    #filter to avoid duplicated ligne (to reduce df dims)
                     #it does not matter concerning the plot. Plot works !
                     private$df <- private$df[which(!duplicated(paste(
                                     private$df$region,
@@ -753,7 +749,13 @@ metagene <- R6Class("metagene",
                                     private$df$bin))),]
                 }
                 private$df <- as.data.frame(private$df)
-                private$df$design <- as.factor(private$df$design)
+                #private$df$design <- as.factor(private$df$design)
+                private$df$group <- paste(private$df$design,
+                                private$df$region,
+                                sep="_")
+                private$df$group <- as.factor(private$df$group)
+                
+                
                 private$params[["df_needs_update"]] <- FALSE
                 invisible(self)
             }
@@ -1059,7 +1061,7 @@ metagene <- R6Class("metagene",
             
             if (private$params[['assay']] == "rnaseq"){
                 stopifnot(all(sum(width(GenomicRanges::reduce(private$regions)))
-                             == sum(width(private$regions))))
+                            == sum(width(private$regions))))
             }
             # TODO: Check if there is a id column in the mcols of every ranges.
             #    If not, add one by merging seqnames, start and end.
@@ -1194,9 +1196,10 @@ metagene <- R6Class("metagene",
         },
         flip_table = function() {
             if(!all(private$table[,length(levels(as.factor(strand))), 
-                                                by=region][,2] == 1)){
-                stop(paste('Strands of exons in one gene/region",
-                                "must have the same sign to be flipped.'))
+                                    by=region][,2] == 1) &
+                                    private$params[["assay"]] == 'rnaseq'){
+                stop(paste('Strands of exons in one gene/region',
+                                'must have the same sign to be flipped.'))
             }
             if (private$params[['assay']] == 'chipseq'){
                 message('chipseq flip/unflip')

@@ -47,9 +47,9 @@ intoNbins <- function(gr, n = 10) {
 #'
 #' @examples
 #' \dontrun{
-#'     # require(TxDb.Hsapiens.UCSC.hg19.knownGene)
-#'     txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
-#'     promoters_hg19 <- get_promoters_txdb(txdb)
+#'    # require(TxDb.Hsapiens.UCSC.hg19.knownGene)
+#'    txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+#'    promoters_hg19 <- get_promoters_txdb(txdb)
 #' }
 #'
 #' @import GenomeInfoDb
@@ -64,7 +64,6 @@ get_promoters_txdb <- function(txdb, upstream = 1000, downstream = 1000) {
 #'
 #' @param adb A valid \code{EnsDb} object.
 #' @param quantification_files the quantification files. A vector of pathes.
-#' @param downstream The number of nucleotides downstream of TSS.
 #'
 #' @return A \code{GRangesList} object containing exons by genes for which 
 #'                                data are available in quantification files.
@@ -75,7 +74,7 @@ get_promoters_txdb <- function(txdb, upstream = 1000, downstream = 1000) {
 #'    edb <- EnsDb.Hsapiens.v86
 #'    quantification_files <- 'file_path'
 #'    ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
-#'                                                     quantification_files)
+#'                                                    quantification_files)
 #'    bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
 #'                                                            end=23596356))
 #'    bed_file_filter(ebgwot, bed_file_content_gr)
@@ -91,10 +90,12 @@ exon_by_gene_with_observed_transcripts <- function (adb, quantification_files){
     #retrieve of all transcript_id found in quantification_files (no duplicate)
     transcript_id <- unique(unlist(map(quantification_files, 
                     ~ fread(.x)[TPM > 0]$transcript_id)))
-    transcript_id <- str_replace(transcript_id, '\\.[0-9]+', '')
+    transcript_id <- stringr::str_replace(transcript_id, '\\.[0-9]+', '')
     
     if(is(adb, "EnsDb") & substr(transcript_id[1],1,3) == 'ENS') {
-        edb <- EnsDb.Hsapiens.v86    
+        message('Please, wait few minutes during requests to EnsDB.')
+        edb <- EnsDb.Hsapiens.v86
+        all_exons_id <- unique(exons(edb)$exon_id)
         slct <- unique(ensembldb::select(edb, key=all_exons_id, 
                                     keytype='EXONID', 
                                     columns = c('GENEID', 'EXONID', 
@@ -103,14 +104,14 @@ exon_by_gene_with_observed_transcripts <- function (adb, quantification_files){
                                             'SEQNAME')))
         
         slct <- slct[which(slct$TXID %in% transcript_id),]
-        slct$SEQSTRAND <- str_replace(slct$SEQSTRAND, '-1', '-')
-        slct$SEQSTRAND <- str_replace(slct$SEQSTRAND, '1', '+')
-        slct$SEQSTRAND <- str_replace(slct$SEQSTRAND, 'NA', '*')
+        slct$SEQSTRAND <- stringr::str_replace(slct$SEQSTRAND, '-1', '-')
+        slct$SEQSTRAND <- stringr::str_replace(slct$SEQSTRAND, '1', '+')
+        slct$SEQSTRAND <- stringr::str_replace(slct$SEQSTRAND, 'NA', '*')
         
         gr <-
         GRanges(seqnames = paste0('chr',slct$SEQNAME),
-          ranges = IRanges(start=slct$EXONSEQSTART, end=slct$EXONSEQEND),
-          strand = slct$SEQNAME, exon_id = slct$EXONID, 
+        ranges = IRanges(start=slct$EXONSEQSTART, end=slct$EXONSEQEND),
+        strand = slct$SEQNAME, exon_id = slct$EXONID, 
                                                     gene_id = slct$GENEID)
         return(split(gr, gr$gene_id))
     } else if(is(adb, "TxDb") & is.numeric(transcript_id[1])) {
@@ -123,11 +124,11 @@ exon_by_gene_with_observed_transcripts <- function (adb, quantification_files){
     }
 }
 
-#' Extract a list of ranges defined by the bed_file_content_gr argument from the 
-#'    exon_by_gene_with_observed_transcripts GRangesList. Equivalent to the 
-#'    exonsByOverlaps of GenomicFeatures.
+#' Extract a list of ranges defined by the bed_file_content_gr argument from 
+#'    the ebgwot GRangesList. Equivalent to the exonsByOverlaps
+#'    of GenomicFeatures.
 #'
-#' @param exon_by_gene_with_observed_transcripts A \code{GRangesList} object 
+#' @param ebgwot A \code{GRangesList} object 
 #'        provided by the exon_by_gene_with_observed_transcripts function.
 #' @param bed_file_content_gr A \code{GRanges} object containing ranges of 
 #'        interest.
@@ -137,19 +138,17 @@ exon_by_gene_with_observed_transcripts <- function (adb, quantification_files){
 #'
 #' @examples
 #' \dontrun{
-#'        require(EnsDb.Hsapiens.v86)
-#'        edb <- EnsDb.Hsapiens.v86
-#'        quantification_files <- 'file_path'
-#'         ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
-#'                                                        quantification_files)
-#'         bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
-#'                                                                end=23596356))
-#'         bed_file_filter(ebgwot, bed_file_content_gr)
+#'    require(EnsDb.Hsapiens.v86)
+#'    edb <- EnsDb.Hsapiens.v86
+#'    quantification_files <- 'file_path'
+#'    ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
+#'                                                    quantification_files)
+#'    bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
+#'                                                            end=23596356))
+#'    bed_file_filter(ebgwot, bed_file_content_gr)
 #' }
 #'
-bed_file_filter <- function (exon_by_gene_with_observed_transcripts, 
-                                bed_file_content_gr, reduce = TRUE) {
-    ebgwot <- exon_by_gene_with_observed_transcripts
+bed_file_filter <- function (ebgwot, bed_file_content_gr, reduce = TRUE) {
     if(reduce){
         IRanges::reduce(unlist(ebgwot)[(
             unlist(start(ebgwot)) >= start(bed_file_content_gr) & 
@@ -180,15 +179,15 @@ bed_file_filter <- function (exon_by_gene_with_observed_transcripts,
 #'
 #' @examples
 #' \dontrun{
-#'   require(EnsDb.Hsapiens.v86)
-#'   edb <- EnsDb.Hsapiens.v86
-#'   quantification_files <- 'file_path'
-#'   ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
+#' require(EnsDb.Hsapiens.v86)
+#' edb <- EnsDb.Hsapiens.v86
+#' quantification_files <- 'file_path'
+#' ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
 #'                                                    quantification_files)
-#'   bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
+#' bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
 #'                                                            end=23596356))
-#'   bffr <- bed_file_filter(ebgwot, bed_file_content_gr)
-#'   write_bed_file_filter_result(bffr, file='test','./')
+#' bffr <- bed_file_filter(ebgwot, bed_file_content_gr)
+#' write_bed_file_filter_result(bffr, file='test','./')
 #' }
 #'
 write_bed_file_filter_result <- function(bed_file_filter_result, 
@@ -217,65 +216,65 @@ write_bed_file_filter_result <- function(bed_file_filter_result,
 #'
 #' @param table A data.table from produce_table(...) function of metagene.
 #' @param bam_name A reference bam_name to allow the same removal 
-#'                 (position in bam) of values for other bam file.
+#'                (position in bam) of values for other bam file.
 #' @param gaps_threshold A threshold under which values will be removed.    
 #'
 #' @return A data.table with values <= to 'gaps_threshold' removed
 #'
 #' @examples
 #' \dontrun{
-#'  bam_files <- c(
-#'  system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
-#'  system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
-#'  system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
-#'  system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
-#'  region <- c(
-#'  system.file("extdata/ENCFF355RXX_DPM1less.bed", package="metagene"),
-#'  system.file("extdata/ENCFF355RXX_NDUFAB1less.bed", package="metagene"),
-#'  system.file("extdata/ENCFF355RXX_SLC25A5less.bed", package="metagene"))
-#'  mydesign <- matrix(c(1,1,0,0,0,0,1,1),ncol=2, byrow=FALSE)
-#'  mydesign <- cbind(c("c_al4_945MLM_demo_sorted.bam",
-#'                      "c_al3_362PYX_demo_sorted.bam",
-#'                      "n_al4_310HII_demo_sorted.bam",
-#'                      "n_al3_588WMR_demo_sorted.bam"), mydesign)
-#'  colnames(mydesign) <- c('Samples', 'cyto', 'nucleo')
-#'  mydesign <- data.frame(mydesign)
-#'  mydesign[,2] <- as.numeric(mydesign[,2])-1
-#'  mydesign[,3] <- as.numeric(mydesign[,3])-1
+#' bam_files <- c(
+#' system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
+#' system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
+#' system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
+#' system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
+#' region <- c(
+#' system.file("extdata/ENCFF355RXX_DPM1less.bed", package="metagene"),
+#' system.file("extdata/ENCFF355RXX_NDUFAB1less.bed", package="metagene"),
+#' system.file("extdata/ENCFF355RXX_SLC25A5less.bed", package="metagene"))
+#' mydesign <- matrix(c(1,1,0,0,0,0,1,1),ncol=2, byrow=FALSE)
+#' mydesign <- cbind(c("c_al4_945MLM_demo_sorted.bam",
+#'                    "c_al3_362PYX_demo_sorted.bam",
+#'                    "n_al4_310HII_demo_sorted.bam",
+#'                    "n_al3_588WMR_demo_sorted.bam"), mydesign)
+#' colnames(mydesign) <- c('Samples', 'cyto', 'nucleo')
+#' mydesign <- data.frame(mydesign)
+#' mydesign[,2] <- as.numeric(mydesign[,2])-1
+#' mydesign[,3] <- as.numeric(mydesign[,3])-1
 #'
-#'  mg <- metagene$new(regions = region, bam_files = bam_files, 
+#' mg <- metagene$new(regions = region, bam_files = bam_files, 
 #'                                                            assay = 'rnaseq')
-#'  mg$produce_table(flip_regions = FALSE, bin_count = 100, 
+#' mg$produce_table(flip_regions = FALSE, bin_count = 100, 
 #'                                design = mydesign, normalization = 'RPM')
-#'  mg$produce_data_frame(avoid_gaps = TRUE, 
+#' mg$produce_data_frame(avoid_gaps = TRUE, 
 #'                        bam_name = "c_al4_945MLM_demo_sorted", 
 #'                        gaps_threshold = 10)
-#'  mg$plot()
-#'  tab <- mg$get_table()
-#'  tab <- avoid_gaps_update(tab, 
-#'         bam_name = 'c_al4_945MLM_demo_sorted', gaps_threshold = 10)
-#'  tab0 <- mg$get_table()
-#'  tab1 <- tab0[which(tab0$design == "cyto"),]
-#'  tab2 <- tab0[which(tab0$design == "nucleo"),]
-#'  
-#'  library(similaRpeak)
-#'  perm_fun <- function(profile1, profile2) {
+#' mg$plot()
+#' tab <- mg$get_table()
+#' tab <- avoid_gaps_update(tab, 
+#'        bam_name = 'c_al4_945MLM_demo_sorted', gaps_threshold = 10)
+#' tab0 <- mg$get_table()
+#' tab1 <- tab0[which(tab0$design == "cyto"),]
+#' tab2 <- tab0[which(tab0$design == "nucleo"),]
+#' 
+#' library(similaRpeak)
+#' perm_fun <- function(profile1, profile2) {
 #'    sim <- similarity(profile1, profile2)
 #'    sim[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
-#'  }
-#'  
-#'  ratio_normalized_intersect <- 
+#' }
+#' 
+#' ratio_normalized_intersect <- 
 #'    perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, 
-#'             tab2[, .(moy=mean(value)), by=bin]$moy)
-#'  ratio_normalized_intersect
-#'  
-#'  permutation_results <- permutation_test(tab1, tab2, sample_size = 2,
-#'                                  sample_count = 1000, FUN = perm_fun)
-#'  hist(permutation_results, 
-#'           main="ratio_normalized_intersect (1=total overlapping area)")
-#'  abline(v=ratio_normalized_intersect, col = 'red')
-#'  sum(ratio_normalized_intersect >= permutation_results) / 
-#'         length(permutation_results)
+#'            tab2[, .(moy=mean(value)), by=bin]$moy)
+#' ratio_normalized_intersect
+#' 
+#' permutation_results <- permutation_test(tab1, tab2, sample_size = 2,
+#'                                sample_count = 1000, FUN = perm_fun)
+#' hist(permutation_results, 
+#'        main="ratio_normalized_intersect (1=total overlapping area)")
+#' abline(v=ratio_normalized_intersect, col = 'red')
+#' sum(ratio_normalized_intersect >= permutation_results) / 
+#'        length(permutation_results)
 #' }
 #'
 
@@ -318,8 +317,8 @@ avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
         new_table$regionsize[selected] <- new_regionsize
     }
     
-	#assignment of new regionstartnuc (allow flip nuctot after gaps removal)
-	for (i in 1:length(unique(nb_nuc_removed_by_gene$region))){
+    #assignment of new regionstartnuc (allow flip nuctot after gaps removal)
+    for (i in 1:length(unique(nb_nuc_removed_by_gene$region))){
         #selected = lines of the ith region of nb_nuc_removed
         selected <- which(
             new_table$region == nb_nuc_removed_by_gene$region[i])
@@ -330,7 +329,7 @@ avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
                             - nb_nuc_removed_by_gene$V1[i])
         new_table$regionstartnuc[selected] <- new_regionstartnuc
     }
-	
+    
     ### removal of zero values
     ## stop if all bam haven't the same amount of lines in table
     stopifnot(length(unique(new_table[, .N, by=bam]$N)) == 1)

@@ -25,15 +25,15 @@ Transforms the bed_file_filter function output into a file.BED readable by
 }
 \examples{
 \dontrun{
-  require(EnsDb.Hsapiens.v86)
-  edb <- EnsDb.Hsapiens.v86
-  quantification_files <- 'file_path'
-  ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
+require(EnsDb.Hsapiens.v86)
+edb <- EnsDb.Hsapiens.v86
+quantification_files <- 'file_path'
+ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
                                                    quantification_files)
-  bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
+bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
                                                            end=23596356))
-  bffr <- bed_file_filter(ebgwot, bed_file_content_gr)
-  write_bed_file_filter_result(bffr, file='test','./')
+bffr <- bed_file_filter(ebgwot, bed_file_content_gr)
+write_bed_file_filter_result(bffr, file='test','./')
 }
 
 }

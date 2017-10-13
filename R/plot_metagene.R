@@ -14,14 +14,15 @@
 #' df <- mg$get_data_frame()
 #' p <- plot_metagene(df)
 plot_metagene <- function(df) {
+    df$design <- as.factor(df$design)
+
     if (('bin' %in% colnames(df)) & !('nuc' %in% colnames(df))) { 
         # if chipseq, for instance
         message('ChIP-Seq')
         
         expected_cols <- c("bin", "value", "qinf", "qsup", "group")
         df<-df[,which(colnames(df) %in% expected_cols)]
-        expected_class <- c("integer", "numeric", "factor",
-                                                    rep("numeric", 2))
+        expected_class <- c("integer", rep("numeric", 3), "factor")
         stopifnot(all(expected_cols %in% colnames(df)))
         stopifnot(all(vapply(df, class, character(1)) == expected_class))
 
@@ -83,8 +84,7 @@ plot_metagene <- function(df) {
         
             expected_cols <- c("nuctot", "value", "qinf", "qsup", "design")
             df<-df[,which(colnames(df) %in% expected_cols)]
-            expected_class <- c("factor", "integer", "numeric",
-                                                    rep("numeric", 2))
+            expected_class <- c("factor", "integer", rep("numeric", 3))
             stopifnot(all(expected_cols %in% colnames(df)))
             stopifnot(all(vapply(df, class, character(1)) == expected_class))
             
@@ -125,8 +125,7 @@ plot_metagene <- function(df) {
             
             expected_cols <- c("nuctot", "value", "qinf", "qsup", "design")
             df<-df[,which(colnames(df) %in% expected_cols)]
-            expected_class <- c("factor", "integer", "numeric",
-                                                    rep("numeric", 2))
+            expected_class <- c("factor", "integer", rep("numeric", 3))
             stopifnot(all(expected_cols %in% colnames(df)))
             stopifnot(all(vapply(df, class, character(1)) == expected_class))
         
@@ -140,7 +139,6 @@ plot_metagene <- function(df) {
                                                     linetype = "dotted") +
                 geom_vline(xintercept = gene_separation_bars, 
                                                     linetype = "solid") +
-                # geom_text(data = unique(df$region), aes(x = c(0,gene_separation_bars[-1]), y = -10), colour = 'black') +
                 theme(panel.grid.major = element_line()) +
                 theme(panel.grid.minor = element_line()) +
                 theme(panel.background = element_blank()) +

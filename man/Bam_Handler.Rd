@@ -19,16 +19,16 @@ files/data.
 \section{Constructor}{
 
 \describe{
-   \item{}{\code{bh <- Bam_Handler$new(bam_files, cores = SerialParam())}}
-   \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
-                   indexed. i.e.: if a file is named file.bam, there must
-                   be a file named file.bam.bai or file.bai in the same 
-                   directory.}
-   \item{cores}{The number of cores available to parallelize the analysis.
-               Either a positive integer or a \code{BiocParallelParam}.
-               Default: \code{SerialParam()}.}
-  \item{paired_end}{If \code{TRUE}, metagene will deal with paired-end 
-			  data. If \code{FALSE}, single-end data are expected}
+    \item{}{\code{bh <- Bam_Handler$new(bam_files, cores = SerialParam())}}
+    \item{bam_files}{A \code{vector} of BAM filenames. The BAM files must be
+                    indexed. i.e.: if a file is named file.bam, there must
+                    be a file named file.bam.bai or file.bai in the same 
+                    directory.}
+    \item{cores}{The number of cores available to parallelize the analysis.
+                Either a positive integer or a \code{BiocParallelParam}.
+                Default: \code{SerialParam()}.}
+    \item{paired_end}{If \code{TRUE}, metagene will deal with paired-end 
+                data. If \code{FALSE}, single-end data are expected}
 }
 
 \code{Bam_Handler$new} returns a \code{Bam_Handler} object that contains
@@ -39,48 +39,48 @@ be obtain by using this object.
 \section{Methods}{
 
 \describe{
-   \item{}{\code{bh$get_aligned_count(bam_file)}}
-   \item{bam_file}{The name of the BAM file.}
+    \item{}{\code{bh$get_aligned_count(bam_file)}}
+    \item{bam_file}{The name of the BAM file.}
 }
 \describe{
-   \item{}{\code{bg$get_bam_name(bam_file)}}
-   \item{bam_file}{The name of the BAM file.}
+    \item{}{\code{bg$get_bam_name(bam_file)}}
+    \item{bam_file}{The name of the BAM file.}
 }
 \describe{
-   \item{}{\code{bh$get_rpm_coefficient(bam_file)}}
-   \item{bam_file}{The name of the BAM file.}
+    \item{}{\code{bh$get_rpm_coefficient(bam_file)}}
+    \item{bam_file}{The name of the BAM file.}
 }
 \describe{
-   \item{}{\code{bh$index_bam_files(bam_files)}}
-   \item{bam_files}{A \code{vector} of BAM filenames.}
+    \item{}{\code{bh$index_bam_files(bam_files)}}
+    \item{bam_files}{A \code{vector} of BAM filenames.}
 }
 \describe{
-   \item{}{\code{bh$get_bam_files()}}
+    \item{}{\code{bh$get_bam_files()}}
 }
 \describe{
-   \item{}{\code{bh$get_coverage(bam_file, regions)
-                               force_seqlevels = FALSE)}}
-   \item{bam_file}{The name of the BAM file.}
-   \item{regions}{A not empty \code{GRanges} object.}
-   \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
-                   in bam file header. Default: \code{FALSE}. TRUE and FALSE
-                   respectively correspond to pruning.mode = "coarse" 
-                   and "error" in ?seqinfo.}
+    \item{}{\code{bh$get_coverage(bam_file, regions)
+                                force_seqlevels = FALSE)}}
+    \item{bam_file}{The name of the BAM file.}
+    \item{regions}{A not empty \code{GRanges} object.}
+    \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
+                    in bam file header. Default: \code{FALSE}. TRUE and FALSE
+                    respectively correspond to pruning.mode = "coarse" 
+                    and "error" in ?seqinfo.}
 }
 \describe{
-   \item{}{\code{bh$get_normalized_coverage(bam_file, regions)
-                               force_seqlevels = FALSE)}}
-   \item{bam_file}{The name of the BAM file.}
-   \item{regions}{A not empty \code{GRanges} object.}
-   \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
-                   in bam file header. Default: \code{FALSE}. TRUE and FALSE
-                   respectively correspond to pruning.mode = "coarse" 
-                   and "error" in ?seqinfo.}
+    \item{}{\code{bh$get_normalized_coverage(bam_file, regions)
+                                force_seqlevels = FALSE)}}
+    \item{bam_file}{The name of the BAM file.}
+    \item{regions}{A not empty \code{GRanges} object.}
+    \item{force_seqlevels}{If \code{TRUE}, Remove regions that are not found
+                    in bam file header. Default: \code{FALSE}. TRUE and FALSE
+                    respectively correspond to pruning.mode = "coarse" 
+                    and "error" in ?seqinfo.}
 }
 \describe{
-   \item{}{\code{bh$get_noise_ratio(chip_bam_file, input_bam_file)}}
-   \item{chip_bam_file}{The path to the chip bam file.}
-   \item{input_bam_file}{The path to the input (control) bam file.}
+    \item{}{\code{bh$get_noise_ratio(chip_bam_file, input_bam_file)}}
+    \item{chip_bam_file}{The path to the chip bam file.}
+    \item{input_bam_file}{The path to the input (control) bam file.}
 }
 }
 

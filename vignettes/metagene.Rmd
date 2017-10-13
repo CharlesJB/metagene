@@ -470,8 +470,8 @@ We then compare our two profiles using this metric:
 
 ```{r calculateRNI}
 ratio_normalized_intersect <- 
-  perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, 
-		   tab2[, .(moy=mean(value)), by=bin]$moy)
+ perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, 
+        tab2[, .(moy=mean(value)), by=bin]$moy)
 ratio_normalized_intersect
 ```
 
