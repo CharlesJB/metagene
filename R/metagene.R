@@ -605,11 +605,26 @@ metagene <- R6Class("metagene",
                                                     avoid_gaps = FALSE, 
                                                     bam_name = NULL, 
                                                     gaps_threshold = 0) {
+            
+            #arguments checking
             stopifnot(is.numeric(alpha))
             stopifnot(is.numeric(sample_count))
             stopifnot(alpha >= 0 & alpha <= 1)
             stopifnot(sample_count > 0)
             sample_count <- as.integer(sample_count)
+            stopifnot(is.logical(avoid_gaps))
+            if (!is.null(bam_name)){
+                stopifnot(is.character(bam_name))
+                bam_name <- tools::file_path_sans_ext(basename(bam_name))
+                bam_names <- tools::file_path_sans_ext(basename(
+                                                private$params[["bam_files"]]))
+                if (!bam_name %in% bam_names){
+                    stop(paste("bam_name argument is no one of bam_names",
+                                        "provided to the metagene object"))
+                }
+            }
+            stopifnot(gaps_threshold >= 0)
+            
             #add checks
             list_of_arguments <- paste(alpha,
                                     sample_count,
