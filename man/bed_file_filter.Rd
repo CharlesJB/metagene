@@ -2,15 +2,14 @@
 % Please edit documentation in R/Utilities.R
 \name{bed_file_filter}
 \alias{bed_file_filter}
-\title{Extract a list of ranges defined by the bed_file_content_gr argument from the 
-exon_by_gene_with_observed_transcripts GRangesList. Equivalent to the 
-exonsByOverlaps of GenomicFeatures.}
+\title{Extract a list of ranges defined by the bed_file_content_gr argument from 
+    the ebgwot GRangesList. Equivalent to the exonsByOverlaps
+    of GenomicFeatures.}
 \usage{
-bed_file_filter(exon_by_gene_with_observed_transcripts, bed_file_content_gr,
-  reduce = TRUE)
+bed_file_filter(ebgwot, bed_file_content_gr, reduce = TRUE)
 }
 \arguments{
-\item{exon_by_gene_with_observed_transcripts}{A \code{GRangesList} object 
+\item{ebgwot}{A \code{GRangesList} object 
 provided by the exon_by_gene_with_observed_transcripts function.}
 
 \item{bed_file_content_gr}{A \code{GRanges} object containing ranges of 
@@ -22,20 +21,20 @@ interest.}
 A \code{GRanges} object that contains exons by genes selected.
 }
 \description{
-Extract a list of ranges defined by the bed_file_content_gr argument from the 
-exon_by_gene_with_observed_transcripts GRangesList. Equivalent to the 
-exonsByOverlaps of GenomicFeatures.
+Extract a list of ranges defined by the bed_file_content_gr argument from 
+    the ebgwot GRangesList. Equivalent to the exonsByOverlaps
+    of GenomicFeatures.
 }
 \examples{
 \dontrun{
-	require(EnsDb.Hsapiens.v86)
-	edb <- EnsDb.Hsapiens.v86
-	quantification_files <- 'file_path'
-    	ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
-													quantification_files)
-    	bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
-															end=23596356))
-    	bed_file_filter(ebgwot, bed_file_content_gr)
+    require(EnsDb.Hsapiens.v86)
+    edb <- EnsDb.Hsapiens.v86
+    quantification_files <- 'file_path'
+    ebgwot <- exon_by_gene_with_observed_transcripts(edb, 
+                                                    quantification_files)
+    bed_file_content_gr <- GRanges("chr16",ranges = IRanges(start=23581002, 
+                                                            end=23596356))
+    bed_file_filter(ebgwot, bed_file_content_gr)
 }
 
 }
