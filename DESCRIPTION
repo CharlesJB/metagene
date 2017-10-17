@@ -56,7 +56,8 @@ Imports:
     methods,
 	utils, 
 	ensembldb,
-	EnsDb.Hsapiens.v86
+	EnsDb.Hsapiens.v86,
+	stringr
 Suggests:
     RUnit,
     BiocGenerics,
