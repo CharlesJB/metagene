@@ -330,6 +330,8 @@ avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
         #replace former regionsize
         new_regionstartnuc <- (original_regionstartnuc
                             - nb_nuc_removed_by_gene$V1[i])
+		new_regionstartnuc <- replace(new_regionstartnuc, 
+								which(new_regionstartnuc < 1), 1)
         new_table$regionstartnuc[selected] <- new_regionstartnuc
     }
     

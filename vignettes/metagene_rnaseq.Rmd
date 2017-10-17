@@ -315,7 +315,6 @@ releases.
 The first step is to decide which profiles we want to compare and extract the 
 corresponding tables :
 
-```{r extract_subtables}
 It is possible to compare two metagene profiles using the `permutation_test`
 function provided with the `metagene` package. Please note that the permutation
 tests functionality is still in development and is expected to change in future
@@ -381,7 +380,7 @@ the permutations:
 sum(ratio_normalized_intersect >= permutation_results) / 
                                 length(permutation_results)
 ```
-And we can visualized it with a histogram :
+And we can also visualized it with a histogram :
 
 ```{r hist_perm_pval}
 hist(permutation_results, 
