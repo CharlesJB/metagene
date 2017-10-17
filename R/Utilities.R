@@ -253,9 +253,8 @@ write_bed_file_filter_result <- function(bed_file_filter_result,
 #' tab <- mg$get_table()
 #' tab <- avoid_gaps_update(tab, 
 #'        bam_name = 'c_al4_945MLM_demo_sorted', gaps_threshold = 10)
-#' tab0 <- mg$get_table()
-#' tab1 <- tab0[which(tab0$design == "cyto"),]
-#' tab2 <- tab0[which(tab0$design == "nucleo"),]
+#' tab1 <- tab[which(tab0$design == "cyto"),]
+#' tab2 <- tab[which(tab0$design == "nucleo"),]
 #' 
 #' library(similaRpeak)
 #' perm_fun <- function(profile1, profile2) {
@@ -281,7 +280,11 @@ write_bed_file_filter_result <- function(bed_file_filter_result,
 avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
     new_table <- data.table::copy(table)
     
-    bin_count <- max(unique(new_table$bin))
+	if (!is.null(new_table$bin)){
+		bin_count <- max(unique(new_table$bin))
+	} else {
+		bin_count <- NULL
+	}
             
     #how_namy_by_exon_by_design
     nb_nuc_removed <- new_table[value <= gaps_threshold 
@@ -432,3 +435,4 @@ avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
     }
     return(new_table)
 }
+

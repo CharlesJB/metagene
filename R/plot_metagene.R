@@ -82,7 +82,7 @@ plot_metagene <- function(df) {
                         df$exonsize[1:length(which(df$bam == df$bam[1]))])))
             }
         
-            expected_cols <- c("nuctot", "value", "qinf", "qsup", "design")
+            expected_cols <- c("nuc", "value", "qinf", "qsup", "design")
             df<-df[,which(colnames(df) %in% expected_cols)]
             expected_class <- c("factor", "integer", rep("numeric", 3))
             stopifnot(all(expected_cols %in% colnames(df)))

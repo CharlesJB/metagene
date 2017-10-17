@@ -426,8 +426,8 @@ metagene <- R6Class("metagene",
                                 times=as.vector(unlist(
                                     exon_length_by_exon_by_gene)))
                                     
-                        gene_size <- unlist(map(1:length(mg$get_regions()), 
-                                        ~sum(width(mg$get_regions()[[.x]]))))
+                        gene_size <- unlist(map(1:length(self$get_regions()), 
+                                        ~sum(width(self$get_regions()[[.x]]))))
                         col_gene_size <- rep(gene_size, times = gene_size)
                         
                         gene_length_cum <- c(0,
@@ -484,7 +484,7 @@ metagene <- R6Class("metagene",
                         
                         ## col_values
                         #NB : lapply(Views...) -> out of limits of view
-                        grl <- mg$get_regions()
+                        grl <- self$get_regions()
                         grtot <- unlist(grl)
                         col_values <- list()
                         idx = 1 #index for col_values list
@@ -674,7 +674,7 @@ metagene <- R6Class("metagene",
                     private$df <- unique(private$df)
                 } else if (private$params[['assay']] == 'rnaseq' 
                                 & !('bin' %in% colnames(private$df))){
-                    message('produce DF : RNA-Seq')
+                    message('produce data.frame : RNA-Seq')
                     private$data_frame_need_update(alpha, sample_count)
                         
                     sample_size <- self$get_table()[nuc == 1,][
@@ -1301,7 +1301,7 @@ metagene <- R6Class("metagene",
             ### removal of zero values
             ## stop if all bam haven't the same amount of lines in table
             stopifnot(length(unique(private$table[, .N, by=bam]$N)) == 1)
-            bam_line_count <- tab[bam == bam_name, .N]
+            bam_line_count <- private$table[bam == bam_name, .N]
             #lines_to_remove for bam_name
             lines_to_remove <- which(private$df$bam == bam_name &
                                             private$df$value <= gaps_threshold)
