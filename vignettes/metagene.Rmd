@@ -15,8 +15,6 @@ library(knitr)
 ```
 
 **Package**: `r Biocpkg("metagene")`<br />
-**Authors**:
-`r eval(parse(text = packageDescription("metagene")[["Author@R"]]))`<br />
 **Modified**: 18 september, 2015<br />
 **Compiled**: `r date()`<br />
 **License**: `r packageDescription("metagene")[["License"]]`<br />
@@ -50,7 +48,7 @@ library(metagene)
 There is no hard limit in the number of BAM files that can be included in an
 analysis (but with too many BAM files, memory may become an issue). BAM files
 must be indexed. For instance, if you use a file names `file.bam`, a file
-named `file.bam.bai` must be present in the same directory.
+named `file.bam.bai` or `file.bai`must be present in the same directory.
 
 The path (relative or absolute) to the BAM files must be in a vector:
 ```{r bamFiles}
@@ -89,8 +87,8 @@ and the [broadPeak](https://genome.ucsc.edu/FAQ/FAQformat.html#format13).
 
 ### GRanges or GRangesList objects - Regions
 
-As an alternative to a list of BED files, `GRanges` or `GRangesList` objects can
-be used.
+As an alternative to a list of BED files, `GRanges` or `GRangesList` objects 
+can be used.
 
 ### Available datasets
 
@@ -106,8 +104,8 @@ data(promoters_hg19)
 promoters_hg19
 ```
 
-For more details about each datasets, please refer to their documentation (i.e.:
-`?promoters_hg19`).
+For more details about each datasets, please refer to their documentation 
+(i.e.:`?promoters_hg19`).
 
 ## Design groups
 
@@ -150,7 +148,7 @@ fileDesign <- system.file("extdata/design.txt", package="metagene")
 design <- read.table(fileDesign, header=TRUE, stringsAsFactors=FALSE)
 design$Samples <- paste(system.file("extdata", package="metagene"),
                         design$Samples, sep="/")
-kable(design)
+table(design)
 ```
 
 ### Design groups from R
@@ -163,10 +161,10 @@ For instance, the previous design data.frame could have been create directly
 in R:
 ```{r alternateDesign}
 design <- data.frame(Samples = c("align1_rep1.bam", "align1_rep2.bam",
-                     "align2_rep1.bam", "align2_rep2.bam", "ctrl.bam"),
-                     align1 = c(1,1,0,0,2), align2 = c(0,0,1,1,2))
+                    "align2_rep1.bam", "align2_rep2.bam", "ctrl.bam"),
+                    align1 = c(1,1,0,0,2), align2 = c(0,0,1,1,2))
 design$Samples <- paste0(system.file("extdata", package="metagene"), "/",
-                         design$Samples)
+                        design$Samples)
 kable(design)
 ```
 
@@ -178,7 +176,7 @@ A typical metagene analysis will consist steps:
 * Conversion in coverage.
 * Noise removal
 * Normalization of the coverage values.
-* Matrices production.
+* Table production.
 * Data frame production.
 * Generation of the metagene plot.
 
@@ -196,10 +194,10 @@ mg <- metagene$new(regions = regions, bam_files = bam_files)
 # Plotting
 mg$plot(title = "Demo metagene plot")
 ```
-As you can see, it is not mandatory to explicitly call each step of the metagene
-analysis. For instance, in the previous example, the `plot` function call the
-other steps automatically with default values (the next section will describe
-the steps in more details).
+As you can see, it is not mandatory to explicitly call each step of the 
+metagene analysis. For instance, in the previous example, the `plot` function 
+call the other steps automatically with default values (the next section will 
+describe the steps in more details).
 
 In this specific case, the plot is messy since by default
 `r Biocpkg("metagene")` will produce a curve for each possible combinations of
@@ -228,24 +226,25 @@ bam_files <- get_demo_bam_files()
 mg <- metagene$new(regions = regions, bam_files = bam_files)
 ```
 
-### Producing the matrices
-
-To produce the metagene plot, the coverages must be converted in a matrix where
-the columns represent the positions and the rows the regions. Furthermore, to
-reduce the computation time during the following steps, the positions are also
-binned.
+### Producing the table
+To produce the table, coverages (produced from Genomics regions (.BED), 
+Alignment Files (.BAM) and Design Sheet) was treated for noise removal
+and normalized. Furthermore, to reduce the computation time during the 
+following steps, the positions are also binned. Regions, designs, bins, 
+associated values and orientation of strands are pulled into a data.table 
+called 'table' and accessible thanks to the getter `get_table`.
 
 We can control the size of the bins with the `bin_count` argument. By
 default, a `bin_count` of 100 will be used during this step.
 
-```{r showProduceMatrices}
-mg$produce_matrices()
+```{r showProduceTable}
+mg$produce_table()
 ```
 
 We can also use the design we produced earlier to remove background signal and
 combine replicates:
-```{r produceMatricesDesign}
-mg$produce_matrices(design = design)
+```{r produceTableDesign}
+mg$produce_table(design = design)
 ```
 
 ### Producing the `data.frame`
@@ -260,18 +259,18 @@ mean of enrichment for every positions in each group of regions/BAM files.
 Another approach, called "basic" will simply use the ribbon to represent 95%
 of the values for each positions in each groups.
 ```{r produceDataFrame}
-mg$produce_data_frame(stat = "basic")
+mg$produce_data_frame()
 ```
 
 ### Plotting
 
 During this step, metagene will use the `data.frame` to plot the calculated
-values using `ggplot2`. We show a subset of the regions by using the
-`region_names` and `exp_names` parameter. The `region_names` correspond to the
-names of the regions used during the initialization. The `exp_name` will vary
-depending if a design was added. If no design was added, this param correspond
-to the BAM name or BAM filenames. Otherwise, we have to use the names of the
-columns from the design.
+values using `ggplot2`. We show a subset of the regions by using the 
+`region_names` and `design_names` parameter. The `region_names` correspond to 
+the names of the regions used during the initialization. The `design_name` 
+will vary depending if a design was added. If no design was added, this param 
+correspond to the BAM name or BAM filenames. Otherwise, we have to use the 
+names of the columns from the design.
 ```{r showPlot}
 mg$plot(region_names = "list1", title = "Demo plot subset")
 ```
@@ -283,10 +282,38 @@ mg$plot(region_names = "list1", title = "Demo plot subset")
 Multiple getters functions are available to access the data that is stored in a
 `metagene` object.
 
+### `get_table`
+To get the data.table containing regions, designs, bins, values at bins and 
+orientation of strands.
+```{r getTable}
+mg <- get_demo_metagene()
+mg$produce_table()
+mg$get_table()
+```
+
+### `get_matrices`
+To get the data.table as matrices (the former data structure)
+```{r getMatrices}
+mg <- get_demo_metagene()
+mg$produce_table()
+m <- mg$get_matrices()
+# m$list1$ctrl$input to access to region 'list1' and 'ctrl' design
+```
+
+### `get_data_frame`
+get_data_frame = function(region_names = NULL, design_names = NULL)
+To get the data.frame containing regions and design 
+```{r getDataFrame}
+mg <- get_demo_metagene()
+mg$produce_table()
+mg$produce_data_frame()
+mg$get_data_frame()
+```
+
 ### `get_params`
 
 The various parameters used during the initialization of the `metagene` object,
-the production of the matrices and the production of the plot are saved and can
+the production of the table and the production of the plot are saved and can
 be accessed with the `get_params` function:
 ```{r getParams}
 mg <- get_demo_metagene()
@@ -295,19 +322,20 @@ mg$get_params()
 
 ### `get_design`
 
-To get the design that was used to produce the last version of the matrices,
+To get the design that was used to produce the last version of the table,
 you can use the `get_design` function:
 ```{r getDesign}
-mg$produce_matrices(design = get_demo_design())
+mg$produce_table(design = get_demo_design())
 ## Alternatively, it is also possible to add a design without producing the
-## matrices:
-#mg$add_design(get_demo_design())
+## table:
+mg$add_design(get_demo_design())
 mg$get_design()
 ```
 
 ### `get_bam_count`
 
-To get the number of aligned read in a BAM file, you can use the `get_bam_count`
+To get the number of aligned read in a BAM file, you can use the 
+`get_bam_count`
 function:
 ```{r getBamCount}
 mg$get_bam_count(bam_files[1])
@@ -362,7 +390,7 @@ rg <- get_demo_regions()
 bam <- get_demo_bam_files()
 d <- get_demo_design()
 title <- "Show chain"
-mg <- metagene$new(rg, bam)$produce_matrices(design = d)$plot(title = title)
+mg <- metagene$new(rg, bam)$produce_table(design = d)$plot(title = title)
 ```
 
 ## Copying a metagene object
@@ -411,13 +439,14 @@ function provided with the `metagene` package. Please note that the permutation
 tests functionality is still in development and is expected to change in future
 releases.
 
-The first step is to decide which profiles we want to compare and extract the
-corresponding matrices:
+The first step is to decide which profiles we want to compare and extract the 
+corresponding tables :
 
-```{r extractMatrices}
-matrices <- mg$get_matrices()
-m1 <- matrices[["list1"]][["align1"]][["input"]]
-m2 <- matrices[["list1"]][["align2"]][["input"]]
+```{r extract_subtables}
+tab <- mg$get_table()
+tab0 <- tab[which(tab$region == "list1"),]
+tab1 <- tab0[which(tab$design == "align1"),]
+tab2 <- tab0[which(tab$design == "align2"),]
 ```
 
 Then we defined to function to use to compare the two profiles. For this, a
@@ -430,29 +459,33 @@ RATIO_NORMALIZED_INTERSECT between two profiles:
 ```{r similaRpeak}
 library(similaRpeak)
 perm_fun <- function(profile1, profile2) {
-    similarity(profile1, profile2)[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+    sim <- similarity(profile1, profile2)
+    sim[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
 }
 ```
 
 We then compare our two profiles using this metric:
 
 ```{r calculateRNI}
-ratio_normalized_intersect <- perm_fun(colMeans(m1), colMeans(m2))
+ratio_normalized_intersect <- 
+ perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, 
+        tab2[, .(moy=mean(value)), by=bin]$moy)
 ratio_normalized_intersect
 ```
 
-To check if this value is significant, we can permute the two matrices that
+To check if this value is significant, we can permute the two tables that
 were used to produce the profile and calculate their
 RATIO_NORMALIZED_INTERSECT:
 
 ```{r permTest}
-permutation_results <-  permutation_test(m1, m2, sample_size = nrow(m1),
-                                         sample_count = 1000, FUN = perm_fun)
+permutation_results <- permutation_test(tab1, tab2, sample_size = 50,
+                                        sample_count = 1000, FUN = perm_fun)
 ```
 
 Finally, we check how often the calculated value is greater than the results of
 the permutations:
 
 ```{r perm_pval}
-sum(ratio_normalized_intersect >= permutation_results) / length(permutation_results)
+sum(ratio_normalized_intersect >= permutation_results) / 
+                                length(permutation_results)
 ```

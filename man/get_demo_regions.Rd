@@ -15,4 +15,3 @@ Get regions filenames for demo
 \examples{
 regions <- get_demo_regions()
 }
-

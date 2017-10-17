@@ -2,20 +2,20 @@
 % Please edit documentation in R/permutation.R
 \name{permutation_test}
 \alias{permutation_test}
-\title{Perform a permutation test on 2 matrices}
+\title{Perform a permutation test on 2 tables}
 \usage{
-permutation_test(matrix1, matrix2, sample_size, sample_count, FUN, ...)
+permutation_test(table1, table2, sample_size, sample_count, FUN, ...)
 }
 \arguments{
-\item{matrix1}{The first matrix.}
+\item{table1}{The first table.}
 
-\item{matrix2}{The second matrix.}
+\item{table2}{The second table.}
 
-\item{sample_size}{The number of element to draw for each matrix.}
+\item{sample_size}{The number of element to draw for each table.}
 
 \item{sample_count}{The number of permutations.}
 
-\item{FUN}{The function to use to compare the 2 matrices. First two params
+\item{FUN}{The function to use to compare the 2 table. First two params
 must be \code{numeric} vector and the return must be a single
 \code{numeric} value.}
 
@@ -23,7 +23,7 @@ must be \code{numeric} vector and the return must be a single
 }
 \value{
 A \code{vector} of numeric corresponding to the result of each
-        permutation.
+       permutation.
 }
 \description{
 The goal of this function is to calculate the values of a test performed
@@ -31,23 +31,26 @@ by \code{FUN} after each of \code{sample_count} permutations.
 }
 \details{
 Each round of the permutation test, two new matrices will be randomly
-sampled from using the combination of the two original matrices. The means
+sampled from using the combination of the two original tables. The means
 of each columns will be calculated to produce the vectors that will be sent
 \code{FUN}.
 }
 \examples{
-# Get some matrices
+\dontrun{
+# Get some tables
 mg <- get_demo_metagene()
-mg$produce_matrices()
-m1 <- mg$get_matrices()$list1$align1_rep1$input
-m2 <- mg$get_matrices()$list1$align2_rep1$input
+mg$produce_table()
+tab <- mg$get_table()
+tab <- tab[which(tab$region == "list1"),]
+tab1 <- tab[which(tab$design == "align1_rep1"),]
+tab2 <- tab[which(tab$design == "align2_rep2"),]
 
 # Perform permutation test
-sample_size <- min(nrow(m1), nrow(m2))
+sample_size <- min(nrow(tab1), nrow(tab2))
 FUN = function(a, b) { mean(a) - mean(b) } # Dummy function for demo purpose
 # A sample_count >= 1000 should be used in a real analysis
 permutation_results <- permutation_test(m1, m2, sample_size = sample_size,
-                                        sample_count = 10, FUN = FUN)
-
+                                       sample_count = 10, FUN = FUN)
 }
 
+}

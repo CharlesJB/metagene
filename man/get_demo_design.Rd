@@ -15,4 +15,3 @@ Get a demo design object
 \examples{
 mg <- get_demo_design()
 }
-

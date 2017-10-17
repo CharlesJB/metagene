@@ -1,0 +1,390 @@
+ ---
+title: "metagene: RNA-Seq version (experimental extension)"
+output:
+    BiocStyle::html_document:
+        toc: true
+vignette: >
+    %\VignetteIndexEntry{Introduction to metagene}
+    %\VignetteEngine{knitr::rmarkdown}
+    \usepackage[utf8]{inputenc}
+---
+
+```{r style, echo = FALSE, results = 'asis', message = FALSE}
+BiocStyle::markdown()
+library(knitr)
+```
+
+**Package**: `r Biocpkg("metagene")`<br />
+**Modified**: 17 october, 2017<br />
+**Compiled**: `r date()`<br />
+**License**: `r packageDescription("metagene")[["License"]]`<br />
+
+# Introduction
+
+This experimental extension of metagene allows to use metagene to analyse 
+RNA-Seq data. The quantification at the gene level of RNA-seq experiment is done
+directly from the profile of coverages and the differential expression level can 
+be done via the similaRpeak package in order to compare profile of coverages.
+Design experiment can take into account multiple replicates divided into several
+groups of samples. As done by metagene in ChIP-Seq analysis, this experimental 
+extension uses bootstrap to obtain a better estimation of the mean enrichment 
+and the confidence interval for every group of samples.
+
+This vignette will introduce all the main features of the metagene RNA-seq 
+extension.
+
+# Loading the metagene package
+
+```{r libraryLoad, message = FALSE}
+library(metagene)
+```
+
+# Inputs
+
+## Alignment files (BAM files)
+
+There is no hard limit in the number of BAM files that can be included in an
+analysis (but with too many BAM files, memory may become an issue). BAM files
+must be indexed. For instance, if you use a file names `file.bam`, a file
+named `file.bam.bai` or `file.bai` must be present in the same directory.
+
+The path (relative or absolute) to the BAM files must be in a vector:
+```{r bamFiles}
+bam_files <- 
+c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
+  system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
+  system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
+  system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
+bam_files
+```
+The possibility to use BAM file from single-ended of pair-ended RNA-seq 
+experiment is available (see below)
+
+## Genomic regions
+
+### BED files
+
+To compare custom regions of interest, it is possible to use a list of one or
+more BED files. Here, we use three genes. The name of the files (without the 
+extension) will be used to name each gene. 
+CAUTION : one BED files must be provided by gene of interest. Ranges into BED 
+files must be the ranges of exons for this gene. (See for instance the 
+'ENCFF355RXX_DPM1.bed' BED file into 'metagene/inst/extdata').
+
+```{r regionsArgument}
+regions <- 
+c(system.file("extdata/ENCFF355RXX_DPM1.bed", package="metagene"),
+system.file("extdata/ENCFF355RXX_NDUFAB1.bed", package="metagene"),
+system.file("extdata/ENCFF355RXX_SLC25A5.bed", package="metagene"))
+regions
+```
+### GRanges or GRangesList objects - Regions
+
+As an alternative to a list of BED files, `GRangesList` objects 
+can be used. CAUTION : elements of the `GRangesList` must be the genes of 
+interest and ranges into each elements of the `GRangesList` must be the exons
+regions. You get an example of this with the regions `GRangesList` object 
+above in the BED files section.
+
+## Design groups
+
+A design group contains a set of BAM files that, when put together, represent
+a logical analysis. Furthermore, a design group contains the relationship
+between every BAM files present.
+
+For instance, the design could be created directly from R.
+
+```{r DesignCraft}
+Samples <- c("c_al4_945MLM_demo_sorted.bam",
+                    "c_al3_362PYX_demo_sorted.bam",
+                    "n_al4_310HII_demo_sorted.bam",
+                    "n_al3_588WMR_demo_sorted.bam")
+nucleo <- c(0,0,1,1)
+cyto <- c(1,1,0,0)
+mydesign <- cbind(Samples, cyto, nucleo)
+mydesign <- data.frame(mydesign)
+```
+
+# Analysis steps
+
+A typical metagene analysis will consist steps:
+
+* Extraction the read count of every BAM files in selected regions.
+* Conversion in coverage.
+* Normalization of the coverage values.
+* Table production.
+* Data frame production.
+* Generation of the metagene plot.
+* Profile comparison (differential expression)
+
+## Creation of a metagene object for RNA-seq analysis
+
+Two new arguments were introduced : paired_end and assay. Data used here came
+from the ENCSR000CPJ and ENCSR000CPK experiments (ENCODE) using paired-end 
+polyA mRNA RNA-seq.
+
+```{r new metagene_rnaseq object}
+bam_files <- 
+c(system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"))
+regions <- 
+c(system.file("extdata/ENCFF355RXX_DPM1.bed", package="metagene"))
+# Initialization
+mg <- metagene$new(regions = regions, 
+                    bam_files = bam_files, 
+                    assay = 'rnaseq', 
+                    paired_end = TRUE)
+mg$plot(title = 'DPM1')
+```
+NOTE : in paired_end, a warning message could appear to warn you about how many 
+alignments with ambiguous pairing were dumped.
+
+As you can see, it is not mandatory to explicitly call each step of the 
+metagene analysis. For instance, in the previous example, the `plot` function 
+call the other steps automatically with default values (the next section will 
+describe the steps in more details).
+
+The plot displayed shows the coverage of the gene DPM1 for the bam file 
+n_al4_310HII_demo_sorted.bam. Coverage is expressed in raw, because by default 
+it is not normalized and orientation here is from 3' to 5' (to 0 from 1250 on 
+horizontal axis) because of the strand orientation of the gene in BED files.
+
+However, you can control normalization, flip and other arguments provided in 
+produce_table and produce_data_frame methods. Let's see that together.
+
+## Complete analysis
+
+In order to fully control every step of a metagene analysis in RNA-Seq version, 
+it is important to understand how a complete analysis is performed. If we are 
+satisfied with the default values, it is not mandatory to explicitly call every 
+step (as was shown in the previous section).
+
+### Initialization
+
+During this step, the coverages for every regions specified are extracted from
+every BAM files. Let's start with a bigger dataset as introduced in inputs 
+section. Here, we will use four bam files and three genes.
+
+```{r initialization}
+bam_files <- 
+c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
+  system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
+  system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
+  system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
+regions <- 
+c(system.file("extdata/ENCFF355RXX_DPM1.bed", package="metagene"),
+system.file("extdata/ENCFF355RXX_NDUFAB1.bed", package="metagene"),
+system.file("extdata/ENCFF355RXX_SLC25A5.bed", package="metagene"))
+mg <- metagene$new(regions = regions, 
+                    bam_files = bam_files, 
+                    assay = 'rnaseq', 
+                    paired_end = TRUE)
+```
+
+### Producing the table
+
+No new parameters was added to the produce_table method. However, new colums to 
+the table were added but is completely transparent for user. Colums names are now :
+`r colnames(mg$get_table())`. Regions was kept and not replaced by gene but
+stands for gene names. Data were not binned as for ChIP-Seq analysis and bin 
+column was replaced by nuc (for nucleotide) column.
+
+```{r showProduceTable}
+mg$produce_table(flip_regions = TRUE, normalization = 'RPM')
+tab <- mg$get_table()
+```
+Here the flip argument is `TRUE`. Thus, all genes will be oriented from 5' to 3'
+on the metagene plot. The 'Reads Per Millions' (RPM) normalization was done.
+
+### Producing the `data.frame`
+
+The metagene plot are produced using the `ggplot2` package, which require a
+`data.frame` as input. During this step, the values of the ribbon are
+calculated. Metagene RNA-Seq version uses "bootstrap" to obtain a better 
+estimation of the mean coverage for every positions in each group samples.
+
+```{r produceDataFrame}
+mg$produce_data_frame()
+```
+
+An additionnal option was implemented into the produce_data_frame method. The 
+possibility to remove values which are under a certain threshold. This option 
+is used in order to remove, for instance, exon or part of exon for which there 
+is no data and thereby obtain a profile without gaps. There are the new 
+arguments to do that : (1) 'avoid_gaps' a logical argument to allow this 
+removal or not, (2) 'bam_name' a character argument that give the name of the 
+bam file to take as reference for values to remove also for other samples 
+(default : the first sample in table) (3) 'gaps_threshold' a numeric threshold 
+under which value will be removed from data_frame (default = 0).
+
+```{r produceDataFrame2}
+bam_files <- 
+c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"))
+region <- 
+c(system.file("extdata/ENCFF355RXX_NDUFAB1.bed", package="metagene"))
+mg <- metagene$new(regions = region, bam_files = bam_files, assay = 'rnaseq')
+mg$produce_table(flip_regions = TRUE)
+mg$plot(title = 'with normalized values under 10')
+mg$produce_data_frame(avoid_gaps = TRUE,
+                        bam_name = "c_al4_945MLM_demo_sorted",
+                        gaps_threshold = 30)
+mg$plot(title = 'without normalized values under 30')
+```
+
+### Plotting
+
+During this step, metagene will use the `data.frame` to plot the calculated
+values using `ggplot2`. A subset of the gene and design can be selected by using
+ the `region_names` and `design_names` arguments. The `region_names` correspond 
+to the names of the genes used during the initialization. The `design_name` 
+will vary depending if a design was added. If no design was added, this param 
+correspond to the BAM name or BAM filenames. Otherwise, we have to use the 
+names of the columns from the design.
+
+```{r showPlot}
+bam_files <- 
+c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
+  system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
+  system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
+  system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
+regions <- 
+c(system.file("extdata/ENCFF355RXX_DPM1.bed", package="metagene"),
+system.file("extdata/ENCFF355RXX_NDUFAB1.bed", package="metagene"),
+system.file("extdata/ENCFF355RXX_SLC25A5.bed", package="metagene"))
+mg <- metagene$new(regions = regions, 
+                    bam_files = bam_files, 
+                    assay = 'rnaseq', 
+                    paired_end = TRUE)
+mg$produce_data_frame(avoid_gaps = TRUE,
+                        bam_name = "c_al4_945MLM_demo_sorted",
+                        gaps_threshold = 30)
+mg$plot(region_names = "ENCFF355RXX_DPM1", 
+                                        title = "Demo plot subset RNA-Seq")
+```
+
+# Managing large datasets
+
+While `metagene` try to reduce it's memory usage, it's possible to run into
+memory limits when working with multiple large datasets (especially when there
+is a lot of genes).
+
+One way to avoid this is to analyse each dataset seperately and then merge just
+before producing the metagene plot:
+
+```{r memory, collapse=TRUE}
+regions <- 
+c(system.file("extdata/ENCFF355RXX_DPM1.bed", package="metagene"),
+system.file("extdata/ENCFF355RXX_NDUFAB1.bed", package="metagene"),
+system.file("extdata/ENCFF355RXX_SLC25A5.bed", package="metagene"))
+bam_files <- 
+c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
+  system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
+  system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
+  system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
+mg1 <- metagene$new(bam_files = bam_files[1:2], regions = regions, 
+							assay = 'rnaseq', paired_end = TRUE)
+mg1$produce_data_frame()
+mg2 <- metagene$new(bam_files = bam_files[3:4], regions = regions, 
+							assay = 'rnaseq', paired_end = TRUE)
+mg2$produce_data_frame()
+```
+
+Then you can extract the `data.frame`s and combine them with `rbind`:
+
+```{r extractDF}
+df1 <- mg1$get_data_frame()
+df2 <- mg2$get_data_frame()
+df <- rbind(df1, df2)
+```
+
+Finally, you can use the `plot_metagene` function to produce the metagene plot:
+
+```{r plotMetagene}
+p <- plot_metagene(df)
+p + ggplot2::ggtitle("Managing large datasets")
+```
+
+# Comparing profiles with permutations
+
+It is possible to compare two metagene profiles using the `permutation_test`
+function provided with the `metagene` package. Please note that the permutation
+tests functionality is still in development and is expected to change in future
+releases.
+
+The first step is to decide which profiles we want to compare and extract the 
+corresponding tables :
+
+It is possible to compare two metagene profiles using the `permutation_test`
+function provided with the `metagene` package. Please note that the permutation
+tests functionality is still in development and is expected to change in future
+releases.
+
+As before in produce_data_frame, you get the possibility to remove values under 
+a certain threshold. In order to be able to statistically compare these profiles
+ underestimated by the values under the threshold, a compagnon function called
+'avoid_gaps_update' was created to carry out the same treatment underwent at 
+the data_frame level.
+
+The first step is to decide which profiles we want to compare and extract the 
+corresponding tables :
+
+```{r extract_subtables}
+tab <- mg$get_table()
+tab0 <- metagene:::avoid_gaps_update(tab, 
+       bam_name = 'c_al4_945MLM_demo_sorted', gaps_threshold = 10)
+tab1 <- tab0[which(tab0$design == "cyto"),]
+tab2 <- tab0[which(tab0$design == "nucleo"),]
+```
+
+Then we defined to function to use to compare the two profiles. For this, a
+companion package of `metagene` named `r Biocpkg("similaRpeak")` provides
+multiple metrics.
+
+For this example, we will prepare a function to calculate the
+RATIO_NORMALIZED_INTERSECT between two profiles:
+
+```{r similaRpeak}
+library(similaRpeak)
+perm_fun <- function(profile1, profile2) {
+    sim <- similarity(profile1, profile2)
+    sim[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+}
+```
+
+We then compare our two profiles using this metric:
+
+```{r calculateRNI}
+ratio_normalized_intersect <- 
+  perm_fun(tab1[, .(moy=mean(value)), by=nuc]$moy, 
+           tab2[, .(moy=mean(value)), by=nuc]$moy)
+ratio_normalized_intersect
+```
+
+To check if this value is significant, we can permute the two tables that
+were used to produce the profile and calculate their
+RATIO_NORMALIZED_INTERSECT:
+
+```{r permTest}
+#permutation_results <- permutation_test(tab1, tab2, sample_size = 2,
+#                                        sample_count = 1000, FUN = perm_fun)
+```
+NB : sample_size here is very low to get an accurate permutation test. More 
+replicates by design are needed to improve the quality of the result.
+
+
+Finally, we check how often the calculated value is greater than the results of
+the permutations:
+
+```{r perm_pval}
+#sum(ratio_normalized_intersect >= permutation_results) / 
+#                                length(permutation_results)
+```
+And we can also visualized it with a histogram :
+
+```{r hist_perm_pval}
+#hist(permutation_results, 
+#	main="ratio_normalized_intersect (1=total overlapping area)")
+#abline(v=ratio_normalized_intersect, col = 'red')
+```
+
+
+
