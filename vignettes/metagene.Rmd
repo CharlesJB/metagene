@@ -150,7 +150,7 @@ fileDesign <- system.file("extdata/design.txt", package="metagene")
 design <- read.table(fileDesign, header=TRUE, stringsAsFactors=FALSE)
 design$Samples <- paste(system.file("extdata", package="metagene"),
                         design$Samples, sep="/")
-kable(design)
+table(design)
 ```
 
 ### Design groups from R
