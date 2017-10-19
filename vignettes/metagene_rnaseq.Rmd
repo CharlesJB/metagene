@@ -99,10 +99,13 @@ Samples <- c("c_al4_945MLM_demo_sorted.bam",
                     "c_al3_362PYX_demo_sorted.bam",
                     "n_al4_310HII_demo_sorted.bam",
                     "n_al3_588WMR_demo_sorted.bam")
-nucleo <- c(0,0,1,1)
 cyto <- c(1,1,0,0)
+nucleo <- c(0,0,1,1)
 mydesign <- cbind(Samples, cyto, nucleo)
 mydesign <- data.frame(mydesign)
+#to make cyto and nucleo colums numeric variables
+mydesign$cyto <- cyto
+mydesign$nucleo <- nucleo
 ```
 
 # Analysis steps
@@ -328,9 +331,13 @@ The first step is to decide which profiles we want to compare and extract the
 corresponding tables :
 
 ```{r extract_subtables}
+mg <- metagene$new(bam_files = bam_files, regions = regions, 
+							assay = 'rnaseq', paired_end = TRUE)
+mg$produce_table(design = mydesign)
 tab <- mg$get_table()
 tab0 <- metagene:::avoid_gaps_update(tab, 
        bam_name = 'c_al4_945MLM_demo_sorted', gaps_threshold = 10)
+tab0 <- tab0[which(tab0$region == "ENCFF355RXX_SLC25A5"),]
 tab1 <- tab0[which(tab0$design == "cyto"),]
 tab2 <- tab0[which(tab0$design == "nucleo"),]
 ```
