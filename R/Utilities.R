@@ -259,21 +259,20 @@ write_bed_file_filter_result <- function(bed_file_filter_result,
 #' library(similaRpeak)
 #' perm_fun <- function(profile1, profile2) {
 #'    sim <- similarity(profile1, profile2)
-#'    sim[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+#'    sim[["metrics"]][["RATIO_INTERSECT"]]
 #' }
 #' 
-#' ratio_normalized_intersect <- 
+#' ratio_intersect <- 
 #'    perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, 
 #'            tab2[, .(moy=mean(value)), by=bin]$moy)
-#' ratio_normalized_intersect
+#' ratio_intersect
 #' 
 #' permutation_results <- permutation_test(tab1, tab2, sample_size = 2,
 #'                                sample_count = 1000, FUN = perm_fun)
 #' hist(permutation_results, 
-#'        main="ratio_normalized_intersect (1=total overlapping area)")
-#' abline(v=ratio_normalized_intersect, col = 'red')
-#' sum(ratio_normalized_intersect >= permutation_results) / 
-#'        length(permutation_results)
+#'        main="ratio_intersect (1=total overlapping area)")
+#' abline(v=ratio_intersect, col = 'red')
+#' sum(ratio_intersect >= permutation_results) / length(permutation_results)
 #' }
 #'
 
