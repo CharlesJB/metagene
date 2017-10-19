@@ -340,50 +340,49 @@ companion package of `metagene` named `r Biocpkg("similaRpeak")` provides
 multiple metrics.
 
 For this example, we will prepare a function to calculate the
-RATIO_NORMALIZED_INTERSECT between two profiles:
+RATIO_INTERSECT between two profiles:
 
 ```{r similaRpeak}
 library(similaRpeak)
 perm_fun <- function(profile1, profile2) {
     sim <- similarity(profile1, profile2)
-    sim[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+    sim[["metrics"]][["RATIO_INTERSECT"]]
 }
 ```
 
 We then compare our two profiles using this metric:
 
 ```{r calculateRNI}
-ratio_normalized_intersect <- 
+ratio_intersect <- 
   perm_fun(tab1[, .(moy=mean(value)), by=nuc]$moy, 
            tab2[, .(moy=mean(value)), by=nuc]$moy)
-ratio_normalized_intersect
+ratio_intersect
 ```
 
 To check if this value is significant, we can permute the two tables that
 were used to produce the profile and calculate their
-RATIO_NORMALIZED_INTERSECT:
+RATIO_INTERSECT:
 
 ```{r permTest}
-#permutation_results <- permutation_test(tab1, tab2, sample_size = 2,
-#                                        sample_count = 1000, FUN = perm_fun)
+permutation_results <- permutation_test(tab1, tab2, sample_size = 2,
+                                        sample_count = 1000, FUN = perm_fun)
 ```
 NB : sample_size here is very low to get an accurate permutation test. More 
 replicates by design are needed to improve the quality of the result.
-
 
 Finally, we check how often the calculated value is greater than the results of
 the permutations:
 
 ```{r perm_pval}
-#sum(ratio_normalized_intersect >= permutation_results) / 
-#                                length(permutation_results)
+sum(ratio_intersect >= permutation_results) / 
+                                length(permutation_results)
 ```
 And we can also visualized it with a histogram :
 
 ```{r hist_perm_pval}
-#hist(permutation_results, 
-#	main="ratio_normalized_intersect (1=total overlapping area)")
-#abline(v=ratio_normalized_intersect, col = 'red')
+hist(permutation_results, 
+	main="ratio_intersect (1=total overlapping area)")
+abline(v=ratio_intersect, col = 'red')
 ```
 
 
