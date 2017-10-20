@@ -55,7 +55,6 @@ c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
   system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
   system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
   system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
-bam_files
 ```
 The possibility to use BAM file from single-ended of pair-ended RNA-seq 
 experiment is available (see below)
@@ -76,7 +75,6 @@ regions <-
 c(system.file("extdata/ENCFF355RXX_DPM1.bed", package="metagene"),
 system.file("extdata/ENCFF355RXX_NDUFAB1.bed", package="metagene"),
 system.file("extdata/ENCFF355RXX_SLC25A5.bed", package="metagene"))
-regions
 ```
 ### GRanges or GRangesList objects - Regions
 
