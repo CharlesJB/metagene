@@ -18,7 +18,7 @@ plot_metagene <- function(df) {
 
     if (('bin' %in% colnames(df)) & !('nuc' %in% colnames(df))) { 
         # if chipseq, for instance
-        message('ChIP-Seq')
+        message('Plot : ChIP-Seq')
         
         expected_cols <- c("bin", "value", "qinf", "qsup", "group")
         df<-df[,which(colnames(df) %in% expected_cols)]
@@ -36,8 +36,8 @@ plot_metagene <- function(df) {
             theme_bw(base_size = 20)
             
     } else if (('nuc' %in% colnames(df)) & !('bin' %in% colnames(df))) { 
-        message(paste('Please, notice that strand orientation by gene',
-                    'must be the same for all BAM file.'))
+        #message(paste('Please, notice that strand orientation by gene',
+        #            'must be the same for all BAM file.'))
         # if rnaseq, for instance
         ascending = function(nuc) {
             nuc[1] < nuc[2]
@@ -69,7 +69,7 @@ plot_metagene <- function(df) {
         
         #if only one region/gene in the data_frame
         if (length(unique(df$region)) == 1) {
-            message('RNA-Seq : One region/gene')
+            message('Plot : RNA-Seq (One gene)')
             
             are_genes_unflipped <- unlist(lapply(map(unique(df$region),
                         ~ df[which(df$region == .x & df$bam == df$bam[1]),]$nuc)
@@ -100,7 +100,7 @@ plot_metagene <- function(df) {
                 theme_bw(base_size = 20)
                 
         } else { #if multiple regions/genes in the data_frame
-            message('RNA-Seq : Multiple regions/genes')
+            message('Plot : RNA-Seq (Multiple genes)')
             
             are_genes_unflipped <- unlist(lapply(map(unique(df$region),
                         ~ df[which(df$region == .x & df$bam == df$bam[1]),]$nuc)
@@ -146,7 +146,7 @@ plot_metagene <- function(df) {
                 theme_bw(base_size = 20)
         }
     } else if (('bin' %in% colnames(df)) & ('nuc' %in% colnames(df))) { 
-        message('RNA-Seq binned')
+        message('Plot : RNA-Seq binned')
         
         expected_cols <- c("bin", "value", "qinf", "qsup", "design")
         df<-df[,which(colnames(df) %in% expected_cols)]
