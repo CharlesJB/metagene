@@ -1,4 +1,4 @@
- ---
+---
 title: "metagene: RNA-Seq version (experimental extension)"
 output:
     BiocStyle::html_document:
