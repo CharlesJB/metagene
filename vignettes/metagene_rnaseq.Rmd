@@ -51,10 +51,10 @@ named `file.bam.bai` or `file.bai` must be present in the same directory.
 The path (relative or absolute) to the BAM files must be in a vector:
 ```{r bamFiles}
 bam_files <- 
-c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
-  system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
-  system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
-  system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
+c(system.file("extdata/cyto4.bam", package="metagene"),
+  system.file("extdata/cyto3.bam", package="metagene"),
+  system.file("extdata/nuc4.bam", package="metagene"),
+  system.file("extdata/nuc3.bam", package="metagene"))
 ```
 The possibility to use BAM file from single-ended of pair-ended RNA-seq 
 experiment is available (see below)
@@ -68,13 +68,12 @@ more BED files. Here, we use three genes. The name of the files (without the
 extension) will be used to name each gene. 
 CAUTION : one BED files must be provided by gene of interest. Ranges into BED 
 files must be the ranges of exons for this gene. (See for instance the 
-'ENCFF355RXX_DPM1.bed' BED file into 'metagene/inst/extdata').
+'DPM1.bed' BED file into 'metagene/inst/extdata').
 
 ```{r regionsArgument}
 regions <- 
-c(system.file("extdata/ENCFF355RXX_DPM1.bed", package="metagene"),
-system.file("extdata/ENCFF355RXX_NDUFAB1.bed", package="metagene"),
-system.file("extdata/ENCFF355RXX_SLC25A5.bed", package="metagene"))
+c(system.file("extdata/DPM1.bed", package="metagene"),
+system.file("extdata/NDUFAB1.bed", package="metagene"))
 ```
 ### GRanges or GRangesList objects - Regions
 
@@ -93,10 +92,10 @@ between every BAM files present.
 For instance, the design could be created directly from R.
 
 ```{r DesignCraft}
-Samples <- c("c_al4_945MLM_demo_sorted.bam",
-                    "c_al3_362PYX_demo_sorted.bam",
-                    "n_al4_310HII_demo_sorted.bam",
-                    "n_al3_588WMR_demo_sorted.bam")
+Samples <- c("cyto4.bam",
+            "cyto3.bam",
+            "nuc4.bam",
+            "nuc3.bam")
 cyto <- c(1,1,0,0)
 nucleo <- c(0,0,1,1)
 mydesign <- cbind(Samples, cyto, nucleo)
@@ -124,18 +123,22 @@ Two new arguments were introduced : paired_end and assay. Data used here came
 from the ENCSR000CPJ and ENCSR000CPK experiments (ENCODE) using paired-end 
 polyA mRNA RNA-seq.
 
-```{r new metagene_rnaseq object}
+```{r new metagene_rnaseq object, warnings = FALSE}
 bam_files <- 
-c(system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"))
+c(system.file("extdata/nuc4.bam", package="metagene"))
 regions <- 
-c(system.file("extdata/ENCFF355RXX_DPM1.bed", package="metagene"))
+c(system.file("extdata/DPM1.bed", package="metagene"))
 # Initialization
 mg <- metagene$new(regions = regions, 
                     bam_files = bam_files, 
                     assay = 'rnaseq', 
                     paired_end = TRUE)
+mg$produce_table(normalization = 'RPM')
+mg$produce_data_frame()
 mg$plot(title = 'DPM1')
 ```
+Dashed lines strand for exon separations.
+
 NOTE : in paired_end, a warning message could appear to warn you about how many 
 alignments with ambiguous pairing were dumped.
 
@@ -145,7 +148,7 @@ call the other steps automatically with default values (the next section will
 describe the steps in more details).
 
 The plot displayed shows the coverage of the gene DPM1 for the bam file 
-n_al4_310HII_demo_sorted.bam. Coverage is expressed in raw, because by default 
+nuc4.bam. Coverage is expressed in raw, because by default 
 it is not normalized and orientation here is from 3' to 5' (to 0 from 1250 on 
 horizontal axis) because of the strand orientation of the gene in BED files.
 
@@ -165,16 +168,15 @@ During this step, the coverages for every regions specified are extracted from
 every BAM files. Let's start with a bigger dataset as introduced in inputs 
 section. Here, we will use four bam files and three genes.
 
-```{r initialization}
+```{r initialization, warnings = FALSE}
 bam_files <- 
-c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
-  system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
-  system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
-  system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
+c(system.file("extdata/cyto4.bam", package="metagene"),
+  system.file("extdata/cyto3.bam", package="metagene"),
+  system.file("extdata/nuc4.bam", package="metagene"),
+  system.file("extdata/nuc3.bam", package="metagene"))
 regions <- 
-c(system.file("extdata/ENCFF355RXX_DPM1.bed", package="metagene"),
-system.file("extdata/ENCFF355RXX_NDUFAB1.bed", package="metagene"),
-system.file("extdata/ENCFF355RXX_SLC25A5.bed", package="metagene"))
+c(system.file("extdata/DPM1.bed", package="metagene"),
+system.file("extdata/NDUFAB1.bed", package="metagene"))
 mg <- metagene$new(regions = regions, 
                     bam_files = bam_files, 
                     assay = 'rnaseq', 
@@ -189,7 +191,7 @@ the table were added but is completely transparent for user. Colums names are no
 stands for gene names. Data were not binned as for ChIP-Seq analysis and bin 
 column was replaced by nuc (for nucleotide) column.
 
-```{r showProduceTable}
+```{r showProduceTable, warnings = FALSE}
 mg$produce_table(flip_regions = TRUE, normalization = 'RPM')
 tab <- mg$get_table()
 ```
@@ -217,16 +219,16 @@ bam file to take as reference for values to remove also for other samples
 (default : the first sample in table) (3) 'gaps_threshold' a numeric threshold 
 under which value will be removed from data_frame (default = 0).
 
-```{r produceDataFrame2}
+```{r produceDataFrame2, warnings = FALSE}
 bam_files <- 
-c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"))
+c(system.file("extdata/cyto4.bam", package="metagene"))
 region <- 
-c(system.file("extdata/ENCFF355RXX_NDUFAB1.bed", package="metagene"))
+c(system.file("extdata/NDUFAB1.bed", package="metagene"))
 mg <- metagene$new(regions = region, bam_files = bam_files, assay = 'rnaseq')
-mg$produce_table(flip_regions = TRUE)
-mg$plot(title = 'with normalized values under 10')
+mg$produce_table(flip_regions = TRUE, normalization = 'RPM')
+mg$plot(title = 'with all normalized values')
 mg$produce_data_frame(avoid_gaps = TRUE,
-                        bam_name = "c_al4_945MLM_demo_sorted",
+                        bam_name = "cyto4",
                         gaps_threshold = 30)
 mg$plot(title = 'without normalized values under 30')
 ```
@@ -241,24 +243,24 @@ will vary depending if a design was added. If no design was added, this param
 correspond to the BAM name or BAM filenames. Otherwise, we have to use the 
 names of the columns from the design.
 
-```{r showPlot}
+```{r showPlot, warnings = FALSE}
 bam_files <- 
-c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
-  system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
-  system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
-  system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
+c(system.file("extdata/cyto4.bam", package="metagene"),
+  system.file("extdata/cyto3.bam", package="metagene"),
+  system.file("extdata/nuc4.bam", package="metagene"),
+  system.file("extdata/nuc3.bam", package="metagene"))
 regions <- 
-c(system.file("extdata/ENCFF355RXX_DPM1.bed", package="metagene"),
-system.file("extdata/ENCFF355RXX_NDUFAB1.bed", package="metagene"),
-system.file("extdata/ENCFF355RXX_SLC25A5.bed", package="metagene"))
+c(system.file("extdata/DPM1.bed", package="metagene"),
+system.file("extdata/NDUFAB1.bed", package="metagene"))
 mg <- metagene$new(regions = regions, 
                     bam_files = bam_files, 
                     assay = 'rnaseq', 
                     paired_end = TRUE)
+mg$produce_table(normalization = 'RPM')
 mg$produce_data_frame(avoid_gaps = TRUE,
-                        bam_name = "c_al4_945MLM_demo_sorted",
+                        bam_name = "cyto4",
                         gaps_threshold = 30)
-mg$plot(region_names = "ENCFF355RXX_DPM1", 
+mg$plot(region_names = "DPM1", 
                                         title = "Demo plot subset RNA-Seq")
 ```
 
@@ -271,16 +273,15 @@ is a lot of genes).
 One way to avoid this is to analyse each dataset seperately and then merge just
 before producing the metagene plot:
 
-```{r memory, collapse=TRUE}
+```{r memory, collapse=TRUE, warnings = FALSE}
 regions <- 
-c(system.file("extdata/ENCFF355RXX_DPM1.bed", package="metagene"),
-system.file("extdata/ENCFF355RXX_NDUFAB1.bed", package="metagene"),
-system.file("extdata/ENCFF355RXX_SLC25A5.bed", package="metagene"))
+c(system.file("extdata/DPM1.bed", package="metagene"),
+system.file("extdata/NDUFAB1.bed", package="metagene"))
 bam_files <- 
-c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
-  system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
-  system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
-  system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
+c(system.file("extdata/cyto4.bam", package="metagene"),
+  system.file("extdata/cyto3.bam", package="metagene"),
+  system.file("extdata/nuc4.bam", package="metagene"),
+  system.file("extdata/nuc3.bam", package="metagene"))
 mg1 <- metagene$new(bam_files = bam_files[1:2], regions = regions, 
 							assay = 'rnaseq', paired_end = TRUE)
 mg1$produce_data_frame()
@@ -299,10 +300,13 @@ df <- rbind(df1, df2)
 
 Finally, you can use the `plot_metagene` function to produce the metagene plot:
 
-```{r plotMetagene}
+```{r out.width="px", out.height="400px"}
 p <- plot_metagene(df)
 p + ggplot2::ggtitle("Managing large datasets")
+
 ```
+Here three genes are drawn on the same plot. Strong solid lines stand for gene 
+separations and dashed lines for exon separations.
 
 # Comparing profiles with permutations
 
@@ -328,14 +332,14 @@ the data_frame level.
 The first step is to decide which profiles we want to compare and extract the 
 corresponding tables :
 
-```{r extract_subtables}
+```{r extract_subtables, warnings = FALSE}
 mg <- metagene$new(bam_files = bam_files, regions = regions, 
 							assay = 'rnaseq', paired_end = TRUE)
-mg$produce_table(design = mydesign)
+mg$produce_table(design = mydesign, normalization = 'RPM')
 tab <- mg$get_table()
 tab0 <- metagene:::avoid_gaps_update(tab, 
-       bam_name = 'c_al4_945MLM_demo_sorted', gaps_threshold = 10)
-tab0 <- tab0[which(tab0$region == "ENCFF355RXX_SLC25A5"),]
+       bam_name = 'cyto4', gaps_threshold = 10)
+tab0 <- tab0[which(tab0$region == "NDUFAB1"),]
 tab1 <- tab0[which(tab0$design == "cyto"),]
 tab2 <- tab0[which(tab0$design == "nucleo"),]
 ```
@@ -381,14 +385,6 @@ the permutations:
 ```{r perm_pval}
 sum(ratio_intersect >= permutation_results) / 
                                 length(permutation_results)
+mg$plot(region_names = 'NDUFAB1', title='NDUFAB1')
 ```
-And we can also visualized it with a histogram :
-
-```{r hist_perm_pval}
-hist(permutation_results, 
-	main="ratio_intersect (1=total overlapping area)")
-abline(v=ratio_intersect, col = 'red')
-```
-
-
 

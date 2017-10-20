@@ -148,7 +148,7 @@ fileDesign <- system.file("extdata/design.txt", package="metagene")
 design <- read.table(fileDesign, header=TRUE, stringsAsFactors=FALSE)
 design$Samples <- paste(system.file("extdata", package="metagene"),
                         design$Samples, sep="/")
-table(design)
+kable(design)
 ```
 
 ### Design groups from R
@@ -165,7 +165,7 @@ design <- data.frame(Samples = c("align1_rep1.bam", "align1_rep2.bam",
                     align1 = c(1,1,0,0,2), align2 = c(0,0,1,1,2))
 design$Samples <- paste0(system.file("extdata", package="metagene"), "/",
                         design$Samples)
-table(design)
+kable(design)
 ```
 
 # Analysis steps
@@ -251,13 +251,8 @@ mg$produce_table(design = design)
 
 The metagene plot are produced using the `ggplot2` package, which require a
 `data.frame` as input. During this step, the values of the ribbon are
-calculated. The algorithm used for the estimation of the confidence interval
-can be specified with the `stat` parameter.
-
-By default, metagene uses "bootstrap" to obtain a better estimation of the
-mean of enrichment for every positions in each group of regions/BAM files.
-Another approach, called "basic" will simply use the ribbon to represent 95%
-of the values for each positions in each groups.
+calculated. Metagene uses "bootstrap" to obtain a better estimation of the
+mean of enrichment for every positions in each groups.
 ```{r produceDataFrame}
 mg$produce_data_frame()
 ```
