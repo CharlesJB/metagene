@@ -165,7 +165,7 @@ design <- data.frame(Samples = c("align1_rep1.bam", "align1_rep2.bam",
                     align1 = c(1,1,0,0,2), align2 = c(0,0,1,1,2))
 design$Samples <- paste0(system.file("extdata", package="metagene"), "/",
                         design$Samples)
-kable(design)
+table(design)
 ```
 
 # Analysis steps
@@ -445,8 +445,8 @@ corresponding tables :
 ```{r extract_subtables}
 tab <- mg$get_table()
 tab0 <- tab[which(tab$region == "list1"),]
-tab1 <- tab0[which(tab$design == "align1"),]
-tab2 <- tab0[which(tab$design == "align2"),]
+tab1 <- tab0[which(tab0$design == "align1"),]
+tab2 <- tab0[which(tab0$design == "align2"),]
 ```
 
 Then we defined to function to use to compare the two profiles. For this, a
