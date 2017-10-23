@@ -260,8 +260,7 @@ mg$produce_table(normalization = 'RPM')
 mg$produce_data_frame(avoid_gaps = TRUE,
                         bam_name = "cyto4",
                         gaps_threshold = 30)
-mg$plot(region_names = "DPM1", 
-                                        title = "Demo plot subset RNA-Seq")
+mg$plot(region_names = "DPM1", title = "Demo plot subset RNA-Seq")
 ```
 
 # Managing large datasets
@@ -273,7 +272,7 @@ is a lot of genes).
 One way to avoid this is to analyse each dataset seperately and then merge just
 before producing the metagene plot:
 
-```{r memory, collapse=TRUE, warnings = FALSE}
+```{r memory, collapse=TRUE, warnings = FALSE, eval=FALSE}
 regions <- 
 c(system.file("extdata/DPM1.bed", package="metagene"),
 system.file("extdata/NDUFAB1.bed", package="metagene"))
@@ -292,7 +291,7 @@ mg2$produce_data_frame()
 
 Then you can extract the `data.frame`s and combine them with `rbind`:
 
-```{r extractDF}
+```{r extractDF, eval=FALSE}
 df1 <- mg1$get_data_frame()
 df2 <- mg2$get_data_frame()
 df <- rbind(df1, df2)
@@ -300,7 +299,7 @@ df <- rbind(df1, df2)
 
 Finally, you can use the `plot_metagene` function to produce the metagene plot:
 
-```{r out.width="px", out.height="400px"}
+```{r out.width="px", out.height="400px", eval=FALSE}
 p <- plot_metagene(df)
 p + ggplot2::ggtitle("Managing large datasets")
 
