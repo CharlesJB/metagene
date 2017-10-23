@@ -505,7 +505,7 @@ metagene <- R6Class("metagene",
                         col_values <- unlist(col_values)
                     
                     if (!is.null(bin_count)) {
-                        message('produce data table : rnaseq binned')
+                        message('produce data table : RNA-Seq binned')
                         col_bins <- trunc(
                                     (col_nuc/(col_gene_size+1))*bin_count)+1
                         col_bins <- as.integer(col_bins)
@@ -524,7 +524,7 @@ metagene <- R6Class("metagene",
                                 value = col_values,
                                 strand = col_strand)
                     } else {
-                        message('produce data table : rnaseq')
+                        message('produce data table : RNA-Seq')
                         private$table <- data.table(
                                 region = col_gene,
                                 exon = col_exon,
@@ -545,7 +545,7 @@ metagene <- R6Class("metagene",
                         coverages <- private$merge_chip(coverages, design)
                     }
                 
-                    message('produce data table : chipseq')
+                    message('produce data table : ChIP-Seq')
                     if (is.null(bin_count)) {
                         bin_count = 100
                     }
@@ -648,7 +648,7 @@ metagene <- R6Class("metagene",
                 private$df <- data.table::copy(self$get_table())
             
                 if (private$params[['assay']] == 'chipseq') {
-                    message('produce DF : ChIP-Seq')
+                    message('produce data frame : ChIP-Seq')
                     private$data_frame_need_update(alpha, sample_count)
                     sample_size <- self$get_table()[bin == 1,][
                                             ,.N, by = .(region, design)][
@@ -674,7 +674,7 @@ metagene <- R6Class("metagene",
                     private$df <- unique(private$df)
                 } else if (private$params[['assay']] == 'rnaseq' 
                                 & !('bin' %in% colnames(private$df))){
-                    message('produce data.frame : RNA-Seq')
+                    message('produce data frame : RNA-Seq')
                     private$data_frame_need_update(alpha, sample_count)
                         
                     sample_size <- self$get_table()[nuc == 1,][
@@ -719,7 +719,7 @@ metagene <- R6Class("metagene",
                                     private$df$nuctot))),]
                 } else if (private$params[['assay']] == 'rnaseq' 
                                         & ('bin' %in% colnames(private$df))){
-                    message('produce DF : RNA-Seq binned')
+                    message('produce data frame : RNA-Seq binned')
                     private$data_frame_need_update(alpha, sample_count)
                         
                     sample_size <- self$get_table()[bin == 1,][
@@ -1216,14 +1216,14 @@ metagene <- R6Class("metagene",
                                 'must have the same sign to be flipped.'))
             }
             if (private$params[['assay']] == 'chipseq'){
-                message('chipseq flip/unflip')
+                message('ChIP-Seq flip/unflip')
                 i <- which(private$table$strand == '-')
                 private$table$bin[i] <- (self$get_params()$bin_count + 1) - 
                                                         private$table$bin[i]
                 private$table$bin <- as.integer(private$table$bin)
                 private$params[["df_needs_update"]] <- TRUE
             } else if (private$params[['assay']] == 'rnaseq'){
-                message('rna flip/unflip')
+                message('RNA-Seq flip/unflip')
                 i <- which(private$table$strand == '-')
                 #col_nuc
                 private$table$nuc[i] <- (private$table$regionsize[i] + 1) - 
