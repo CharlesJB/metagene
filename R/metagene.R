@@ -230,7 +230,7 @@ metagene <- R6Class("metagene",
             # Parse bam files
             private$print_verbose("Parse bam files...\n")
             private$print_verbose("coverages...\n")
-            private$coverages <- private$produce_coverages()            
+            private$coverages <- private$produce_coverages()        
         },
         get_bam_count = function(filename) {
             # Parameters validation are done by Bam_Handler object
@@ -484,22 +484,21 @@ metagene <- R6Class("metagene",
                         
                         ## col_values
                         #NB : lapply(Views...) -> out of limits of view
-                        grl <- self$get_regions()
-                        grtot <- unlist(grl)
+                        grtot <- self$get_regions()
                         col_values <- list()
-                        idx = 1 #index for col_values list
+                        idx <- 1 #index for col_values list
+                        idx_sd_loop <- 1 
                         for(bam in bam_names_in_design) {
-                            for (seqnames in unique(as.character(seqnames(
-                                                                grtot)))) {
+                            for (i in 1:length(grtot)){
+								gr <- grtot[[i]]
+								sq <- unique(as.character(seqnames(gr)))
                                 val <- Views(
-                                    coverages[[bam]][[seqnames]], 
-                                    start(grtot[which(
-                                        seqnames(grtot) == seqnames)]), 
-                                    end(grtot[which(
-                                        seqnames(grtot) == seqnames)]))
+                                    coverages[[bam]][[sq]], 
+                                    start(gr), 
+                                    end(gr))
                                 col_values[[idx]] <- unlist(lapply(
-                                                        val, as.numeric))
-                                idx = idx + 1
+                                val, as.numeric))
+                                idx <- idx + 1
                             }
                         }
                         col_values <- unlist(col_values)
@@ -676,7 +675,18 @@ metagene <- R6Class("metagene",
                                 & !('bin' %in% colnames(private$df))){
                     message('produce data frame : RNA-Seq')
                     private$data_frame_need_update(alpha, sample_count)
-                        
+
+###################                    
+                    if(all(rowSums(self$get_design()[,-1]) == 1) &
+                        all(colSums(self$get_design()[,-1]) == 1)){
+                        private$df$qinf <- private$df$value
+                        private$df$qsup <- private$df$value
+                        private$df$group <- paste0(private$df$design,'_',private$df$region)
+                        private$df <- data.frame(private$df)
+                        return(private$df)
+                    }
+###################
+                    
                     sample_size <- self$get_table()[nuc == 1,][
                                             ,.N, by = .(region, design)][
                                             , .(min(N))]
