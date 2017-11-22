@@ -275,8 +275,8 @@ test.metagene_relative_and_absolute_bam_files_pathes <- function() {
     obs1 <- tryCatch(metagene:::metagene$new(regions = regions[1],
                                             bam_files = bamfiles),
                     error = conditionMessage)
-    bamfiles <- substr(bam_files,10,500)
     bamfiles <- substr(bam_files,nchar(path.expand("~"))+1,500)
+    bamfiles <- str_replace(bamfiles, '^/','~/')
     obs2 <- tryCatch(metagene:::metagene$new(regions = regions[1],
                                             bam_files = bamfiles),
                     error = conditionMessage)
