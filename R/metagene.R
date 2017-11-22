@@ -201,6 +201,17 @@ metagene <- R6Class("metagene",
                                 cores = cores, verbose = verbose,
                                 force_seqlevels = force_seqlevels, 
                                 assay = assay)
+
+            # Change bam_files pathes to absolute pathes
+            bam_files <- 
+                unlist(lapply(bam_files, function(x) if (substr(x,1,1) == '.') {
+                                            wd <- getwd()
+                                            paste0(wd,substr(x,2,500))
+                                        } else if (substr(x,1,1) == '~') {
+                                            normalizePath(x) 
+                                        } else {
+                                            x })))
+
             # Save params
             private$parallel_job <- Parallel_Job$new(cores)
             private$params[["padding_size"]] <- padding_size
@@ -220,7 +231,8 @@ metagene <- R6Class("metagene",
             
             # Prepare bam files
             private$print_verbose("Prepare bam files...")
-            private$bam_handler <- Bam_Handler$new(bam_files, cores = cores,
+            private$bam_handler <- Bam_Handler$new(bam_files, 
+                                        cores = cores,
                                         paired_end = paired_end)
 
             # Prepare regions
