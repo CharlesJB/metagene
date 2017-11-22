@@ -152,6 +152,23 @@ test.bam_handler_initialize_with_not_existing_files<- function() {
     checkEquals(obs, exp)
 }
 
+#bam files pathes normalization
+test.bam_handler_relative_and_absolute_bam_files_pathes <- function() {
+    bamfiles <- substr(bam_files,nchar(getwd())+1,500)
+    bamfiles <- str_replace(bamfiles, '^/','./')
+    obs1 <- tryCatch(metagene:::Bam_Handler$new(bam_files = bamfiles),
+                    error = conditionMessage)
+    bamfiles <- substr(bam_files,10,500)
+    bamfiles <- str_replace(bamfiles, '^/','~/')
+    obs2 <- tryCatch(metagene:::Bam_Handler$new(bam_files = bamfiles),
+                    error = conditionMessage)
+    obs3 <- tryCatch(metagene:::Bam_Handler$new(bam_files = bam_files),
+                    error = conditionMessage)
+    checkTrue(all(class(obs1)[1]=='Bam_Handler', 
+                    class(obs2)[1]=='Bam_Handler',
+                    class(obs3)[1]=='Bam_Handler'))
+}
+
 ###################################################
 ## Test the bam_handler$get_aligned_count()
 ###################################################
