@@ -210,7 +210,7 @@ metagene <- R6Class("metagene",
                                         } else if (substr(x,1,1) == '~') {
                                             normalizePath(x) 
                                         } else {
-                                            x })))
+                                            x }))
 
             # Save params
             private$parallel_job <- Parallel_Job$new(cores)
