@@ -158,7 +158,7 @@ test.bam_handler_relative_and_absolute_bam_files_pathes <- function() {
     bamfiles <- str_replace(bamfiles, '^/','./')
     obs1 <- tryCatch(metagene:::Bam_Handler$new(bam_files = bamfiles),
                     error = conditionMessage)
-    bamfiles <- substr(bam_files,10,500)
+    bamfiles <- substr(bam_files,nchar(path.expand("~"))+1,500)
     bamfiles <- str_replace(bamfiles, '^/','~/')
     obs2 <- tryCatch(metagene:::Bam_Handler$new(bam_files = bamfiles),
                     error = conditionMessage)
