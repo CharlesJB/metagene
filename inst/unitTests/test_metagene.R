@@ -271,18 +271,21 @@ test.metagene_initialize_valid_unnamed_bam_files <- function() {
 #bam files pathes normalization
 test.metagene_relative_and_absolute_bam_files_pathes <- function() {
     bamfiles <- substr(bam_files,nchar(getwd())+1,500)
-    bamfiles <- str_replace(bamfiles, '^/','./')
+    bamfiles <- stringr:::str_replace(bamfiles, '^/','./')
     obs1 <- tryCatch(metagene:::metagene$new(regions = regions[1],
                                             bam_files = bamfiles),
                     error = conditionMessage)
     bamfiles <- substr(bam_files,nchar(path.expand("~"))+1,500)
-    bamfiles <- str_replace(bamfiles, '^/','~/')
+    bamfiles <- stringr:::str_replace(bamfiles, '^/','~/')
     obs2 <- tryCatch(metagene:::metagene$new(regions = regions[1],
                                             bam_files = bamfiles),
                     error = conditionMessage)
     obs3 <- tryCatch(metagene:::metagene$new(regions = regions[1],
                                             bam_files = bam_files),
                     error = conditionMessage)
+    print(obs1)
+    print(obs2)
+    print(obs3)
     checkTrue(all(class(obs1)[1]=='metagene', 
                     class(obs2)[1]=='metagene',
                     class(obs3)[1]=='metagene'))

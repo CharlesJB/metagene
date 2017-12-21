@@ -688,16 +688,6 @@ metagene <- R6Class("metagene",
                     message('produce data frame : RNA-Seq')
                     private$data_frame_need_update(alpha, sample_count)
 
-###################                    
-                    if(all(rowSums(self$get_design()[,-1]) == 1) &
-                        all(colSums(self$get_design()[,-1]) == 1)){
-                        private$df$qinf <- private$df$value
-                        private$df$qsup <- private$df$value
-                        private$df$group <- paste0(private$df$design,'_',private$df$region)
-                        private$df <- data.frame(private$df)
-                        return(private$df)
-                    }
-###################
                     
                     sample_size <- self$get_table()[nuc == 1,][
                                             ,.N, by = .(region, design)][
@@ -717,7 +707,8 @@ metagene <- R6Class("metagene",
                         names(res) <- out_cols
                         as.list(res)
                     }
-                    
+
+
                     if(avoid_gaps){
                         if (!is.null(bam_name)){
                             private$data_frame_avoid_gaps_updates(bam_name,
@@ -729,10 +720,20 @@ metagene <- R6Class("metagene",
                         }
                     }
 
-                    private$df <- private$df[, 
+###################                    
+                    if(all(rowSums(self$get_design()[,-1, drop=FALSE]) == 1) &
+                        all(colSums(self$get_design()[,-1, drop=FALSE]) == 1)){
+                        private$df$qinf <- private$df$value
+                        private$df$qsup <- private$df$value
+                        private$df$group <- paste0(private$df$design,'_',private$df$region)
+                        private$df <- data.frame(private$df)
+                        #return(private$df)
+                    } else {
+###################
+                        private$df <- private$df[, 
                                 c(out_cols) := bootstrap(.SD), 
                                 by = .(region, design, nuctot)]
-
+                    }
                     #filter to avoid duplicated ligne (to reduce df dims)
                     #it does not matter concerning the plot. Plot works !
                     private$df <- private$df[which(!duplicated(paste(

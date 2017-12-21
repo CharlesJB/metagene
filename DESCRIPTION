@@ -64,5 +64,6 @@ Suggests:
     BiocGenerics,
     knitr,
     BiocStyle,
-    rmarkdown
+    rmarkdown,
+    similaRpeak
 RoxygenNote: 6.0.1
