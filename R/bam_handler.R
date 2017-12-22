@@ -90,6 +90,16 @@ Bam_Handler <- R6Class("Bam_Handler",
                 stop("bam_files must be a vector of BAM filenames")
             }
 
+            # Change bam_files pathes to absolute pathes
+            bam_files <- 
+                unlist(lapply(bam_files, function(x) if (substr(x,1,1) == '.') {
+                                            wd <- getwd()
+                                            paste0(wd,substr(x,2,500))
+                                        } else if (substr(x,1,1) == '~') {
+                                            normalizePath(x) 
+                                        } else {
+                                            x }))
+
             # All BAM files must exist
             if (!all(sapply(bam_files, file.exists))) {
                 stop("At least one BAM file does not exist")

@@ -14,9 +14,9 @@ Author@R: c(person("Charles", "Joly Beauparlant",
 	email="fabien.lamaze.1@ulaval.ca"), 
 	person("Rawane", "Samb",
     email="rawane.samb.1@ulaval.ca"), 
-	person("Astrid Louise","Deschenes",
-        person("Cedric", "Lippens",
+	person("Cedric", "Lippens",
     email="lippens.cedric@protonmail.com"),
+    person("Astrid Louise","Deschenes",
     email="Astrid-Louise.Deschenes@crchudequebec.ulaval.ca"), 
 	person("Arnaud", "Droit", 
 	email="arnaud.droit@crchuq.ulaval.ca"))
@@ -65,5 +65,6 @@ Suggests:
     RUnit,
     knitr,
     BiocStyle,
-    rmarkdown
+    rmarkdown,
+    similaRpeak
 RoxygenNote: 6.0.1
