@@ -16,7 +16,7 @@ Each regions have a width of 2000 nucleotide centered at the transcription
 start site.
 }
 \examples{
-data(promoters_hg19)
+  data(promoters_hg19)
 }
 \seealso{
 \code{\link{get_promoters_txdb}}

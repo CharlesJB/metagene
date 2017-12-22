@@ -10,11 +10,11 @@
 # param n Number of bins to produce.
 #
 # return
-# A GRanges object splitted into N bins
+#   A GRanges object splitted into N bins
 #
 # examples
-# gr <- GRanges("chr1", IRanges(c(100, 300), c(200, 500))
-# gr <- intoNbins(gr)
+#   gr <- GRanges("chr1", IRanges(c(100, 300), c(200, 500))
+#   gr <- intoNbins(gr)
 intoNbins <- function(gr, n = 10) {
     stopifnot(class(gr) == "GRanges")
     stopifnot(length(gr) > 0)
@@ -56,7 +56,7 @@ intoNbins <- function(gr, n = 10) {
 get_promoters_txdb <- function(txdb, upstream = 1000, downstream = 1000) {
     stopifnot(is(txdb, "TxDb"))
     GenomicFeatures::promoters(GenomicFeatures::genes(txdb),
-                            upstream = upstream, downstream = downstream)
+                               upstream = upstream, downstream = downstream)
 }
 
 
@@ -259,25 +259,24 @@ write_bed_file_filter_result <- function(bed_file_filter_result,
 #' library(similaRpeak)
 #' perm_fun <- function(profile1, profile2) {
 #'    sim <- similarity(profile1, profile2)
-#'    sim[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+#'    sim[["metrics"]][["RATIO_INTERSECT"]]
 #' }
 #' 
-#' ratio_normalized_intersect <- 
+#' ratio_intersect <- 
 #'    perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, 
 #'            tab2[, .(moy=mean(value)), by=bin]$moy)
-#' ratio_normalized_intersect
+#' ratio_intersect
 #' 
 #' permutation_results <- permutation_test(tab1, tab2, sample_size = 2,
 #'                                sample_count = 1000, FUN = perm_fun)
 #' hist(permutation_results, 
-#'        main="ratio_normalized_intersect (1=total overlapping area)")
-#' abline(v=ratio_normalized_intersect, col = 'red')
-#' sum(ratio_normalized_intersect >= permutation_results) / 
-#'        length(permutation_results)
+#'        main="ratio_intersect (1=total overlapping area)")
+#' abline(v=ratio_intersect, col = 'red')
+#' sum(ratio_intersect >= permutation_results) / length(permutation_results)
 #' }
 #'
-
-avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
+avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0)
+{
     new_table <- data.table::copy(table)
     
 	if (!is.null(new_table$bin)){
@@ -437,4 +436,3 @@ avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
     }
     return(new_table)
 }
-

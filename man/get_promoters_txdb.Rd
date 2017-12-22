@@ -21,9 +21,9 @@ Extract Entrez genes promoters from TxDb object.
 }
 \examples{
 \dontrun{
-    # require(TxDb.Hsapiens.UCSC.hg19.knownGene)
-    txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
-    promoters_hg19 <- get_promoters_txdb(txdb)
+   # require(TxDb.Hsapiens.UCSC.hg19.knownGene)
+   txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+   promoters_hg19 <- get_promoters_txdb(txdb)
 }
 
 }

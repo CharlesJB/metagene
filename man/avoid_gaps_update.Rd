@@ -47,47 +47,46 @@ system.file("extdata/ENCFF355RXX_NDUFAB1less.bed", package="metagene"),
 system.file("extdata/ENCFF355RXX_SLC25A5less.bed", package="metagene"))
 mydesign <- matrix(c(1,1,0,0,0,0,1,1),ncol=2, byrow=FALSE)
 mydesign <- cbind(c("c_al4_945MLM_demo_sorted.bam",
-                "c_al3_362PYX_demo_sorted.bam",
-                "n_al4_310HII_demo_sorted.bam",
-                "n_al3_588WMR_demo_sorted.bam"), mydesign)
+                   "c_al3_362PYX_demo_sorted.bam",
+                   "n_al4_310HII_demo_sorted.bam",
+                   "n_al3_588WMR_demo_sorted.bam"), mydesign)
 colnames(mydesign) <- c('Samples', 'cyto', 'nucleo')
 mydesign <- data.frame(mydesign)
 mydesign[,2] <- as.numeric(mydesign[,2])-1
 mydesign[,3] <- as.numeric(mydesign[,3])-1
 
 mg <- metagene$new(regions = region, bam_files = bam_files, 
-                                                        assay = 'rnaseq')
+                                                           assay = 'rnaseq')
 mg$produce_table(flip_regions = FALSE, bin_count = 100, 
-                            design = mydesign, normalization = 'RPM')
+                               design = mydesign, normalization = 'RPM')
 mg$produce_data_frame(avoid_gaps = TRUE, 
-                    bam_name = "c_al4_945MLM_demo_sorted", 
-                    gaps_threshold = 10)
+                       bam_name = "c_al4_945MLM_demo_sorted", 
+                       gaps_threshold = 10)
 mg$plot()
 tab <- mg$get_table()
 tab <- avoid_gaps_update(tab, 
-    bam_name = 'c_al4_945MLM_demo_sorted', gaps_threshold = 10)
-tab0 <- mg$get_table()
-tab1 <- tab0[which(tab0$design == "cyto"),]
-tab2 <- tab0[which(tab0$design == "nucleo"),]
+       bam_name = 'c_al4_945MLM_demo_sorted', gaps_threshold = 10)
+tab1 <- tab[which(tab0$design == "cyto"),]
+tab2 <- tab[which(tab0$design == "nucleo"),]
 
 library(similaRpeak)
 perm_fun <- function(profile1, profile2) {
- sim <- similarity(profile1, profile2)
- sim[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
+   sim <- similarity(profile1, profile2)
+   sim[["metrics"]][["RATIO_NORMALIZED_INTERSECT"]]
 }
 
 ratio_normalized_intersect <- 
- perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, 
-        tab2[, .(moy=mean(value)), by=bin]$moy)
+   perm_fun(tab1[, .(moy=mean(value)), by=bin]$moy, 
+           tab2[, .(moy=mean(value)), by=bin]$moy)
 ratio_normalized_intersect
 
 permutation_results <- permutation_test(tab1, tab2, sample_size = 2,
-                            sample_count = 1000, FUN = perm_fun)
+                               sample_count = 1000, FUN = perm_fun)
 hist(permutation_results, 
-    main="ratio_normalized_intersect (1=total overlapping area)")
+       main="ratio_normalized_intersect (1=total overlapping area)")
 abline(v=ratio_normalized_intersect, col = 'red')
 sum(ratio_normalized_intersect >= permutation_results) / 
-    length(permutation_results)
+       length(permutation_results)
 }
 
 }

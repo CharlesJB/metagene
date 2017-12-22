@@ -7,6 +7,7 @@ if(FALSE) {
     library( "metagene" )
     library( "rtracklayer" )
     library( "DBChIP" )
+    library( "stringr" )
 }
 
 ### }}}
@@ -35,21 +36,19 @@ test.bam_handler_single_valid_file <- function() {
 ## Different seqnames bam file warning
 test.bam_handler_different_seqnames_bam_file_warning <- function() {
     bam_handler <- demo_bh_one$clone()
-	msg <- "\n\nSome bam files have discrepancies in their "
-    msg <- paste0(msg, "seqnames.")
-    msg <- paste0(msg, "\n\n")
-    msg <- paste0(msg, "This could be caused by chromosome names")
-    msg <- paste0(msg, " present only in a subset of the bam ")
-    msg <- paste0(msg, "files (i.e.: chrY in some bam files, but ")
-    msg <- paste0(msg, "absent in others.\n\n")
-    msg <- paste0(msg, "This could also be caused by ")
-    msg <- paste0(msg, "discrepancies in the seqlevels style")
-    msg <- paste0(msg, " (i.e.: UCSC:chr1 versus NCBI:1)\n\n")
-	print(msg)
+    exp <- "\n\nSome bam files have discrepancies in their "
+    exp <- paste0(exp, "seqnames.")
+    exp <- paste0(exp, "\n\n")
+    exp <- paste0(exp, "This could be caused by chromosome names")
+    exp <- paste0(exp, " present only in a subset of the bam ")
+    exp <- paste0(exp, "files (i.e.: chrY in some bam files, but ")
+    exp <- paste0(exp, "absent in others.\n\n")
+    exp <- paste0(exp, "This could also be caused by ")
+    exp <- paste0(exp, "discrepancies in the seqlevels style")
+	exp <- paste0(exp, " (i.e.: UCSC:chr1 versus NCBI:1)\n\n")
     obs <- tryCatch(metagene:::Bam_Handler$new(different_seqnames),
                     warning = conditionMessage)
-	print(obs)
-    checkIdentical(obs, msg)
+    checkIdentical(obs, warning(exp))
 }
 
 ## Invalid bam file - not indexed
@@ -152,6 +151,26 @@ test.bam_handler_initialize_with_not_existing_files<- function() {
                     error = conditionMessage)
     exp <- "At least one BAM file does not exist"
     checkEquals(obs, exp)
+}
+
+#bam files pathes normalization
+test.bam_handler_relative_and_absolute_bam_files_pathes <- function() {
+    # bamfiles <- substr(bam_files,nchar(getwd())+1,nchar(bam_files)+1)
+    # print(getwd())
+    # print(bamfiles)
+    # bamfiles <- stringr:::str_replace(bamfiles, '^/','./')
+    # print(bamfiles)
+    # obs1 <- tryCatch(metagene:::Bam_Handler$new(bam_files = bamfiles),
+    #                 error = conditionMessage)
+    bamfiles <- substr(bam_files,nchar(path.expand("~"))+1,nchar(bam_files)+1)
+    bamfiles <- stringr:::str_replace(bamfiles, '^/','~/')
+    obs2 <- tryCatch(metagene:::Bam_Handler$new(bam_files = bamfiles),
+                    error = conditionMessage)
+    obs3 <- tryCatch(metagene:::Bam_Handler$new(bam_files = bam_files),
+                    error = conditionMessage)
+    # class(obs1)[1]=='Bam_Handler',
+    checkTrue(all(class(obs2)[1]=='Bam_Handler',
+                    class(obs3)[1]=='Bam_Handler'))
 }
 
 ###################################################
@@ -356,7 +375,6 @@ test.bam_handler_get_coverage_all_seqnames_not_in_bam_force_seqlevels <-
                                              regions = region,
                                              force_seqlevels = TRUE),
                     error = conditionMessage)
-	print(obs)
     exp <- "No seqlevels matching between regions and bam file"
     checkIdentical(obs, exp)
 }

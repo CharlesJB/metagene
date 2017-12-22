@@ -10,7 +10,7 @@ if(FALSE) {
     library( "RUnit" )
     library( "metagene" )
     library( "data.table" )
-	library( "purrr" )
+    library( "purrr" )
 }
 
 ### }}}
@@ -19,32 +19,29 @@ if(FALSE) {
 ## Init of RNA-Seq assay 
 #########################
 
-bam_files <- 
-  c(system.file("extdata/c_al4_945MLM_demo_sorted.bam", package="metagene"),
-    system.file("extdata/c_al3_362PYX_demo_sorted.bam", package="metagene"),
-    system.file("extdata/n_al4_310HII_demo_sorted.bam", package="metagene"),
-    system.file("extdata/n_al3_588WMR_demo_sorted.bam", package="metagene"))
+bam_files <- c(system.file("extdata/cyto4.bam", package="metagene"),
+                system.file("extdata/cyto3.bam", package="metagene"),
+                system.file("extdata/nuc4.bam", package="metagene"),
+                system.file("extdata/nuc3.bam", package="metagene"))
 
-regions <- 
-  c(system.file("extdata/ENCFF355RXX_DPM1less.bed", package="metagene"),
-    system.file("extdata/ENCFF355RXX_NDUFAB1less.bed", package="metagene"),
-    system.file("extdata/ENCFF355RXX_SLC25A5less.bed", package="metagene"))
+region <- c(system.file("extdata/DPM1.bed", package="metagene"),
+            system.file("extdata/NDUFAB1.bed", package="metagene"))
 
 mg_ori <- metagene$new(regions = regions, bam_files = bam_files, 
-                       assay = 'rnaseq')
+                        assay = 'rnaseq')
 nb_nuctot <- sum(unlist(width(mg_ori$get_regions())))
 nb_bam <- length(bam_files)
 nb_rg <- length(regions)
 
-mydesign <- matrix(c(1,1,1,0,0,0,0,1),ncol=2, byrow=FALSE)
-mydesign <- cbind(c("c_al4_945MLM_demo_sorted.bam",
-                    "c_al3_362PYX_demo_sorted.bam",
-                    "n_al4_310HII_demo_sorted.bam",
-                    "n_al3_588WMR_demo_sorted.bam"), mydesign)
+mydesign <- matrix(c(1,1,0,0,0,0,1,1),ncol=2, byrow=FALSE)
+mydesign <- cbind(c("cyto4.bam",
+                    "cyto3.bam",
+                    "nuc4.bam",
+                    "nuc3.bam"), mydesign)
 colnames(mydesign) <- c('Samples', 'cyto', 'nucleo')
 mydesign <- data.frame(mydesign)
 mydesign[,2] <- as.numeric(mydesign[,2])-1
-mydesign[,3] <- as.numeric(mydesign[,3])-1
+mydesign[,3] <- as.numeric(mydesign[,3])-11
 #mydesign
 
 
@@ -100,7 +97,7 @@ test.metagene.rna_produce_data_table_dim_checking_bin100 <- function() {
   #nb of bin
   checkIdentical(unique(tab$bin), 1:100)
   checkIdentical(dim(tab[,.N,by=c('bam','region','bin')])[1] ==  
-                   nb_bam * nb_rg * 100, TRUE)
+                    nb_bam * nb_rg * 100, TRUE)
 }
 
 test.metagene.rna_produce_data_table_checking_noise_removal <- function() {
@@ -255,7 +252,7 @@ test.metagene.rna_produce_data_frame_w_design_bam_name_not_found <- function() {
                                         bam_name = 'test'),
                   error = conditionMessage)
   exp <- paste("bam_name argument is no one of bam_names",
-               "provided to the metagene object")
+                "provided to the metagene object")
   checkIdentical(obs, exp)
 }
 
@@ -277,7 +274,7 @@ test.metagene.rna_produce_data_frame_w_design_w_avoid_gaps <- function() {
   df_obs <- mg$get_data_frame()
   
   gaps_threshold <- 0
-  bam_name <- "c_al4_945MLM_demo_sorted"
+  bam_name <- "cyto4"
   tab <- mg$get_table()
   dfdt <- data.table(tab)
   nb_nuc_removed <- dfdt[value <= gaps_threshold 
@@ -299,8 +296,8 @@ test.metagene.rna_produce_data_frame_w_design_w_avoid_gaps <- function() {
   
   exp_exon_length <- dfdt[, .N, by=c('region', 'bam', 'exon')]
   selected <- map2(nb_nuc_removed$exon,
-                   nb_nuc_removed$region, 
-                   ~which(exp_exon_length$exon == .x 
+                    nb_nuc_removed$region, 
+                    ~which(exp_exon_length$exon == .x 
                           & exp_exon_length$region == .y))
   for (i in 1:length(selected)){
     exp_exon_length$N[selected[[i]]] <- exp_exon_length$N[selected[[i]]] -

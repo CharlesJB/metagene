@@ -1,21 +1,22 @@
 Package: metagene
-Version: 2.7.1
+Version: 2.9.3
 Date: 2017-10-13
 Title: A package to produce metagene plots
-Author: Cedric Lippens <lippens.cedric@protonmail>, Charles Joly Beauparlant 
+Author: Charles Joly Beauparlant 
 	<charles.joly-beauparlant@crchul.ulaval.ca>, Fabien Claude Lamaze 
 	<fabien.lamaze.1@ulaval.ca>, Rawane Samb <rawane.samb.1@ulaval.ca>, 
+        Cedric Lippens <lippens.cedric@protonmail>,
 	Astrid Louise Deschenes <Astrid-Louise.Deschenes@crchudequebec.ulaval.ca> 
 	and Arnaud Droit <arnaud.droit@crchuq.ulaval.ca>.
-Author@R: c(person("Cedric", "Lippens",
-	email="lippens.cedric@protonmail.com"),
-	person("Charles", "Joly Beauparlant",
+Author@R: c(person("Charles", "Joly Beauparlant",
     email="charles.joly-beauparlant@crchul.ulaval.ca"), 
 	person("Fabien Claude", "Lamaze", 
 	email="fabien.lamaze.1@ulaval.ca"), 
 	person("Rawane", "Samb",
     email="rawane.samb.1@ulaval.ca"), 
-	person("Astrid Louise","Deschenes",
+	person("Cedric", "Lippens",
+    email="lippens.cedric@protonmail.com"),
+    person("Astrid Louise","Deschenes",
     email="Astrid-Louise.Deschenes@crchudequebec.ulaval.ca"), 
 	person("Arnaud", "Droit", 
 	email="arnaud.droit@crchuq.ulaval.ca"))
@@ -63,5 +64,6 @@ Suggests:
     BiocGenerics,
     knitr,
     BiocStyle,
-    rmarkdown
+    rmarkdown,
+    similaRpeak
 RoxygenNote: 6.0.1
