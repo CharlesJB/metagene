@@ -290,7 +290,6 @@ test.metagene_relative_and_absolute_bam_files_pathes <- function() {
                     class(obs3)[1]=='metagene'))
 }
 
-
 ###################################################
 ## Test the metagene$plot() function
 ###################################################

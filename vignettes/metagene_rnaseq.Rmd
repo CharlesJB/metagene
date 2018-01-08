@@ -64,7 +64,7 @@ experiment is available (see below)
 ### BED files
 
 To compare custom regions of interest, it is possible to use a list of one or
-more BED files. Here, we use three genes. The name of the files (without the 
+more BED files. Here, we use two genes. The name of the files (without the 
 extension) will be used to name each gene. 
 CAUTION : one BED files must be provided by gene of interest. Ranges into BED 
 files must be the ranges of exons for this gene. (See for instance the 
@@ -92,10 +92,10 @@ between every BAM files present.
 For instance, the design could be created directly from R.
 
 ```{r DesignCraft}
-Samples <- c("cyto4.bam",
-            "cyto3.bam",
-            "nuc4.bam",
-            "nuc3.bam")
+Samples <- c("cyto4",
+            "cyto3",
+            "nuc4",
+            "nuc3")
 cyto <- c(1,1,0,0)
 nucleo <- c(0,0,1,1)
 mydesign <- cbind(Samples, cyto, nucleo)
@@ -166,7 +166,7 @@ step (as was shown in the previous section).
 
 During this step, the coverages for every regions specified are extracted from
 every BAM files. Let's start with a bigger dataset as introduced in inputs 
-section. Here, we will use four bam files and three genes.
+section. Here, we will use four bam files and two genes.
 
 ```{r initialization, warnings = FALSE}
 bam_files <- 
@@ -304,7 +304,7 @@ p <- plot_metagene(df)
 p + ggplot2::ggtitle("Managing large datasets")
 
 ```
-Here three genes are drawn on the same plot. Strong solid lines stand for gene 
+Here two genes are drawn on the same plot. Strong solid lines stand for gene 
 separations and dashed lines for exon separations.
 
 # Comparing profiles with permutations
