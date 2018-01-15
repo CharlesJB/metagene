@@ -206,7 +206,7 @@ metagene <- R6Class("metagene",
             bam_files <- 
                 unlist(lapply(bam_files, function(x) if (substr(x,1,1) == '.') {
                                             wd <- getwd()
-                                            paste0(wd,substr(x,2,500))
+                                            paste0(wd,substr(x,2,nchar(x)))
                                         } else if (substr(x,1,1) == '~') {
                                             normalizePath(x) 
                                         } else {
@@ -215,7 +215,7 @@ metagene <- R6Class("metagene",
                 regions <- 
                     unlist(lapply(regions, function(x) if (substr(x,1,1) == '.') {
                                             wd <- getwd()
-                                            paste0(wd,substr(x,2,500))
+                                            paste0(wd,substr(x,2,nchar(x)))
                                         } else if (substr(x,1,1) == '~') {
                                             normalizePath(x) 
                                         } else {
@@ -511,7 +511,6 @@ metagene <- R6Class("metagene",
                         
                         ## col_values
                         #NB : lapply(Views...) -> out of limits of view
-                        print(coverages[['cyto4']])
 
                         grtot <- self$get_regions()
                         col_values <- list()
@@ -1139,7 +1138,12 @@ metagene <- R6Class("metagene",
                         regions = regions,
                         force_seqlevels= private$params[["force_seqlevels"]])
             names(res) <- names(private$params[["bam_files"]])
-            lapply(res, GenomeInfoDb::sortSeqlevels)
+            if(all(lapply(lapply(unlist(res), sum),sum) != 0)){
+                lapply(res, GenomeInfoDb::sortSeqlevels)
+            } else {
+                stop(paste0("At least one sample has not coverage at all. ",
+                    "Please check if all BAM files contain reads for desired regions"))
+            }
         },
         plot_graphic = function(df, title, x_label) {
             # Prepare x label
