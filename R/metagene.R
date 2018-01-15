@@ -202,7 +202,7 @@ metagene <- R6Class("metagene",
                                 force_seqlevels = force_seqlevels, 
                                 assay = assay)
 
-            # Change bam_files pathes to absolute pathes
+            # Change bam_files and regions files pathes to absolute pathes
             bam_files <- 
                 unlist(lapply(bam_files, function(x) if (substr(x,1,1) == '.') {
                                             wd <- getwd()
@@ -211,6 +211,16 @@ metagene <- R6Class("metagene",
                                             normalizePath(x) 
                                         } else {
                                             x }))
+            if(!(class(regions) == "GRanges" | class(regions) == "GRangesList")){
+                regions <- 
+                    unlist(lapply(regions, function(x) if (substr(x,1,1) == '.') {
+                                            wd <- getwd()
+                                            paste0(wd,substr(x,2,500))
+                                        } else if (substr(x,1,1) == '~') {
+                                            normalizePath(x) 
+                                        } else {
+                                            x }))
+            }
 
             # Save params
             private$parallel_job <- Parallel_Job$new(cores)
@@ -476,14 +486,19 @@ metagene <- R6Class("metagene",
                         
                     ## other columns of data table
                         design_names <- colnames(design)[-1]
-                        bam_names_in_design <- tools::file_path_sans_ext(
-                                                            design[,1])
+                        # bam_names_in_design <- tools::file_path_sans_ext(
+                        #                                     design[,1])
+                        bam_names_in_design <- design[,1]
 
-                        bfile_names_by_design <- tools::file_path_sans_ext(
-                            unlist(map(design_names , 
-                                ~design[which(design[,
-                                    which(colnames(
-                                        design) == .x)] > 0),1])))
+                        # bfile_names_by_design <- tools::file_path_sans_ext(
+                        #     unlist(map(design_names , 
+                        #         ~design[which(design[,
+                        #             which(colnames(
+                        #                 design) == .x)] > 0),1])))
+                        bfile_names_by_design <- unlist(map(design_names , 
+                                                    ~design[which(design[,
+                                                        which(colnames(
+                                                            design) == .x)] > 0),1]))
                         col_bam <- rep(bfile_names_by_design,
                                 each=length_std_dt_struct)
                         
@@ -496,6 +511,8 @@ metagene <- R6Class("metagene",
                         
                         ## col_values
                         #NB : lapply(Views...) -> out of limits of view
+                        print(coverages[['cyto4']])
+
                         grtot <- self$get_regions()
                         col_values <- list()
                         idx <- 1 #index for col_values list
@@ -881,7 +898,7 @@ metagene <- R6Class("metagene",
             }
             isBiocParallel = is(cores, "BiocParallelParam")
             isInteger = ((is.numeric(cores) || is.integer(cores)) &&
-                            cores > 0 &&as.integer(cores) == cores)
+                            cores > 0 && as.integer(cores) == cores)
             if (!isBiocParallel && !isInteger) {
                 stop(paste0("cores must be a positive numeric or ",
                             "BiocParallelParam instance"))
@@ -1160,7 +1177,8 @@ metagene <- R6Class("metagene",
                 bam_files <- names(private$params[["bam_files"]])
                 design <- data.frame(bam_files = bam_files)
                 for (bam_file in names(private$coverages)) {
-                    colname <- file_path_sans_ext(basename(bam_file))
+                    #colname <- file_path_sans_ext(basename(bam_file))
+                    colname <- bam_file
                     design[[colname]] <- rep(0, length(bam_files))
                     i <- bam_files == bam_file
                     design[[colname]][i] <- 1

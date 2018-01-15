@@ -275,8 +275,7 @@ write_bed_file_filter_result <- function(bed_file_filter_result,
 #' sum(ratio_intersect >= permutation_results) / length(permutation_results)
 #' }
 #'
-avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0)
-{
+avoid_gaps_update <- function(table, bam_name, gaps_threshold = 0){
     new_table <- data.table::copy(table)
     
 	if (!is.null(new_table$bin)){

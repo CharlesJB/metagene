@@ -99,7 +99,7 @@ Bam_Handler <- R6Class("Bam_Handler",
                                             normalizePath(x) 
                                         } else {
                                             x }))
-
+            
             # All BAM files must exist
             if (!all(sapply(bam_files, file.exists))) {
                 stop("At least one BAM file does not exist")
