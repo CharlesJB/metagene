@@ -270,24 +270,28 @@ test.metagene_initialize_valid_unnamed_bam_files <- function() {
 
 #bam files pathes normalization
 test.metagene_relative_and_absolute_bam_files_pathes <- function() {
-    # bamfiles <- substr(bam_files,nchar(getwd())+1,500)
-    # print(bamfiles)
-    # bamfiles <- stringr:::str_replace(bamfiles, '^/','./')
-    # print(bamfiles)
-    # obs1 <- tryCatch(metagene:::metagene$new(regions = regions[1],
-    #                                         bam_files = bamfiles),
-    #                 error = conditionMessage)
     bamfiles <- substr(bam_files,nchar(path.expand("~"))+1,500)
     bamfiles <- stringr:::str_replace(bamfiles, '^/','~/')
-    obs2 <- tryCatch(metagene:::metagene$new(regions = regions[1],
+    obs1 <- tryCatch(metagene:::metagene$new(regions = regions[1],
                                             bam_files = bamfiles),
                     error = conditionMessage)
-    obs3 <- tryCatch(metagene:::metagene$new(regions = regions[1],
+    obs2 <- tryCatch(metagene:::metagene$new(regions = regions[1],
                                             bam_files = bam_files),
                     error = conditionMessage)
-    # class(obs1)[1]=='metagene', 
-    checkTrue(all(class(obs2)[1]=='metagene',
-                    class(obs3)[1]=='metagene'))
+    checkTrue(all(class(obs1)[1]=='metagene',
+                    class(obs2)[1]=='metagene'))
+}
+
+#bam file without reads for selected regions
+test.metagene_bam_file_without_reads_for_selected_regions <- function() {
+    region <-system.file("extdata/NDUFAB1.bed", package = "metagene")
+    bamfile <- system.file("extdata/subset.bam", package = "metagene")
+    obs <- tryCatch(metagene:::metagene$new(regions = region,
+                                            bam_files = bamfile),
+                    error = conditionMessage)
+    expected <- paste0("At least one sample has not coverage at all. ",
+                    "Please check if all BAM files contain reads for desired regions")
+    checkIdentical(obs, expected)
 }
 
 ###################################################

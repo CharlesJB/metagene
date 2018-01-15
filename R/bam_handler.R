@@ -94,7 +94,7 @@ Bam_Handler <- R6Class("Bam_Handler",
             bam_files <- 
                 unlist(lapply(bam_files, function(x) if (substr(x,1,1) == '.') {
                                             wd <- getwd()
-                                            paste0(wd,substr(x,2,500))
+                                            paste0(wd,substr(x,2,nchar(x)))
                                         } else if (substr(x,1,1) == '~') {
                                             normalizePath(x) 
                                         } else {
