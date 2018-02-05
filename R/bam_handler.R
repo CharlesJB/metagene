@@ -379,7 +379,9 @@ Bam_Handler <- R6Class("Bam_Handler",
                 alignment <- GenomicAlignments:::readGAlignmentPairs(bam_file,
                                                                 param=param)
             }
-            if (!is.null(count)) {
+            #remove useless seqlevels fron alignment
+            alignment <- keepSeqlevels(alignment,unique(as.character(seqnames(regions))))
+            if (!is.null(count)){
                 weight <- 1 / (count / 1000000)
                 GenomicAlignments::coverage(alignment) * weight
             } else {
