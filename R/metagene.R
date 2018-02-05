@@ -222,6 +222,7 @@ metagene <- R6Class("metagene",
                                             x }))
             }
 
+
             # Save params
             private$parallel_job <- Parallel_Job$new(cores)
             private$params[["padding_size"]] <- padding_size
@@ -724,7 +725,6 @@ metagene <- R6Class("metagene",
                         as.list(res)
                     }
 
-
                     if(avoid_gaps){
                         if (!is.null(bam_name)){
                             private$data_frame_avoid_gaps_updates(bam_name,
@@ -735,8 +735,7 @@ metagene <- R6Class("metagene",
                                                         gaps_threshold)
                         }
                     }
-
-###################                    
+               
                     if(all(rowSums(self$get_design()[,-1, drop=FALSE]) == 1) &
                         all(colSums(self$get_design()[,-1, drop=FALSE]) == 1)){
                         private$df$qinf <- private$df$value
@@ -745,7 +744,6 @@ metagene <- R6Class("metagene",
                         private$df <- data.frame(private$df)
                         #return(private$df)
                     } else {
-###################
                         private$df <- private$df[, 
                                 c(out_cols) := bootstrap(.SD), 
                                 by = .(region, design, nuctot)]
@@ -1131,7 +1129,7 @@ metagene <- R6Class("metagene",
             }))
         },
         produce_coverages = function() {
-        regions <- GenomicRanges::reduce(BiocGenerics::unlist(private$regions))
+            regions <- GenomicRanges::reduce(BiocGenerics::unlist(private$regions))
             res <- private$parallel_job$launch_job(
                         data = private$params[["bam_files"]],
                         FUN = private$bam_handler$get_coverage,
