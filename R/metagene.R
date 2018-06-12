@@ -289,7 +289,7 @@ metagene <- R6Class("metagene",
                         matrices[[regions]][[design_name]][["input"]] <- 
                                 matrix(private$table[region == regions & 
                                 design == design_name,]$value, 
-                                nrow=nbrow, ncol=nbcol, byrow=TRUE)
+                                nrow=nbrow[regions], ncol=nbcol, byrow=TRUE)
                     }
                 }
                 return (matrices)
