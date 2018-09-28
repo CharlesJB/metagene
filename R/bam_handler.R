@@ -91,9 +91,7 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
 
             # Change bam_files paths to absolute paths
-            bam_names <- names(bam_files)
-            bam_files <- normalizePath(bam_files)
-            names(bam_files) <- bam_names
+            bam_files = private$uniformize_bam_files(bam_files)
 
             # All BAM files must exist
             if (!all(sapply(bam_files, file.exists))) {
@@ -163,6 +161,8 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
         },
         get_bam_name = function(bam_file) {
+            bam_file = private$uniformize_bam_files(bam_file)
+            
             bam <- private$bam_files[["bam"]]
             row_names <- rownames(private$bam_files)
             bam_name <- basename(gsub(".bam$", "", bam_file))
@@ -369,6 +369,13 @@ Bam_Handler <- R6Class("Bam_Handler",
             } else {
                 GenomicAlignments::coverage(alignment)
             }
+        },
+        uniformize_bam_files = function(bam_files) {
+            bam_names <- names(bam_files)
+            bam_files <- normalizePath(bam_files)
+            names(bam_files) <- bam_names        
+            
+            return(bam_files)
         }
     )
 )
