@@ -380,6 +380,10 @@ metagene <- R6Class("metagene",
                                                     "noise_removal")
             normalization <- private$get_param_value(normalization,
                                                     "normalization")
+                                                    
+            if(!is.null(normalization) && !is.null(noise_removal)) {
+                stop("NCIS background removal and RPM normalization are mutually exclusive.")
+            }
             coverages <- private$coverages
 
             #addition of private$params[["table_needs_update"]] comes from 
@@ -1212,12 +1216,16 @@ metagene <- R6Class("metagene",
         },
         merge_chip = function(coverages, design) {
             result <- list()
+            normalization = private$params[["normalization"]]
             for (design_name in colnames(design)[-1]) {
                 i <- design[[design_name]] == 1
                 bam_files <- as.character(design[,1][i])
-            bam_names <- private$get_bam_names(bam_files)
+                bam_names <- private$get_bam_names(bam_files)
                 cov <- coverages[bam_names]
                 result[[design_name]] <- Reduce("+", cov)
+                if(!is.null(normalization) && normalization =="RPM" && sum(i) > 1) {
+                    result[[design_name]] = result[[design_name]] / sum(i)
+                }
             }
             result
         },

@@ -90,10 +90,8 @@ Bam_Handler <- R6Class("Bam_Handler",
                 stop("bam_files must be a vector of BAM filenames")
             }
 
-            # Change bam_files pathes to absolute pathes
-            bam_names <- names(bam_files)
-            bam_files <- normalizePath(bam_files)
-            names(bam_files) <- bam_names
+            # Change bam_files paths to absolute paths
+            bam_files = private$uniformize_bam_files(bam_files)
 
             # All BAM files must exist
             if (!all(sapply(bam_files, file.exists))) {
@@ -101,19 +99,21 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
 
             # All BAM files must be indexed
-            if (any(sapply(sapply(bam_files, private$get_bam_index_filename), 
-                                        is.na))) {
+            if (any(is.na(sapply(bam_files, private$get_bam_index_filename)))) {
                 stop("All BAM files must be indexed")
             }
 
             # All BAM names must be unique
             if (is.null(names(bam_files))) {
                 bam_names <- tools::file_path_sans_ext(basename(bam_files))
-                if (length(bam_names) != length(unique(bam_names))) {
-                    stop("All BAM names must be unique")
-                }
+            } else {
+                bam_names = names(bam_files)
             }
-
+            
+            if (length(bam_names) != length(unique(bam_names))) {
+                stop("All BAM names must be unique")
+            }
+            
             # Core must be a positive integer or a BiocParallelParam instance
             isBiocParallel = is(cores, "BiocParallelParam")
             isInteger = ((is.numeric(cores) || is.integer(cores)) &&
@@ -140,7 +140,7 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
             private$bam_files[["aligned_count"]] <-
                 sapply(private$bam_files[["bam"]], private$get_file_count)
-
+                
             # Check the seqnames
             get_seqnames <- function(bam_file) {
                 bam_file <- Rsamtools::BamFile(bam_file)
@@ -149,20 +149,20 @@ Bam_Handler <- R6Class("Bam_Handler",
             bam_seqnames <- lapply(private$bam_files$bam, get_seqnames)
             all_seqnames <- unlist(bam_seqnames)
             if (!all(table(all_seqnames) == length(bam_seqnames))) {
-                msg <- "\n\nSome bam files have discrepancies in their "
-                msg <- paste0(msg, "seqnames.")
-                msg <- paste0(msg, "\n\n")
-                msg <- paste0(msg, "This could be caused by chromosome names")
-                msg <- paste0(msg, " present only in a subset of the bam ")
-                msg <- paste0(msg, "files (i.e.: chrY in some bam files, but ")
-                msg <- paste0(msg, "absent in others.\n\n")
-                msg <- paste0(msg, "This could also be caused by ")
-                msg <- paste0(msg, "discrepancies in the seqlevels style")
-                msg <- paste0(msg, " (i.e.: UCSC:chr1 versus NCBI:1)\n\n")
+                msg <- paste0("\n\nSome bam files have discrepancies in their seqnames.\n\n",
+                              "This could be caused by chromosome names",
+                              " present only in a subset of the bam ",
+                              "files (i.e.: chrY in some bam files, but ",
+                              "absent in others.\n\n",
+                              "This could also be caused by ",
+                              "discrepancies in the seqlevels style",
+                              " (i.e.: UCSC:chr1 versus NCBI:1)\n\n")
                 warning(msg)
             }
         },
         get_bam_name = function(bam_file) {
+            bam_file = private$uniformize_bam_files(bam_file)
+            
             bam <- private$bam_files[["bam"]]
             row_names <- rownames(private$bam_files)
             bam_name <- basename(gsub(".bam$", "", bam_file))
@@ -321,18 +321,7 @@ Bam_Handler <- R6Class("Bam_Handler",
             }
         },
         get_file_count = function(bam_file) {
-            param <- ScanBamParam(flag = scanBamFlag(isUnmappedQuery=FALSE))
-            # To speed up analysis we split the file by chromosome
-            cores <- private$parallel_job$get_core_count()
-            chr <- scanBamHeader(bam_file)[[bam_file]]$targets
-            chr <- GRanges(seqnames = names(chr), IRanges::IRanges(1, chr))
-            do.call(sum, private$parallel_job$launch_job(
-                                data = suppressWarnings(split(chr, 1:cores)),
-                                FUN = function(x) {
-                                    param = ScanBamParam(which = x);
-                                    countBam(bam_file, param = param)$records;
-                                }))
-
+            sum(Rsamtools::idxstatsBam(bam_file)$mapped)
         },
         prepare_regions = function(regions, bam_file, force_seqlevels) {
             # The regions must be a GRanges object
@@ -380,6 +369,13 @@ Bam_Handler <- R6Class("Bam_Handler",
             } else {
                 GenomicAlignments::coverage(alignment)
             }
+        },
+        uniformize_bam_files = function(bam_files) {
+            bam_names <- names(bam_files)
+            bam_files <- normalizePath(bam_files)
+            names(bam_files) <- bam_names        
+            
+            return(bam_files)
         }
     )
 )
