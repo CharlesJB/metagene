@@ -467,7 +467,8 @@ metagene <- R6Class("metagene",
                     ## other columns of data table
                         design_names <- colnames(design)[-1]
                         bam_names_in_design <- tools::file_path_sans_ext(
-                                                            basename(design[,1]))
+                                                            basename(
+                                                            as.character(design[,1])))
 
                         bfile_names_by_design <- tools::file_path_sans_ext(
                             unlist(map(design_names , 
