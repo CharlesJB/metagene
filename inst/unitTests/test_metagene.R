@@ -425,7 +425,7 @@ test.metagene_get_table_check_copy_of_table <- function() {
  mg$produce_table()
  tab <- mg$get_table()
  #modification of table by reference
- tab[,c := 1:5]
+ tab[,c := rep(1:5, length=.N)]
  #Is table copied and unchanged ? 
  tab2 <- mg$get_table()
  checkIdentical(ncol(tab) == ncol(tab2), FALSE)
