@@ -1053,7 +1053,7 @@ metagene <- R6Class("metagene",
             viewMeans(views)
         },
         prepare_regions = function(regions) {
-            if (class(regions) == "character") {
+            if (is(regions, "character")) {
                 names <- sapply(regions, function(x)
                     file_path_sans_ext(basename(x)))
                 import_file <- function(region) {
@@ -1079,9 +1079,9 @@ metagene <- R6Class("metagene",
                 regions <- private$parallel_job$launch_job(data = regions,
                                                         FUN = import_file)
                 names(regions) <- names
-            } else if (class(regions) == "GRanges") {
+            } else if (is(regions, "GRanges")) {
                 regions <- GRangesList("regions" = regions)
-            } else if (class(regions) == "list") {
+            } else if (is(regions, "list")) {
                 regions <- GRangesList(regions)
             }
             if (is.null(names(regions))) {

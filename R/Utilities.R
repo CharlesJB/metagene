@@ -16,7 +16,7 @@
 #   gr <- GRanges("chr1", IRanges(c(100, 300), c(200, 500))
 #   gr <- intoNbins(gr)
 intoNbins <- function(gr, n = 10) {
-    stopifnot(class(gr) == "GRanges")
+    stopifnot(is(gr, "GRanges"))
     stopifnot(length(gr) > 0)
     stopifnot(is.numeric(n))
     stopifnot(n > 0)

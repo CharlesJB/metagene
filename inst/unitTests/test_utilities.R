@@ -45,7 +45,7 @@ test.intonbins_valid_gr_valid_n_length_equal_gr_width <- function() {
 ## Invalid gr class
 test.intonbins_invalid_gr_class <- function() {
     obs <- tryCatch(metagene:::intoNbins(1), error = conditionMessage)
-    exp <- "class(gr) == \"GRanges\" is not TRUE"
+    exp <- "is(gr, \"GRanges\") is not TRUE"
     checkIdentical(obs, exp)
 }
 

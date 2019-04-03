@@ -62,7 +62,7 @@ Stat <- R6Class("Stat",
             error <- "Stat object is not in a valid state:"
 
             # Check class
-            if (class(private$statistics) != "data.frame") {
+            if (!is(private$statistics, "data.frame")) {
                 reason = "statistics must be a data.frame."
                 stop(paste(error, reason))
             }
@@ -74,7 +74,7 @@ Stat <- R6Class("Stat",
                 stop(paste(error, reason))
             }
             if (nrow(private$statistics > 0)) {
-                if (!all(sapply(private$statistics, class) == "numeric")) {
+                if (!all(sapply(private$statistics, function(x) { is(x, "numeric")}))) {
                     reason <- "invalid column classes."
                     stop(paste(error, reason))
                 }

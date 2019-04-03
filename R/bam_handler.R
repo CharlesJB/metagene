@@ -325,7 +325,7 @@ Bam_Handler <- R6Class("Bam_Handler",
         },
         prepare_regions = function(regions, bam_file, force_seqlevels) {
             # The regions must be a GRanges object
-            if (class(regions) != "GRanges") {
+            if (!is(regions, "GRanges")) {
                 stop("Parameter regions must be a GRanges object.")
             }
 
