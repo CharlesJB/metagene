@@ -1152,7 +1152,7 @@ metagene <- R6Class("metagene",
             private$check_design(design = design, check_bam_files)
             get_complete_design <- function() {
                 bam_files <- names(private$params[["bam_files"]])
-                design <- data.frame(bam_files = bam_files)
+                design <- data.frame(bam_files = bam_files, stringsAsFactors=FALSE)
                 for (bam_file in names(private$coverages)) {
                     colname <- file_path_sans_ext(basename(bam_file))
                     design[[colname]] <- rep(0, length(bam_files))
