@@ -191,7 +191,6 @@ test.bootstrap_stat_get_statistics_valid_case_debug <- function() {
     checkEquals(unique(sapply(obs$values, length)), 1000)
     checkIdentical(class(obs$replicates), "list")
     checkEquals(length(obs$replicates), 5)
-    checkIdentical(unique(sapply(obs$replicates, class)), "matrix")
     checkEquals(unique(sapply(obs$replicates, nrow)), 20)
     checkEquals(unique(sapply(obs$replicates, ncol)), 1000)
 }
