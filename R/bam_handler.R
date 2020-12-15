@@ -222,7 +222,7 @@ Bam_Handler <- R6Class("Bam_Handler",
             lapply(c(chip_bam_files, input_bam_files), private$check_bam_file)
             chip.pos <- private$read_bam_files(chip_bam_files)
             input.pos <- private$read_bam_files(input_bam_files)
-            DBChIP:::NCIS.internal(chip.pos, input.pos)$est
+            NCIS.internal(chip.pos, input.pos)$est
         }
     ),
     private = list(

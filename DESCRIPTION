@@ -1,5 +1,5 @@
 Package: metagene
-Version: 2.19.1
+Version: 2.19.2
 Date: 2017-10-13
 Title: A package to produce metagene plots
 Author: Charles Joly Beauparlant 
@@ -37,7 +37,6 @@ Imports:
     ggplot2,
     muStat,
     Rsamtools,
-    DBChIP,
     matrixStats,
     purrr,
     data.table,

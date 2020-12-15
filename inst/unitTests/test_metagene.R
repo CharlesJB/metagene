@@ -1193,43 +1193,43 @@ test.metagene_produce_table_invalid_noise_removal_value <- function() {
 }
 
 # Valid noise_removal NCIS
-test.metagene_produce_table_valid_noise_removal_ncis <- function() {
-    mg <- demo_mg$clone()
-    design <- get_demo_design()[,1:2]
-    design[,2][2] <- 0
-    mg$produce_table(noise_removal = "NCIS", design = design)
-    checkIdentical(mg$get_params()[["bin_count"]], 100)
-    checkIdentical(mg$get_params()[["noise_removal"]], "NCIS")
-    tab <- mg$get_table()
-    tablength <- length(mg$get_regions())*(dim(design)[2]-1)*(mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
-    checkIdentical(dim(tab)[1] == tablength, TRUE)
-    checkIdentical(dim(tab)[2] == length(c('region', 'design', 'bin', 'value', 'strand')), TRUE)
-    
-    tab <- mg$get_table()
-    #check for presence of levels of factors (region, design, strand)
-    checkIdentical(names(mg$get_regions()), unique(tab$region))
-    checkIdentical(names(design)[-1], unique(tab$design))
-    for (region_names in names(mg$get_regions())){
-        #print(region_names)
-        checkIdentical(unique(as.vector(strand(mg$get_regions())[[region_names]])), unique(tab$strand[which(tab$region == region_names)]))
-    }
-    #check for number of line by factor region
-    reglength <- (dim(design)[2]-1)*(mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
-    for (region_names in names(mg$get_regions())){
-        #print(region_names)
-        checkIdentical(length(tab$region[which(tab$region == region_names)]) == reglength , TRUE)
-    }
-    #check for number of line by factor design
-    designlength <- (mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
-    for (region_names in names(mg$get_regions())){
-        #print(region_names)
-        for (design_names in names(design)[-1]){
-            #print(design_names)
-            checkIdentical(length(tab$design[which(tab$region == region_names & tab$design == design_names)]) == designlength , TRUE)
-        }
-    }
-    print(TRUE)
-}
+#test.metagene_produce_table_valid_noise_removal_ncis <- function() {
+#    mg <- demo_mg$clone()
+#    design <- get_demo_design()[,1:2]
+#    design[,2][2] <- 0
+#    mg$produce_table(noise_removal = "NCIS", design = design)
+#    checkIdentical(mg$get_params()[["bin_count"]], 100)
+#    checkIdentical(mg$get_params()[["noise_removal"]], "NCIS")
+#    tab <- mg$get_table()
+#    tablength <- length(mg$get_regions())*(dim(design)[2]-1)*(mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
+#    checkIdentical(dim(tab)[1] == tablength, TRUE)
+#    checkIdentical(dim(tab)[2] == length(c('region', 'design', 'bin', 'value', 'strand')), TRUE)
+#    
+#    tab <- mg$get_table()
+#    #check for presence of levels of factors (region, design, strand)
+#    checkIdentical(names(mg$get_regions()), unique(tab$region))
+#    checkIdentical(names(design)[-1], unique(tab$design))
+#    for (region_names in names(mg$get_regions())){
+#        #print(region_names)
+#        checkIdentical(unique(as.vector(strand(mg$get_regions())[[region_names]])), unique(tab$strand[which(tab$region == region_names)]))
+#    }
+#    #check for number of line by factor region
+#    reglength <- (dim(design)[2]-1)*(mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
+#    for (region_names in names(mg$get_regions())){
+#        #print(region_names)
+#        checkIdentical(length(tab$region[which(tab$region == region_names)]) == reglength , TRUE)
+#    }
+#    #check for number of line by factor design
+#    designlength <- (mg$get_params()$bin_count)*length(mg$get_regions()[[1]])
+#    for (region_names in names(mg$get_regions())){
+#        #print(region_names)
+#        for (design_names in names(design)[-1]){
+#            #print(design_names)
+#            checkIdentical(length(tab$design[which(tab$region == region_names & tab$design == design_names)]) == designlength , TRUE)
+#        }
+#    }
+#    print(TRUE)
+#}
 
 # Invalid normalization class
 test.metagene_produce_table_invalid_normalization_class <- function() {
