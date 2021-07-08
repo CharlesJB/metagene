@@ -176,7 +176,13 @@ test.metagene_initialize_valid_regions_supplementary_seqlevels <- function() {
     obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1]),
                     error = conditionMessage)
     exp <- "Some seqlevels of regions are absent in bam_file"
-    checkIdentical(obs, exp)
+	# The return value should be an error string.
+	checkTrue(is.character(obs))
+	# BiocParallel will preface the error message with something like:
+	#   "BiocParallel errors\n  element index: 1, 2, 3, 4, 5\n  first error: [OUR ERROR STRING]"
+	# We don't want to unit test BiocParallel's error management,
+	# so we'll just make sure our own string is present rather than test for equality.
+	checkTrue(grepl(exp, obs, fixed=TRUE))
 }
 
 # Valid regions with extra seqlevels force
@@ -197,7 +203,13 @@ test.metagene_initialize_invalid_extra_seqnames <- function() {
     obs <- tryCatch(metagene$new(regions = region, bam_files = bam_files[1]),
                     error = conditionMessage)
     exp <- "Some seqlevels of regions are absent in bam_file"
-    checkIdentical(obs, exp)
+	# The return value should be an error string.
+	checkTrue(is.character(obs))
+	# BiocParallel will preface the error message with something like:
+	#   "BiocParallel errors\n  element index: 1, 2, 3, 4, 5\n  first error: [OUR ERROR STRING]"
+	# We don't want to unit test BiocParallel's error management,
+	# so we'll just make sure our own string is present rather than test for equality.
+	checkTrue(grepl(exp, obs, fixed=TRUE))
 }
 
 # Extra seqnames with force
@@ -220,7 +232,13 @@ test.metagene_initialize_all_extra_seqnames_force_seqlevels <- function() {
                                 force_seqlevels = TRUE),
                     error = conditionMessage)
     exp <- "No seqlevels matching between regions and bam file"
-    checkIdentical(obs, exp)
+	# The return value should be an error string.
+	checkTrue(is.character(obs))
+	# BiocParallel will preface the error message with something like:
+	#   "BiocParallel errors\n  element index: 1, 2, 3, 4, 5\n  first error: [OUR ERROR STRING]"
+	# We don't want to unit test BiocParallel's error management,
+	# so we'll just make sure our own string is present rather than test for equality.
+	checkTrue(grepl(exp, obs, fixed=TRUE))
 }
 
 # Valid regions narrowPeak
